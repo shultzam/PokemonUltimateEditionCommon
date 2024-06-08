@@ -78,11 +78,11 @@ customPokemonData =
   { name = "Pikachu", level = 1, types = { "Electric" }, moves = { "Electroweb", "Leer" }, guids = { "77331c" } }
 }
 
--- Add pokemon here that are always included regardless of gens added to game.
+-- Add pokemon here that are always included regardless of gens configured at the start of the game.
 boardPokemonData = 
 {
-  { name = "Red Gyarados",      level = 5, types = { "Water" }, moves = { "Dragon Rage", "Waterfall" },  guids = { "390ee2" }, evoData = { { cost = "Mega", ball = MEGA, gen = 2, ballGuid = "140fbd", guids = { "bc99f5" } } } },
-  { name = "Starter Sudowoodo", level = 3, types = { "Rock" },  moves = { "Rock Throw", "Mimic" },       guids = { "315879" } }
+  { name = "Red Gyarados",level = 5, types = { "Water" }, moves = { "Dragon Rage", "Waterfall" },  guids = { "390ee2" }, evoData = { { cost = "Mega", ball = MEGA, gen = 2, ballGuid = "140fbd", guids = { "bc99f5" } } } },  -- Gen II only.
+  { name = "Sudowoodo",   level = 3, types = { "Rock" },  moves = { "Rock Throw", "Mimic" },       guids = { "315879" } },                                                                                                    -- Gen II only.
 }
 
 gen1PokemonData =
@@ -392,7 +392,7 @@ gen2PokemonData =
 
   -- Mega evolutions.
   { name = "Mega Ampharos",     level = 5,    types = { "Electric" },   moves = { "Charge Beam", "Dragon Pulse" },guids = { "f282f0", "16d003" },            evoData = { { cost = 0, ball = YELLOW, gen = 2, ballGuid = "140fbd", guids = { "57b26e", "433542", "089edd" } } } },
-  { name = "Mega Red Gyarados", level = 6,    types = { "Water" },      moves = { "Water Pulse", "Crunch" },      guids = { "bc99f5" },                      evoData = { { cost = 0, ball = YELLOW, gen = 2, ballGuid = "140fbd", guids = { "390ee2" } } } },
+  { name = "Mega Red Gyarados", level = 6,    types = { "Water" },      moves = { "Water Pulse", "Crunch" },      guids = { "bc99f5" },                      evoData = { { cost = 0, ball = YELLOW, gen = 2, ballGuid = "140fbd", guids = { "390ee2" } } } },     -- Thechnically gen II only.
   { name = "Mega Steelix",      level = 5,    types = { "Steel" },      moves = { "Earthquake", "Rock Slide" },   guids = { "8b5001", "86038a" },            evoData = { { cost = 0, ball = BLUE, gen = 2, ballGuid = "140fbd", guids = { "93482a", "9248b4" } } } },
   { name = "Mega Scizor",       level = 6,    types = { "Bug" },        moves = { "Night Slash", "X-Scissor" },   guids = { "ae958f", "1bb3d8" },            evoData = { { cost = 0, ball = RED, gen = 2, ballGuid = "140fbd", guids = { "7e05b1", "22e6a3" } } } },
   { name = "Mega Heracross",    level = 5,    types = { "Bug" },        moves = { "Close Combat", "Megahorn" },   guids = { "926476" },                      evoData = { { cost = 0, ball = BLUE, gen = 2, ballGuid = "140fbd", guids = { "6f8ffe" } } } },
