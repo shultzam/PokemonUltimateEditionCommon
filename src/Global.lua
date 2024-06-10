@@ -824,7 +824,7 @@ gen5PokemonData =
   { name = "Jellicent",       level = 6, types = { "Water" },    moves = { "Ominous Wind", "Water Pulse" },    guids = { "598d9a", "8fd291" } },                                                                                  -- Pink
   { name = "Alomomola",       level = 3, types = { "Water" },    moves = { "Safeguard", "Brine" },             guids = { "9c2e47" } },
   { name = "Joltik",          level = 2, types = { "Bug" },      moves = { "Fury Cutter", "Absorb" },          guids = { "c4adc9" },                     evoData = { { cost = 3, ball = YELLOW, gen = 5, guids = { "4f2f10" } } } },
-  { name = "Galvantula",      level = 5, types = { "Bug" },      moves = { "Discharge", "Bug Bite" },          guids = { "f79ca8", "4f2f10" } },
+  { name = "Galvantula",      level = 5, types = { "Bug" },      moves = { "Electroweb", "Bug Bite" },         guids = { "1e7df7", "4f2f10" } },
   { name = "Ferroseed",       level = 3, types = { "Grass" },    moves = { "Pin Missile", "Mirror Shot" },     guids = { "4801d8" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "d1ce01" } } } },
   { name = "Ferrothorn",      level = 5, types = { "Grass" },    moves = { "Iron Defense", "Power Whip" },     guids = { "1419cf", "d1ce01" } },
   { name = "Klink",           level = 3, types = { "Steel" },    moves = { "Thunder Shock", "Vise Grip" },     guids = { "4ee23b" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "17a2ae" } } } },
@@ -1403,7 +1403,7 @@ gen9PokemonData =
   { name = "Chien-Pao",     level = 7, types = { "Ice" }, moves = { "Icicle Crash", "Ruination" }, guids = { "a4d468" } }, 
   { name = "Ting-Lu",       level = 7, types = { "Ground" }, moves = { "Earth Power", "Ruination" }, guids = { "c37f93" } },
   { name = "Chi-Yu",        level = 7, types = { "Fire" }, moves = { "Lava Plume", "Ruination" }, guids = { "b9c9fd" }  },
-  { name = "Roaring Moon",  level = 7, types = { "Dragon" }, moves = { "Night Slash", "Dragon Claw" }, guids = { "b4c860" } },
+  { name = "Roaring Moon",  level = 7, types = { "Dragon" }, moves = { "Night Slash", "Dragon Claw" }, guids = { "eac784" } },
   { name = "Iron Valiant",  level = 5, types = { "Fairy" }, moves = { "Close Combat", "Spirit Break" }, guids = { "d1f07b" } },
   { name = "Koraidon",      level = 7, types = { "Ground" }, moves = { "Collision Course", "Outrage" }, guids = { "a7a93a" } }, 
   { name = "Miraidon",      level = 7, types = { "Electric" }, moves = { "Electro Drift", "Outrage" }, guids = { "c00d7b" } },
