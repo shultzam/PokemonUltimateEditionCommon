@@ -347,7 +347,7 @@ gen2PokemonData =
   { name = "Snubbull",   level = 2, types = { "Fairy" },             moves = { "Charm", "Rage" },                 guids = { "d85741" },                     evoData = { { cost = 1, ball = BLUE, gen = 2, guids = { "5351ec" } } } },
   { name = "Granbull",   level = 3, types = { "Fairy" },             moves = { "Bite", "Lick" },                  guids = { "13fcb1", "5351ec" } },
   { name = "Qwilfish",   level = 4, types = { "Water", "Poison" },   moves = { "Poison Sting", "Water Gun" },     guids = { "d28384" } },
-  { name = "Scizor",     level = 5, types = { "Bug", "Steel" },      moves = { "Metal Claw", "Wing Attack" },     guids = { "7e05b1", "22e6a3" },           evoData = { { cost = "Mega", ball = MEGA, gen = 2, ballGuid = "140fbd", guids = { "ae958f", "1bb3d8" } } } },
+  { name = "Scizor",     level = 5, types = { "Steel", "Bug" },      moves = { "Metal Claw", "Wing Attack" },     guids = { "7e05b1", "22e6a3" },           evoData = { { cost = "Mega", ball = MEGA, gen = 2, ballGuid = "140fbd", guids = { "ae958f", "1bb3d8" } } } },
   { name = "Shuckle",    level = 2, types = { "Bug", "Rock" },       moves = { "Withdraw", "Wrap" },              guids = { "3d91d1" } },
   { name = "Heracross",  level = 4, types = { "Bug", "Fighting" },   moves = { "Horn Attack", "Counter" },        guids = { "6f8ffe" },                     evoData = { { cost = "Mega", ball = MEGA, gen = 2, ballGuid = "140fbd", guids = { "926476" } } } },
   { name = "Sneasel",    level = 3, types = { "Dark", "Ice" },       moves = { "Feint Attack", "Quick Attack" },  guids = { "c13dc3" },                     evoData = { { cost = 1, ball = YELLOW, gen = 4, guids = { "9b517e" } } } },
@@ -740,7 +740,7 @@ gen5PokemonData =
   { name = "Blitzle",         level = 2, types = { "Electric" }, moves = { "Thunder Wave", "Flame Charge" },   guids = { "c3f811" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "a00b30" } } } },
   { name = "Zebstrika",       level = 4, types = { "Electric" }, moves = { "Wild Charge", "Stomp" },           guids = { "718d9a", "a00b30" }, },
   { name = "Roggenrola",      level = 2, types = { "Rock" },     moves = { "Sand Attack", "Headbutt" },        guids = { "f96286" },                     evoData = { { cost = 2, ball = GREEN, gen = 5, guids = { "fb2577" } } } },
-  { name = "Boldore",         level = 4, types = { "Rock" },     moves = { "Rock Blast", "Iron Defense" },     guids = { "6f3eeb", "fb2577" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "826c9d", "f3f8a9" } } } },
+  { name = "Boldore",         level = 4, types = { "Rock" },     moves = { "Rock Blast", "Iron Defense" },     guids = { "28e251", "fb2577" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "826c9d", "f3f8a9" } } } },
   { name = "Gigalith",        level = 6, types = { "Rock" },     moves = { "Sandstorm", "Rock Slide" },        guids = { "6c7072", "826c9d", "f3f8a9" }, },
   -- Gen 5 527-550
   { name = "Woobat",          level = 1, types = { "Psychic" },  moves = { "Confusion", "Odor Sleuth" },       guids = { "6264c2" },                     evoData = { { cost = 2, ball = BLUE, gen = 5, guids = { "8f6353" } } } },
@@ -1427,9 +1427,9 @@ gen9PokemonData =
   { name = "Iron Crown",    level = 7, types = { "Steel" }, moves = { "Tachyon Cutter", "Future Sight" }, guids = { "fae0a8" } },
   { name = "Terapagos",     level = 7, types = { "Normal" }, moves = { "Tera Starstorm", "Protect" }, guids = { "686877" } }, 
   { name = "Pecharunt",     level = 7, types = { "Poison" }, moves = { "Malignant Chain", "Shadow Ball" }, guids = { "114b25" } }, 
-  { name = "Tauros",        level = 4, types = { "Fighting" }, moves = { "Double-Edge", "Raging Bull" }, guids = { "16d4a9" } },   -- Fighting
-  { name = "Tauros",        level = 4, types = { "Water" }, moves = { "Double Kick", "Raging Bull" }, guids = { "e464b6" }  },     -- Water
-  { name = "Tauros",        level = 4, types = { "Fire" }, moves = { "Double Kick", "Raging Bull" }, guids = { "723f82" } },       -- Fire
+  { name = "Tauros",        level = 4, types = { "Fighting" }, moves = { "Double-Edge", "Raging Bull Fighting" }, guids = { "16d4a9" } },   -- Fighting
+  { name = "Tauros",        level = 4, types = { "Water" }, moves = { "Double Kick", "Raging Bull Water" }, guids = { "e464b6" }  },        -- Water
+  { name = "Tauros",        level = 4, types = { "Fire" }, moves = { "Double Kick", "Raging Bull Fire" }, guids = { "723f82" } },           -- Fire
   { name = "Wooper",        level = 1, types = { "Poison" }, moves = { "Toxic Spikes", "Slam" }, guids = { "d95619" }, evoData = { { cost = 2, ball = BLUE , gen = 9, guids = { "9299e4" } } } }
 }
 
@@ -1504,6 +1504,7 @@ moveData =
     {name="Snooze",         power=3,      type="Dark",      dice=8, STAB=false, effects={{name="Sleep", target="Enemy", chance=4}} },
     {name="One Blow",       power=4,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
     {name="Night Daze",     power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}}},
+    {name="Snatch",         power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
 
     -- Dragon
     {name="D-max Cannon",   power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
@@ -1957,6 +1958,8 @@ moveData =
     {name="Cuddle",         power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Replenish",      power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Guard",          power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Secret Power",   power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Snore",          power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
 
     -- Poison
     {name="Acid",           power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
