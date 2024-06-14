@@ -207,7 +207,7 @@ function refreshTokenUI()
     if Player[PLAYER_COLOR].steam_name ~= nil then
         player_name = Player[PLAYER_COLOR].steam_name
     end
-    print(player_name .. " now has " .. tostring(script_state.value) .. " Pokécoins")
+    printToAll(player_name .. " now has " .. tostring(script_state.value) .. " Pokécoins", PLAYER_COLOR)
 
     --[[
         I ran into some strange behavior with self.editInput(...) when trying to
