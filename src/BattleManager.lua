@@ -43,7 +43,7 @@ local orangeRack = "341ead"
 local purpleRack = "a990ef"
 local redRack = "06c308"
 local yellowRack = "fc9c59"
-local evolvePokeballGUID = {"757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0"}
+local evolvePokeballGUID = {"757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0", "96358f"}
 local evolvedPokeballGUID = "140fbd"
 local effectDice="6a319d"
 local critDice="229313"
@@ -2592,8 +2592,8 @@ function evolvePoke(params)
             end
           end
         end
-        if evoList[i].ballGuid ~= nil and evoNum < numEvos then
-          local extraPokeball = getObjectFromGUID(evoList[i].ballGuid)
+        if evoList[i].cycle ~= nil and evoList[i].cycle and evoNum < numEvos then
+          local extraPokeball = getObjectFromGUID(evolvedPokeballGUID)
           local pokemonInPokeball = extraPokeball.getObjects()
           for j=1, #pokemonInPokeball do
             local pokeObj = pokemonInPokeball[j]
@@ -2640,11 +2640,11 @@ function evolvePoke(params)
       local evoData = evoList[params.oneOrTwo]
       local evoGUIDS = evoData.guids
 
-      -- If the ballGuid field is present, that indicates that the pokemon may not be in the standard evo pokeball.
+      -- If the cycle field is present, that indicates that the pokemon may not be in the standard evo pokeball.
       -- The is relevant in scenarios where:
-      --    pokemon evolve cyclically (Morpeko & 1:1 GMax/Mega)
-      if evoData.ballGuid ~= nil then
-        local overriddenPokeball = getObjectFromGUID(evoData.ballGuid)
+      --    pokemon evolve cyclically (Morpeko & GMax/Mega)
+      if evoData.cycle ~= nil and evoData.cycle then
+        local overriddenPokeball = getObjectFromGUID(evolvedPokeballGUID)
         local pokemonInSpecialPokeball = overriddenPokeball.getObjects()
 
         for i=1, #pokemonInSpecialPokeball do
