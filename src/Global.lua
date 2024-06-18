@@ -1054,9 +1054,9 @@ gen7PokemonData =
   { name = "Cutiefly",     level = 1, types = { "Bug" },      moves = { "Fairy Wind", "Absorb" },              guids = { "ffc7e4" },                     evoData = { { cost = 2, ball = GREEN, gen = 7, guids = { "aa05a4" } } } },
   { name = "Ribombee",     level = 3, types = { "Bug" },      moves = { "Dazzling Gleam", "Pollen Puff" },     guids = { "aa05a4", "97144c" } },
   { name = "Rockruff",     level = 2, types = { "Rock" },     moves = { "Howl", "Bite" },                      guids = { "e4bb33" },                     evoData = { { cost = 2, ball = YELLOW, gen = 6, guids = { "802af7", "5411a7", "ff8dda" } } } },
-  { name = "Lycanroc",     level = 4, types = { "Rock" },     moves = { "Crush Claw", "Accelerock" },          guids = { "34164a", "802af7" }, }, -- Orange
-  { name = "Lycanroc",     level = 4, types = { "Rock" },     moves = { "Sucker Punch", "Accelerock" },        guids = { "9ecf49", "5411a7" }, }, -- Brown
-  { name = "Lycanroc",     level = 4, types = { "Rock" },     moves = { "Rock Slide", "Counter" },             guids = { "9af49a", "ff8dda" }, }, -- Red
+  { name = "Lyanroc",      level = 4, types = { "Rock" },     moves = { "Crush Claw", "Accelerock" },          guids = { "34164a", "802af7" }, }, -- Orange
+  { name = "Lyanroc",      level = 4, types = { "Rock" },     moves = { "Sucker Punch", "Accelerock" },        guids = { "9ecf49", "5411a7" }, }, -- Brown
+  { name = "Lyanroc",      level = 4, types = { "Rock" },     moves = { "Rock Slide", "Counter" },             guids = { "9af49a", "ff8dda" }, }, -- Red
   { name = "Wishiwashi",   level = 4, types = { "Water" },    moves = { "Beat Up", "Brine" },                  guids = { "acfcee" } },
   { name = "Mareanie",     level = 3, types = { "Poison" },   moves = { "Wide Guard", "Toxic Spikes" },        guids = { "45598a" },                     evoData = { { cost = 2, ball = RED, gen = 7, guids = { "bd3b27" } } } },
   { name = "Toxapex",      level = 5, types = { "Poison" },   moves = { "Bane. Bunker", "Poison Jab" },        guids = { "e0c877", "bd3b27" } },
@@ -1510,8 +1510,8 @@ moveData =
     {name="X-Scissor",      power=2,      type="Bug",       dice=6, STAB=true   },
     {name="Befuddle",       power=3,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
     {name="Flutterby",      power=2,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
+    {name="Savage Spin-Out",power=4,      type="Bug",       dice=6, STAB=true,  effects={{name="Recharge", target="Self"}} },
     
-
     -- Dark
     {name="Assurance",      power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
     {name="Aura Wheel Dark",power=4,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}}},
@@ -1551,6 +1551,8 @@ moveData =
     {name="One Blow",       power=4,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
     {name="Night Daze",     power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}}},
     {name="Snatch",         power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
+    {name="Black Hole Eclipse",power=4,   type="Dark",      dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Malicious Moonsault",power=5,  type="Dark",      dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
 
     -- Dragon
     {name="D-max Cannon",   power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
@@ -1577,6 +1579,8 @@ moveData =
     {name="Dragon Ascent",  power=4,      type="Dragon",    dice=6, STAB=false, effects={{name="AttackDown", target="Self"}} },
     {name="Wyrmwind",       power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
     {name="Eternabeam",     power=5,      type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Devastating Drake",power=4,    type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Clangorous Soulblaze",power=5, type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}, {name="AttackUp", target="Self"}} },
 
     -- Electric
     {name="Aura Wheel Electric",power=4,  type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
@@ -1611,7 +1615,11 @@ moveData =
     {name="Volt Tackle",    power=4,      type="Electric",  dice=6, STAB=false, effects={{name="KO", target="Self", chance=5}} },
     {name="Volt Crash",     power=3,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy"}} },
     {name="Stun Shock",     power=4,      type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
-    
+    {name="Gigavolt Havoc", power=4,      type="Electric",  dice=6, STAB=false, effects={{name="Recharge", target="Self"}} }, -- , , 
+    {name="Catastropika",   power=5,      type="Electric",  dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="10MV Thunderbolt",power=5,     type="Electric",  dice=8, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Stoked Sparksurfer",power=4,   type="Electric",  dice=6, STAB=false, effects={{name="Recharge", target="Self"}, {name="Paralyse", target="Enemy", chance=5}} },
+
     -- Fairy
     {name="Baby-Doll Eyes", power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown", target="Enemy"}} },
     {name="Dazzling Gleam", power=2,      type="Fairy",     dice=6, STAB=true },
@@ -1635,6 +1643,9 @@ moveData =
     {name="Smite",          power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy"}} },
     {name="Starfall",       power=4,      type="Fairy",     dice=6, STAB=false, effects={{name="Custom"}} },
     {name="Finale",         power=4,      type="Fairy",     dice=6, STAB=false},
+    {name="Twinkle Tackle", power=4,      type="Fairy",     dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Let's Snuggle Forever", power=5, type="Fairy",   dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Guardian of Alola", power="Enemy", type="Fairy", dice=8, STAB=false, effects={{name="Recharge", target="Self"}} },
     
     -- Fighting
     {name="Aura Sphere",    power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
@@ -1682,8 +1693,8 @@ moveData =
     {name="Rolling Kick",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Wind Rage",      power=4,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Knuckle",        power=4,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="All-Out Pummeling", power=4,   type="Fighting",  dice=6, STAB=true,  effects={{name="Recharge", target="Self"} } },
     
-
     -- Fire
     {name="Blaze Kick",     power=3,      type="Fire",    dice=8, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
     {name="Blazing Torque", power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
@@ -1724,6 +1735,7 @@ moveData =
     {name="Fireball",       power=5,      type="Fire",    dice=6, STAB=false},
     {name="Flare",          power=4,      type="Fire",    dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Centiferno",     power=3,      type="Fire",    dice=4, STAB=false,   effects={{name="ExtraDice", target="Self", chance=4}} },
+    {name="Inferno Overdrive", power=4,   type="Fire",    dice=6, STAB=true,    effects={{name="Recharge", target="Self"} } },
 
     -- Flying
     {name="Aerial Ace",     power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
@@ -1748,6 +1760,7 @@ moveData =
     {name="Sunny Day",      power=0,      type="Flying",  dice=8, STAB=true,    effects={{name="Custom"}} },
     {name="Wing Attack",    power=2,      type="Flying",  dice=6, STAB=true},
     {name="Airstream",      power=4,      type="Flying",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Supersonic Skystrike",power=4, type="Flying",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"} } },
 
     -- Ghost
     {name="Astral Barrage", power=4,      type="Ghost",   dice=6, STAB=false},
@@ -1773,6 +1786,10 @@ moveData =
     {name="Spectral Thief", power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
     {name="Spirit Shackle", power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
     {name="Terror",         power=4,      type="Ghost",   dice=6, STAB=false,   effects={{name="Custom"}}},
+    {name="Never-Ending Nightmare", power=4,type="Ghost", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Sinister Arrow Raid", power=5, type="Ghost",   dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Soul-Stealing 7* Strike",power=5, type="Ghost", dice=6, STAB=false,  effects={{name="Recharge", target="Self"}} },
+    {name="Menacing Moonraze Maelstrom",power=4,type="Ghost", dice=6, STAB=false, effects={{name="Recharge", target="Self"}, {name="Priority", target="Self"}} },
 
     -- Grass
     {name="Absorb",         power=1,      type="Grass",   dice=6, STAB=true},
@@ -1824,6 +1841,7 @@ moveData =
     {name="Drum Solo",      power=5,      type="Grass",   dice=6, STAB=true},
     {name="Tartness",       power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Sweetness",      power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Bloom Doom",     power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Ground
     {name="Bone Club",      power=2,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6}} },
@@ -1848,6 +1866,7 @@ moveData =
     {name="Spikes",         power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Precipise Blades",power=4,     type="Ground",  dice=6, STAB=false},
     {name="Quake",          power=3,      type="Ground",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Tectonic Rage",  power=4,      type="Ground",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Ice
     {name="Aurora Beam",    power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6}} },
@@ -1871,6 +1890,7 @@ moveData =
     {name="Sheer Cold",     power=0,      type="Ice",     dice=6, STAB=true,    effects={{name="KO", target="Enemy", chance=5}} },
     {name="Weather Ball Ice",power=3,     type="Ice",     dice=6, STAB=true},
     {name="Resonance",      power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Subzero Slammer", power=4,     type="Ice",     dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Normal
     {name="Attract",        power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
@@ -2006,6 +2026,9 @@ moveData =
     {name="Guard",          power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Secret Power",   power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Snore",          power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Breakneck Blitz", power=4,     type="Normal",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Extreme Evoboost", power=0,    type="Normal",  dice=6, STAB=true,    effects={{name="AttackUp2", target="Self"}, {name="AttackDown2", target="Enemy"}} },
+    {name="Pulverizing Pancake", power=5, type="Normal",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Poison
     {name="Acid",           power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
@@ -2034,6 +2057,7 @@ moveData =
     {name="Venom Drench",   power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Venoshock",      power=3,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Ooze",           power=4,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Acid Downpour",  power=4,      type="Poison",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Psychic
     {name="Agility",        power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp2", target="Self"}} },
@@ -2080,6 +2104,9 @@ moveData =
     {name="Psystrike",      power=3,      type="Psychic", dice=6, STAB=true},
     {name="Gravitas",       power=4,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Mindstorm",      power=4,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Shattered Psyche", power=4,    type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Genesis Supernova", power=4,   type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Light That Burns The Sky", power=4, type="Psychic", dice=8, STAB=true, effects={{name="Recharge", target="Self"}} },
 
     -- Rock
     {name="Accelerock",     power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
@@ -2105,6 +2132,8 @@ moveData =
     {name="Wide Guard",     power=0,      type="Rock",    dice=8, STAB=true,    effects={{"Protect", target="Self" }} },
     {name="Volcalith",      power=4,      type="Rock",    dice=6, STAB=false,   effects={{name="Custom"}}},
     {name="Sandblast",      power=3,      type="Rock",    dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}}},
+    {name="Continental Crush", power=4,   type="Rock",    dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Splintered Stormshards", power=4, type="Rock", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
     
     -- Steel
     {name="Anchor Shot",    power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
@@ -2139,6 +2168,8 @@ moveData =
     {name="Steelspike",     power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
     {name="Steelsurge",     power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
     {name="Depletion",      power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Corkscrew Crash", power=4,     type="Steel",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
+    {name="Searing Sunraze Smash", power=4, type="Steel", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}, {name="Priority", target="Self"}} },
 
     -- Water
     {name="Aqua Jet",       power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
@@ -2182,6 +2213,8 @@ moveData =
     {name="Hydro Snipe",    power=5,      type="Water",  dice=6, STAB=true},
     {name="Stonesurge",     power=4,      type="Water",  dice=6, STAB=false,    effects={{name="Custom"}} },
     {name="Rapid Flow",     power=4,      type="Water",  dice=6, STAB=false,    effects={{name="Custom"}} },
+    {name="Hydro Vortex",   power=4,      type="Water",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
+    {name="Oceanic Operetta", power=5,    type="Water",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
 }
 
 
@@ -3559,6 +3592,62 @@ tmData =
   { guid = "0a6b86", move = "Zap Cannon" },
 }
 
+zCrystalData =
+{
+  { guid = "2c591c", move = "Gigavolt Havoc",           overrides = {{ guids = { "a17986", "e5c82a" }, move = "Catastropika" }, 
+                                                                     { guids = { "77331c" }, move = "10MV Thunderbolt" },
+                                                                     { guids = { "65a373", "1e53ce", "ef1a51" }, move = "Stoked Sparksurfer" }}
+  },
+  { guid = "337c73", move = "Supersonic Skystrike" },
+  { guid = "474469", move = "Savage Spin-Out" },
+  { guid = "9da33f", move = "Black Hole Eclipse",       overrides = {{ guids = { "3f1566", "38e353", "45ba93" }, move = "Malicious Moonsault" } } },
+  { guid = "a5f921", move = "Devastating Drake",        overrides = {{ guids = { "51cc27", "6377a7", "79e0d1" }, move = "Clangorous Soulblaze" } } },
+  { guid = "b0ba3a", move = "Never-Ending Nightmare",   overrides = {{ guids = { "d50f86", "2416c8", "9bef15" }, move = "Sinister Arrow Raid" }, 
+                                                                     { guids = { "8e8527" }, move = "Soul-Stealing 7* Strike" },
+                                                                     { guids = { "d118b4", "2c0206" }, move = "Menacing Moonraze Maelstrom" }}
+  },
+  { guid = "88875f", move = "Bloom Doom" },
+  { guid = "ca8a3a", move = "Tectonic Rage" },
+  { guid = "21a039", move = "Twinkle Tackle",           overrides = {{ guids = { "ba3859" }, move = "Let's Snuggle Forever" }, 
+                                                                     { guids = { "c5bd66", "c2d946", "d099d1", "573f6c" }, move = "Guardian of Alola" }}
+  },
+  { guid = "bbbb45", move = "Shattered Psyche",         overrides = {{ guids = { "d68dfc" }, move = "Genesis Supernova" }, 
+                                                                     { guids = { "ec14da", "c65377", "d63d82", "6366eb", "2f92e5", "b01111", "1bdda7", "370a4c" }, move = "Light That Burns The Sky" }}
+  },
+  { guid = "130d52", move = "Breakneck Blitz",          overrides = {{ guids = { "690870" }, move = "Extreme Evoboost" }, 
+                                                                     { guids = { "81f09a", "a017f9" }, move = "Pulverizing Pancake" }}
+  },
+  { guid = "84dde0", move = "Acid Downpour" },
+  { guid = "6a40b4", move = "Subzero Slammer" },
+  { guid = "bac4e8", move = "Hydro Vortex",             overrides = {{ guids = { "de4d6a", "d62cf2", "4026a1" }, move = "Oceanic Operetta" } } },
+  { guid = "3987a4", move = "Corkscrew Crash",          overrides = {{ guids = { "2337ba", "5228d9" }, move = "Searing Sunraze Smash" } } },
+  { guid = "9fc23f", move = "Inferno Overdrive" },
+  { guid = "f18fd0", move = "All-Out Pummeling" },
+  { guid = "7bbd40", move = "Continental Crush",          overrides = {{ guids = { "34164a", "802af7", "9ecf49", "5411a7", "9af49a", "ff8dda" }, move = "Splintered Stormshards" } } }
+}
+
+teraData =
+{
+  { guid = "e80e03", type = "Steel" },
+  { guid = "0af6a7", type = "Water" },
+  { guid = "000c14", type = "Rock" },
+  { guid = "49d049", type = "Psychic" },
+  { guid = "56d218", type = "Poison" },
+  { guid = "040852", type = "Normal" },
+  { guid = "9ba842", type = "Ice" },
+  { guid = "967424", type = "Ground" },
+  { guid = "75d7d9", type = "Grass" },
+  { guid = "456160", type = "Ghost" },
+  { guid = "11194a", type = "Flying" },
+  { guid = "8863f0", type = "Fire" },
+  { guid = "f53d3e", type = "Fighting" },
+  { guid = "5eefbb", type = "Fairy" },
+  { guid = "ff493b", type = "Electric" },
+  { guid = "acf70e", type = "Dragon" },
+  { guid = "27f2e3", type = "Dark" },
+  { guid = "3bd105", type = "Bug" },
+}
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --  CAMERA
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3748,11 +3837,56 @@ function GetMoveDataByGUID(params)
   end
 end
 
-function GetTmDataByGUID(params)
+function GetTmDataByGUID(tmGuid)
   for i = 1, #tmData do
     local data = tmData[i]
     local guid = data.guid
-    if guid == params then
+    if guid == tmGuid then
+      return data
+    end
+  end
+  return nil
+end
+
+function GetZCrystalDataByGUID(params)
+  for zCrystalIndex = 1, #zCrystalData do
+    local data = zCrystalData[zCrystalIndex]
+    local guid = data.guid
+    if guid == params.zCrystalGuid then
+      -- Check against override data, if present.
+      if data.overrides ~= nil then
+        for overrideIndex = 1, #data.overrides do
+          local override = data.overrides[overrideIndex]
+          for guidIndex = 1, #override.guids do
+            if override.guids[guidIndex] == params.pokemonGuid then
+              -- TODO: Format the move name. Anything above 17 characters need to be formatted.
+              local displayName = string.sub(override.move, 1, 15)
+              if displayName != override.move then
+                displayName = displayName .. ".."
+              end
+              return { guid = data.guid, move = override.move, displayName = displayName }
+            end
+          end
+        end
+      end
+
+      -- Return whatever data we found since there were no overrides. Format the move name. 
+      -- Anything above 17 characters need to be formatted.
+      local displayName = string.sub(data.move, 1, 15)
+      if displayName != data.move then
+        displayName = displayName .. ".."
+      end
+      return { guid = data.guid, move = data.move, displayName = displayName }
+    end
+  end
+  return nil
+end
+
+function GetTeraDataByGUID(teraGuid)
+  for i = 1, #teraData do
+    local data = teraData[i]
+    local guid = data.guid
+    if guid == teraGuid then
       return data
     end
   end

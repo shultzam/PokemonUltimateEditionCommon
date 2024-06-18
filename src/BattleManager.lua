@@ -63,7 +63,8 @@ local attackerData={
   canSelectMove=true,
   selectedMoveIndex=-1,
   selectedMoveData=nil,
-  diceMod=0
+  diceMod=0,
+  teraType=nil
 }
 local attackerPokemon=nil
 
@@ -76,7 +77,8 @@ local defenderData={
   canSelectMove=true,
   selectedMoveIndex=-1,
   selectedMoveData=nil,
-  diceMod=0
+  diceMod=0,
+  teraType=nil
 }
 local defenderPokemon=nil
 
@@ -177,7 +179,41 @@ function onLoad()
     
     self.createButton({label="BATTLE", click_function="battleWildPokemon", function_owner=self, position={defConfirmPos.x, 1000, -6.2}, height=300, width=1600, font_size=200})
     self.createButton({label="NEXT POKEMON", click_function="flipGymLeader", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
+    self.createButton({label="", click_function="changeAttackerTeraType", function_owner=self, tooltip="Terastallize Attacker", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
+    self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
 
+end
+
+function changeAttackerTeraType()
+  if attackerPokemon.teraType == nil or attackerPokemon.types == nil then
+    print("Cannot Terastallize the attacker without a Tera card!")
+    return
+  end
+  -- Update the atacker type.
+  local previousType = attackerPokemon.types[1]
+  attackerPokemon.types[1] = attackerPokemon.teraType
+  attackerPokemon.teraType = previousType
+
+  -- Update the effectiveness of moves.
+  updateTypeEffectiveness()
+
+  showAttackerTeraButton(true, attackerPokemon.types[1])
+end
+
+function changeDefenderTeraType()
+  if defenderPokemon.teraType == nil or defenderPokemon.types == nil then
+    print("Cannot Terastallize the defender without a Tera card!")
+    return
+  end
+  -- Update the defender type.
+  local previousType = defenderPokemon.types[1]
+  defenderPokemon.types[1] = defenderPokemon.teraType
+  defenderPokemon.teraType = previousType
+
+  -- Update the effectiveness of moves.
+  updateTypeEffectiveness()
+
+  showDefenderTeraButton(true, defenderPokemon.types[1])
 end
 
 function flipGymLeader()
@@ -1824,6 +1860,7 @@ function recallTrainer(params)
     hideConfirmButton(ATTACKER)
   end
 
+  showAttackerTeraButton(false)
   clearPokemonData(ATTACKER)
   clearTrainerData(ATTACKER)
 end
@@ -1924,11 +1961,14 @@ function sendToArena(params)
 
     local tokenHits = Physics.cast(castParams)
     if #tokenHits ~= 0 then
-
         local statusCounters = getObjectFromGUID(tokenHits[1].hit_object.guid)
         statusCounters.setPosition({arenaPos.statusCounters[1], 1.03, arenaPos.statusCounters[2]})
         statusCounters.setRotation({0, 180, 0})
     end
+
+    -- Initialize tmCard and zCrystalCard variables.
+    pokemonData.tmCard = false
+    pokemonData.zCrystalCard = false
 
     -- Item
     local pokemonMoves = pokemonData.moves
@@ -1936,7 +1976,8 @@ function sendToArena(params)
     castParams.origin = rack.positionToWorld(origin)
     local itemHits = Physics.cast(castParams)
     hasTMCard = false
-    local tmMoveData
+    local cardMoveData = nil
+    local teraType = nil
     if #itemHits ~= 0 then
       local itemCard = getObjectFromGUID(itemHits[1].hit_object.guid)
       if itemCard.hasTag("Item") then
@@ -1945,9 +1986,28 @@ function sendToArena(params)
         itemCard.setRotation({0, 180, 0})
 
         if itemCard.hasTag("TM") then
+          pokemonData.tmCard = true
           local tmData = Global.call("GetTmDataByGUID", itemCard.getGUID())
           if tmData ~= nil then
-            tmMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+            cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+          end
+        elseif itemCard.hasTag("ZCrystal") then
+          pokemonData.zCrystalCard = true
+          local zCrystalData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=itemCard.getGUID(), pokemonGuid=pokemonData.pokemonGUID})
+          if zCrystalData ~= nil then
+            cardMoveData = copyTable(Global.call("GetMoveDataByName", zCrystalData.move))
+            cardMoveData.name = zCrystalData.displayName
+          end
+        elseif itemCard.hasTag("TeraType") then
+          local teraData = Global.call("GetTeraDataByGUID", itemCard.getGUID())
+          if teraData ~= nil then
+            if isAttacker then
+              teraType = teraData.type
+              showAttackerTeraButton(true, pokemonData.types[1])
+            else
+              teraType = teraData.type
+              showDefenderTeraButton(true, pokemonData.types[1])
+            end
           end
         end
       end
@@ -1974,15 +2034,17 @@ function sendToArena(params)
     if isAttacker then
         showAtkButtons(true)
         attackerPokemon = pokemonData
+        attackerPokemon.teraType = teraType
     else
         showDefButtons(true)
         defenderPokemon = pokemonData
+        defenderPokemon.teraType = teraType
     end
     setTrainerType(isAttacker, PLAYER, {playerColor=params.playerColour})
 
     updateEvolveButtons(params, pokemonData, diceLevel)
 
-    updateMoves(params.isAttacker, pokemonData, tmMoveData)
+    updateMoves(params.isAttacker, pokemonData, cardMoveData)
 
     if scriptingEnabled then
 
@@ -2142,6 +2204,12 @@ function recall(params)
 
     clearPokemonData(isAttacker)
 
+    if isAttacker then
+      showAttackerTeraButton(false)
+    else
+      showDefenderTeraButton(false)
+    end
+
     if battleState ~= NO_BATTLE then
       showConfirmButton(isAttacker, "FORFEIT")
     else
@@ -2185,6 +2253,9 @@ function endBattle()
     return
   end
 
+  showAttackerTeraButton(false)
+  showDefenderTeraButton(false)
+
   clearTrainerData(ATTACKER)
   clearTrainerData(DEFENDER)
 
@@ -2219,9 +2290,9 @@ function clearDice(isAttacker)
   end
 end
 
-function updateMoves(isAttacker, data, tmMoveData)
+function updateMoves(isAttacker, data, cardMoveData)
 
-  showMoveButtons(isAttacker, tmMoveData)
+  showMoveButtons(isAttacker, cardMoveData)
   updateTypeEffectiveness()
 
 end
@@ -2697,16 +2768,26 @@ function evolvePoke(params)
         position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
         evolvedPokemon.setPosition(position)
 
-        -- Check if there is a TM card present.
-        local tmMoveData = nil
+        -- Check if there is a Z-Crystal card present.
+        local cardMoveData = nil
         if data.itemCardGUID ~= nil then
-          local tmData = Global.call("GetTmDataByGUID", data.itemCardGUID)
-          if tmData ~= nil then
-            tmMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+          -- Check if the attached card is a TM card.
+          if pokemonData.tmCard then
+            local moveData = Global.call("GetTmDataByGUID", data.itemCardGUID)
+            if moveData ~= nil then
+              cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
+            end
+          -- Check if the attached card is a Z-Crystal card.
+          elseif pokemonData.zCrystalCard then
+            local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=data.itemCardGUID, pokemonGuid=nil})
+            if moveData ~= nil then
+              cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
+              cardMoveData.name = moveData.displayName
+            end
           end
         end
 
-        updateMoves(params.isAttacker, pokemonData, tmMoveData)
+        updateMoves(params.isAttacker, pokemonData, cardMoveData)
 
       else
         position = {params.pokemonXPos[params.index], 1, params.pokemonZPos}
@@ -3250,7 +3331,7 @@ end
 -- ARENA BUTTONS
 --------------------------------------------------------------------------------
 
-function showMoveButtons(isAttacker, tmMoveData)
+function showMoveButtons(isAttacker, cardMoveData)
 
   if isAttacker then
     buttonIndex = 8
@@ -3263,9 +3344,9 @@ function showMoveButtons(isAttacker, tmMoveData)
   end
 
   local numMoves = #moves
-  if tmMoveData ~= nil then
+  if cardMoveData ~= nil then
     numMoves = numMoves + 1
-    table.insert(moves, 1, tmMoveData)
+    table.insert(moves, 1, cardMoveData)
   end
   local buttonWidths = (numMoves*3.2) + ((numMoves-1) + 0.5)
   local xPos = 9.38 - (buttonWidths * 0.5)
@@ -3395,6 +3476,22 @@ function showFlipGymButton(visible)
 
   local yPos = visible and 0.5 or 1000
   self.editButton({index=37, position={2.6, yPos, -0.6}})
+end
+
+function showAttackerTeraButton(visible, type)
+  local yPos = visible and 0.5 or 1000
+  if type == nil then
+    type = ""
+  end
+  self.editButton({index=38, label=type, position={2.6, yPos, 0.6}})
+end
+
+function showDefenderTeraButton(visible, type)
+  local yPos = visible and 0.5 or 1000
+  if type == nil then
+    type = ""
+  end
+  self.editButton({index=39, label=type, position={2.6, yPos, -0.6}})
 end
 
 -- Helper function to print a table.
