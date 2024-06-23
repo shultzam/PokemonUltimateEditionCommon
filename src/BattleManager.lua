@@ -390,7 +390,7 @@ function selectRandomMove(isAttacker)
 
   if data.type == GYM then
     move = math.random(1,3)
-  elseif data.type == TRAINER or data.type == WILD then
+  elseif data.type == TRAINER or data.type == WILD or data.type == RIVAL then
     move = math.random(1,2)
   end
 
@@ -1967,6 +1967,7 @@ function recallRival()
 
   clearPokemonData(ATTACKER)
   clearTrainerData(ATTACKER)
+  showFlipRivalButton(false)
 end
 
 function sendToArena(params)
