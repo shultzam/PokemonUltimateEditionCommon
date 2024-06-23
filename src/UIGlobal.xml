@@ -1,7 +1,7 @@
 <Defaults>
     <Text class="UIText" fontSize="18" fontStyle="Bold" Color="#FFFFFF"/>
 </Defaults>
-<Panel id="Settings" visibility="false" width="620" height="620" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
+<Panel id="Settings" visibility="false" width="620" height="515" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <Text minHeight="30" fontSize="18" text="Select Pokemon Generations" alignment="LowerLeft" fontStyle="Bold"/>
         <Text minHeight="20" fontSize="16" text="150 or more Pokémon are required to start the game" alignment="LowerLeft"/>
@@ -23,32 +23,41 @@
         <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
             <Toggle id="customToggleBtn" onValueChanged="customSet" interactable="true">Custom (? Pokémon) </Toggle>
         </HorizontalLayout>
-        <Text minHeight="30" fontSize="18" text="Select Gym Leaders" alignment="LowerLeft" fontStyle="Bold"/>
-        <ToggleGroup>
-            <VerticalLayout padding="0" spacing="15" childForceExpandHeight="false">
-                <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
-                    <Toggle id="gen1LeaderToggleBtn" onValueChanged="gen1LeadersSet">Gen I</Toggle>
-                    <Toggle id="gen2LeaderToggleBtn" onValueChanged="gen2LeadersSet" interactable="true">Gen II</Toggle>
-                    <Toggle id="gen3LeaderToggleBtn" onValueChanged="gen3LeadersSet" interactable="true">Gen III</Toggle>
-                </HorizontalLayout>
-                <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
-                    <Toggle id="gen4LeaderToggleBtn" onValueChanged="gen4LeadersSet" interactable="true">Gen IV</Toggle>
-                    <Toggle id="gen5LeaderToggleBtn" onValueChanged="gen5LeadersSet" interactable="true">Gen V</Toggle>
-                    <Toggle id="gen6LeaderToggleBtn" onValueChanged="gen6LeadersSet" interactable="true">Gen VI</Toggle>
-                </HorizontalLayout>
-                <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
-                    <Toggle id="gen7LeaderToggleBtn" onValueChanged="gen7LeadersSet" interactable="true">Gen VII</Toggle>
-                    <Toggle id="gen8LeaderToggleBtn" onValueChanged="gen8LeadersSet" interactable="true">Gen VIII</Toggle>
-                    <Toggle id="gen9LeaderToggleBtn" onValueChanged="gen9LeadersSet" interactable="true">Gen IX</Toggle>
-                </HorizontalLayout>
-                <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
-                    <Toggle onValueChanged="customLeadersSet" interactable="true">Custom</Toggle>
-                    <Toggle onValueChanged="randomLeadersSet" interactable="true">Random</Toggle>
-                </HorizontalLayout>
+        <HorizontalLayout padding="0" spacing="30">
+            <VerticalLayout>
+                <Text fontSize="18" text="Select Gym Leaders" alignment="MiddleLeft" fontStyle="Bold"/>
+                <Dropdown id="genLeaderDropdown" onValueChanged="genLeadersSet">
+                    <Option selected="true">Gen I</Option>
+                    <Option>Gen II</Option>
+                    <Option>Gen III</Option>
+                    <Option>Gen IV</Option>
+                    <Option>Gen V</Option>
+                    <Option>Gen VI</Option>
+                    <Option>Gen VII</Option>
+                    <Option>Gen VIII</Option>
+                    <Option>Gen IX</Option>
+                    <Option>Random</Option>
+                    <Option>Custom</Option>
+                </Dropdown>
             </VerticalLayout>
-        </ToggleGroup>
-        <Text minHeight="140" fontSize="16" text="Modifiers" alignment="LowerLeft" fontStyle="Bold"/>
-        <Toggle isOn="false" tooltipOffset="-400" onValueChanged="randomStartersToggle" tooltip="Each player is dealt a random starter at the beginning of the game.">Random Starters</Toggle>
+            <VerticalLayout>
+                <Text fontSize="18" text="Select Rival Region" alignment="MiddleLeft" fontStyle="Bold"/>
+                <Dropdown id="rivalRegionDropdown" tooltipOffset="-400" onValueChanged="rivalRegionSet" tooltip="Select the rival for events">
+                    <Option selected="true">Kanto</Option>
+                    <Option>Johto</Option>
+                    <Option>Hoenn</Option>
+                    <Option>Sinnoh</Option>
+                    <Option>Unova</Option>
+                    <Option>Kalos</Option>
+                    <Option>Alola</Option>
+                    <Option>Galar</Option>
+                    <Option>Paldea</Option>
+                    <Option>Random</Option>
+                </Dropdown>
+            </VerticalLayout>
+        </HorizontalLayout>
+        <Text minHeight="65" fontSize="16" text="Modifiers" alignment="LowerLeft" fontStyle="Bold"/>
+        <Toggle isOn="false" tooltipOffset="-400" onValueChanged="randomStartersToggle" tooltip="Each player is dealt a random starter at the beginning of the game">Random Starters</Toggle>
         <!--Toggle isOn="false" tooltipOffset="-400" onValueChanged="battleScriptingToggle" interactable="false">Battle Scripting (Experimental)</Toggle-->
         <HorizontalLayout padding="10" spacing="15" childForceExpandHeight="false">
             <Button text="Close" preferredHeight="40" width="150" onClick="closeSettings"/>

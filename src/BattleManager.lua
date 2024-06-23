@@ -25,6 +25,7 @@ PLAYER = 0
 GYM = 1
 TRAINER = 2
 WILD = 3
+RIVAL = 4
 
 ATTACKER = true
 DEFENDER = false
@@ -117,6 +118,8 @@ local defEvolve2Pos = {x=8.90, z=-4.94}
 local defMoveZPos = -8.85
 local defConfirmPos = {x=7.35, z=-11.74}
 
+local rivalFipButtonPos = {x=7.33, z=6.28}
+
 local attackRollState = PLACING
 local defendRollState = PLACING
 
@@ -181,6 +184,7 @@ function onLoad()
     self.createButton({label="NEXT POKEMON", click_function="flipGymLeader", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     self.createButton({label="", click_function="changeAttackerTeraType", function_owner=self, tooltip="Terastallize Attacker", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
+    self.createButton({label="NEXT POKEMON", click_function="flipRivalPokemon", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
 
 end
 
@@ -235,6 +239,21 @@ function flipGymLeader()
 
 end
 
+function flipRivalPokemon()
+  if attackerData.type ~= RIVAL then
+    return
+  end
+
+  local pokemonToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  pokemonToken.flip()
+  local attackerText = getObjectFromGUID(atkText)
+  attackerText.TextTool.setValue(" ")
+
+  -- Update pokemon and arena info
+  setNewPokemon(attackerPokemon, attackerPokemon.pokemon2, attackerPokemon.pokemonGUID)
+  updateMoves(ATTACKER, attackerPokemon)
+  showFlipRivalButton(false)
+end
 
 function battleWildPokemon()
 
@@ -1845,6 +1864,42 @@ function sendToArenaTrainer(params)
   return true
 end
 
+function sendToArenaRival(params)
+  if attackerData.type ~= nil then
+    print("There is already a Pokémon in the arena")
+    return false
+  elseif defenderData.type ~= nil and defenderData.type ~= PLAYER then
+    return false
+  end
+
+  setTrainerType(ATTACKER, RIVAL, params)
+
+  -- Params for deployment.
+  local pokeball = getObjectFromGUID(params.pokeballGUID)
+  local takeParams = {guid = params.pokemonGUID, position = {attackerPos.pokemon[1], 1.5, attackerPos.pokemon[2]}, rotation={0,180,0}}
+  local pokemon = pokeball.takeObject(takeParams)
+  local pokemonData = params.pokemonData  -- This is a table with two pokemon.
+
+  -- Update battle state.
+  inBattle = true
+  Global.call("PlayTrainerBattleMusic",{})
+  printToAll("Rival " .. params.trainerName .. " wants to fight!", {r=246/255, g=192/255, b=15/255})
+  
+  -- Update pokemon info.
+  attackerPokemon = {}
+  setNewPokemon(attackerPokemon, pokemonData[1], params.pokemonGUID)
+  attackerPokemon.pokemonGUID = params.pokemonGUID
+  attackerPokemon.pokemon2 = pokemonData[2]
+  attackerPokemon.pokemon2.pokemonGUID = params.pokemonGUID
+  updateMoves(ATTACKER, attackerPokemon)
+
+  -- Update a few buttons.
+  showFlipRivalButton(true)
+  showConfirmButton(ATTACKER, "RANDOM MOVE")
+
+  return true
+end
+
 function recallTrainer(params)
 
   local trainerPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
@@ -1896,6 +1951,22 @@ function recallGym()
 
   clearPokemonData(DEFENDER)
   clearTrainerData(DEFENDER)
+end
+
+function recallRival()
+  local rivalPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
+  pokeball.putObject(rivalPokemon)
+
+  local text = getObjectFromGUID(atkText)
+  text.setValue(" ")
+
+  if scriptingEnabled == false then
+    hideConfirmButton(ATTACKER)
+  end
+
+  clearPokemonData(ATTACKER)
+  clearTrainerData(ATTACKER)
 end
 
 function sendToArena(params)
@@ -2078,6 +2149,11 @@ function setTrainerType(isAttacker, type, params)
     data.gymGUID = params.gymGUID
     data.pokemon = params.pokemon
     data.trainerGUID = params.trainerGUID
+  elseif type == RIVAL then
+    data.trainerName = params.trainerName
+    data.pokeballGUID = params.pokeballGUID
+    data.pokemon = params.pokemonData
+    data.pokemonGUID = params.pokemonGuid
   end
 end
 
@@ -2507,10 +2583,6 @@ end
 
 
 function updateEvolveButtons(params, slotData, level)
-
-  --printToAll("TEMP | updateEvolveButtons, params: " .. dump_table(params))
-  --printToAll("TEMP | updateEvolveButtons, slotData: " .. dump_table(slotData))
-
   local buttonParams = {
       inArena = params.inArena,
       isAttacker = params.isAttacker,
@@ -2528,7 +2600,8 @@ function updateEvolveButtons(params, slotData, level)
   if evoData ~= nil then
     for i=1, #evoData do
       local evolution = evoData[i]
-      if selectedGens[evolution.gen] then 
+      -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
+      if selectedGens[evolution.gen] or evolution.ball == 8 then 
         if type(evolution.cost) == "string" then
           for _, evoGuid in ipairs(evolution.guids) do
             local evoData = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
@@ -2609,7 +2682,8 @@ function evolvePoke(params)
           break
         end
       elseif evolution.cost <= diceLevel then
-        if selectedGens[evolution.gen] then
+        -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
+        if selectedGens[evolution.gen] or evolution.ball == 8 then
           table.insert(evoList, evolution)
         else
           for _, evoGuid in ipairs(evolution.guids) do
@@ -2897,7 +2971,6 @@ function refreshPokemon(params)
 end
 
 function setNewPokemon(data, newPokemonData, pokemonGUID)
-
   data.name = newPokemonData.name
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
@@ -3332,7 +3405,6 @@ end
 --------------------------------------------------------------------------------
 
 function showMoveButtons(isAttacker, cardMoveData)
-
   if isAttacker then
     buttonIndex = 8
     movesZPos = atkMoveZPos
@@ -3478,12 +3550,18 @@ function showFlipGymButton(visible)
   self.editButton({index=37, position={2.6, yPos, -0.6}})
 end
 
+function showFlipRivalButton(visible)
+
+  local yPos = visible and 0.5 or 1000
+  self.editButton({index=40, position={rivalFipButtonPos.x, yPos, rivalFipButtonPos.z}})
+end
+
 function showAttackerTeraButton(visible, type)
   local yPos = visible and 0.5 or 1000
   if type == nil then
     type = ""
   end
-  self.editButton({index=38, label=type, position={2.6, yPos, 0.6}})
+  self.editButton({index=38, label="Current: " .. type, position={2.6, yPos, 0.6}})
 end
 
 function showDefenderTeraButton(visible, type)
@@ -3491,7 +3569,7 @@ function showDefenderTeraButton(visible, type)
   if type == nil then
     type = ""
   end
-  self.editButton({index=39, label=type, position={2.6, yPos, -0.6}})
+  self.editButton({index=39, label="Current: " .. type, position={2.6, yPos, -0.6}})
 end
 
 -- Helper function to print a table.
