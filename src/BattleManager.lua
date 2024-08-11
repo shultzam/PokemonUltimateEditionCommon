@@ -65,7 +65,8 @@ local attackerData={
   selectedMoveIndex=-1,
   selectedMoveData=nil,
   diceMod=0,
-  teraType=nil
+  teraType=nil,
+  model_GUID=nil
 }
 local attackerPokemon=nil
 
@@ -79,7 +80,8 @@ local defenderData={
   selectedMoveIndex=-1,
   selectedMoveData=nil,
   diceMod=0,
-  teraType=nil
+  teraType=nil,
+  model_GUID=nil
 }
 local defenderPokemon=nil
 
@@ -130,6 +132,8 @@ local wildPokemonGUID
 
 local multiEvolving = false
 local multiEvoData={}
+-- Used for models during multi-evo.
+local multiEvoGuids={}
 
 inBattle = false
 battleState = NO_BATTLE
@@ -188,6 +192,10 @@ function onLoad()
 
 end
 
+function isBattleInProgress()
+  return attackerData.type ~= nil or defenderData.type ~= nil
+end
+
 function changeAttackerTeraType()
   if attackerPokemon.teraType == nil or attackerPokemon.types == nil then
     print("Cannot Terastallize the attacker without a Tera card!")
@@ -221,22 +229,146 @@ function changeDefenderTeraType()
 end
 
 function flipGymLeader()
-
   if defenderData.type ~= GYM then
     return
   end
 
-  defenderPokemon = defenderData.pokemon[2]
-  local gymCard = getObjectFromGUID(defenderData.trainerGUID)
-  gymCard.flip()
+  -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+  -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+  -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+  if Global.call("get_models_enabled") then
+    -- Get the active model GUID. This prevents despawning the wrong model.
+    local model_guid = Global.call("get_model_guid", defenderPokemon.pokemonGUID)
+    if model_guid == nil then
+      model_guid = defenderPokemon.model_GUID
+    end
+    
+    local despawn_data = {
+      chip = defenderPokemon.pokemonGUID,
+      state = defenderPokemon,
+      base = defenderPokemon,
+      model = model_guid
+    }
 
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+    Global.call("despawn_now", despawn_data)
+  end
 
+  -- Remove the current data 
+  Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
+
+  -- Update pokemon and arena info
+  --defenderPokemon = defenderData.pokemon[2]
+  setNewPokemon(defenderPokemon, defenderPokemon.pokemon2, defenderPokemon.pokemonGUID)
   updateMoves(DEFENDER, defenderPokemon)
-
   showFlipGymButton(false)
 
+  -- Get the rival token object handle.
+  local gymLeaderCard = getObjectFromGUID(defenderData.trainerGUID)
+
+  -- Handle the model.
+  local pokemonModelData = nil
+  if Global.call("get_models_enabled") then
+    -- The model fields don't get passed in via params here because the gyms don't save it. Modifying all of
+    -- files would make me very sad.
+    local gymData = Global.call("GetGymDataByGUID", {guid=defenderData.trainerGUID})
+    
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+    -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+    -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+    pokemonModelData = {
+      chip_GUID = defenderData.trainerGUID,
+      base = {
+        name = defenderPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        despawn_time = 1.0,
+        model_GUID = defenderPokemon.model_GUID,
+        custom_rotation = {gymLeaderCard.getRotation().x, gymLeaderCard.getRotation().y, gymLeaderCard.getRotation().z}
+      },
+      picked_up = false,
+      in_creation = false,
+      scale_set = {},
+      isTwoFaced = true
+    }
+    pokemonModelData.chip = defenderData.trainerGUID
+
+    -- Copy the base to a state.
+    pokemonModelData.state = pokemonModelData.base
+
+    -- Check if the params have field overrides.
+    if gymData.pokemon[2].offset == nil then pokemonModelData.base.offset = {x=0, y=0, z=-0.17} else pokemonModelData.base.offset = gymData.pokemon[2].offset end
+    if gymData.pokemon[2].custom_scale == nil then pokemonModelData.base.custom_scale = 1 else pokemonModelData.base.custom_scale = gymData.pokemon[2].custom_scale end
+    if gymData.pokemon[2].idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = gymData.pokemon[2].idle_effect end
+    if gymData.pokemon[2].spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = gymData.pokemon[2].spawn_effect end
+    if gymData.pokemon[2].run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = gymData.pokemon[2].run_effect end
+    if gymData.pokemon[2].faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = gymData.pokemon[2].faint_attack end
+  end
+
+  -- Flip the gym leader card.
+  gymLeaderCard.unlock()
+  gymLeaderCard.flip()
+
+  if Global.call("get_models_enabled") then
+    -- Add it to the active chips.
+    local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=defenderPokemon.pokemonGUID, data=pokemonModelData})
+    pokemonModelData.base.created_before = model_already_created
+
+    -- Wait until the gym leader card is idle.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Spawn in the model with the above arguments.
+        Global.call("check_for_spawn_or_despawn", pokemonModelData)
+      end,
+      function() -- Condition function
+        return gymLeaderCard ~= nil and gymLeaderCard.resting
+      end,
+      2,
+      function() -- Timeout function.
+        -- Spawn in the model with the above arguments. But this time the card is still moving, darn.
+        Global.call("check_for_spawn_or_despawn", pokemonModelData)
+      end
+    )
+    
+    -- Sometimes the model gets placed upside down (I have no idea why lol). Detect it and fix it if needed.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Get a handle to the model.
+        local model_guid = Global.call("get_model_guid", defenderData.trainerGUID)
+        if model_guid == nil then return end
+        local model = getObjectFromGUID(model_guid)
+        if model ~= nil then
+          local model_rotation = model.getRotation()
+          if math.abs(model_rotation.z-180) < 1 or math.abs(model_rotation.x-0) then
+            model.setRotation({0, model_rotation.y, 0})
+          end
+        end
+      end,
+      function() -- Condition function
+        return Global.call("get_model_guid", defenderData.trainerGUID) ~= nil
+      end,
+      2
+    )
+  end
+
+  -- Lock the rival token in place.
+  Wait.condition(
+    function()
+      -- Lock the rival in place.
+      gymLeaderCard.lock()
+    end,
+    function() -- Condition function
+      return gymLeaderCard ~= nil and gymLeaderCard.resting
+    end,
+    2
+  )
+
+  -- Clear texts.
+  local attackerText = getObjectFromGUID(atkText)
+  attackerText.TextTool.setValue(" ")
+  local defenderText = getObjectFromGUID(defText)
+  defenderText.TextTool.setValue(" ")
 end
 
 function flipRivalPokemon()
@@ -244,15 +376,104 @@ function flipRivalPokemon()
     return
   end
 
-  local pokemonToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
-  pokemonToken.flip()
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
+  -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+  -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+  -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+  if Global.call("get_models_enabled") then
+    -- Get the active model GUID. This prevents despawning the wrong model.
+    local model_guid = Global.call("get_model_guid", attackerPokemon.pokemonGUID)
+    if model_guid == nil then
+      model_guid = attackerPokemon.model_GUID
+    end
+
+    local despawn_data = {
+      chip = attackerPokemon.pokemonGUID,
+      state = attackerPokemon,
+      base = attackerPokemon,
+      model = model_guid
+    }
+
+    Global.call("despawn_now", despawn_data)
+  end
+
+  -- Remove the current data 
+  Global.call("remove_from_active_chips_by_GUID", attackerPokemon.pokemonGUID)
 
   -- Update pokemon and arena info
   setNewPokemon(attackerPokemon, attackerPokemon.pokemon2, attackerPokemon.pokemonGUID)
   updateMoves(ATTACKER, attackerPokemon)
   showFlipRivalButton(false)
+
+  -- Get the rival token object handle.
+  local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  
+  -- Handle the model.
+  local pokemonModelData = nil
+  if Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it to spawn the next model. (Sorry, I know this is hideous.) 
+    -- This is extra gross because I didn't feel like figuring out to fake allllll of the initialization process for
+    -- RivalData models that may never ever get seen for a game. Also it is extra complicated because we need two models per token.
+    pokemonModelData = {
+      chip_GUID = attackerPokemon.pokemonGUID,
+      base = {
+        name = attackerPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        despawn_time = 1.0,
+        model_GUID = attackerPokemon.model_GUID,
+        custom_rotation = {rivalToken.getRotation().x, rivalToken.getRotation().y + 180.0, rivalToken.getRotation().z}
+      },
+      picked_up = false,
+      in_creation = false,
+      scale_set = {},
+      isTwoFaced = true
+    } 
+    pokemonModelData.chip = attackerPokemon.pokemonGUID
+
+    -- Copy the base to a state.
+    pokemonModelData.state = pokemonModelData.base
+
+    -- Check if the params have field overrides.
+    if attackerPokemon.offset == nil then pokemonModelData.base.offset = {x=0, y=0, z=-0.17} else pokemonModelData.base.offset = attackerPokemon.offset end
+    if attackerPokemon.custom_scale == nil then pokemonModelData.base.custom_scale = 1 else pokemonModelData.base.custom_scale = attackerPokemon.custom_scale end
+    if attackerPokemon.idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = attackerPokemon.idle_effect end
+    if attackerPokemon.spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = attackerPokemon.spawn_effect end
+    if attackerPokemon.run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = attackerPokemon.run_effect end
+    if attackerPokemon.faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = attackerPokemon.faint_attack end
+  end
+
+  -- Flip the rival token.
+  rivalToken.unlock()
+  rivalToken.flip()
+  
+  if Global.call("get_models_enabled") then
+    -- Add it to the active chips.
+    local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=attackerPokemon.pokemonGUID, data=pokemonModelData})
+
+    -- Spawn in the model with the above arguments.
+    pokemonModelData.base.created_before = model_already_created
+    Global.call("check_for_spawn_or_despawn", pokemonModelData)
+  end
+
+  -- Lock the rival token in place.
+  Wait.condition(
+    function()
+      -- Lock the rival in place.
+      rivalToken.lock()
+    end,
+    function() -- Condition function
+      return rivalToken ~= nil and rivalToken.resting
+    end,
+    2
+  )
+
+  -- Clear texts.
+  local attackerText = getObjectFromGUID(atkText)
+  attackerText.TextTool.setValue(" ")
+  local defenderText = getObjectFromGUID(defText)
+  defenderText.TextTool.setValue(" ")
 end
 
 function battleWildPokemon()
@@ -394,7 +615,7 @@ function selectRandomMove(isAttacker)
     move = math.random(1,2)
   end
 
-  selectMove(move, isAttacker)
+  selectMove(move, isAttacker, true)
 end
 
 function startBattle()
@@ -891,43 +1112,34 @@ function noPokemonInArena()
 end
 
 function attackMove1()
-
   selectMove(1, ATTACKER)
-
 end
 
 function attackMove2()
-
   selectMove(2, ATTACKER)
-
 end
 
 function attackMove3()
-
   selectMove(3, ATTACKER)
-
 end
 
 function defenceMove1()
-
   selectMove(1, DEFENDER)
-
 end
 
 function defenceMove2()
-
   selectMove(2, DEFENDER)
-
 end
 
 function defenceMove3()
-
   selectMove(3, DEFENDER)
-
 end
 
-
-function selectMove(index, isAttacker)
+function selectMove(index, isAttacker, isRandom)
+  -- For safety, sanitize the isRandom parameter.
+  if isRandom == nil then
+    isRandom = false
+  end
 
   if isAttacker then
     moveData = attackerPokemon.movesData[index]
@@ -946,10 +1158,45 @@ function selectMove(index, isAttacker)
   local moveName = moveData.name
   text.TextTool.setValue(moveName)
 
-  if battleState ~= SELECT_MOVE then
-      local pokemonName = isAttacker and attackerPokemon.name or defenderPokemon.name
-      printToAll(pokemonName .. " used " .. moveName .. "!")
 
+  -- Get the active model GUID. This prevents calling animations for the wrong model.
+  local data_model_GUID = isAttacker and attackerPokemon.model_GUID or defenderPokemon.model_GUID
+  local chip_guid = isAttacker and attackerPokemon.pokemonGUID or defenderPokemon.pokemonGUID
+  local model_guid = Global.call("get_model_guid", chip_guid)
+  if model_guid == nil then
+    model_guid = data_model_GUID
+  end
+
+  -- Call animations.
+  if model_guid ~= nil and Global.call("get_models_enabled") then
+    local model = getObjectFromGUID(model_guid)
+    if model ~= nil then
+      local triggerList = model.AssetBundle.getTriggerEffects()
+      if triggerList ~= nil then
+        local triggerListLength = #triggerList
+        -- If triggerListLength is greater than x, we need to prevent choosing all the rubbish animations.
+        -- 109, 110 and 111 are the attack indexes.
+        if triggerListLength == 1 then
+          local animationName = triggerList[1].name
+          Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
+        elseif triggerListLength < 100 then
+          local animationName = triggerList[math.random(triggerListLength - 1)].name
+          Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
+        else
+          local animationName = triggerList[math.random(109, 111)].name
+          Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
+        end
+      end
+    end
+  end
+
+  if battleState ~= SELECT_MOVE then
+    local pokemonName = isAttacker and attackerPokemon.name or defenderPokemon.name
+    if isRandom then
+      printToAll(pokemonName .. " randomly used " .. moveName .. "!")
+    else
+      printToAll(pokemonName .. " used " .. moveName .. "!")
+    end
     return
   end
 
@@ -967,7 +1214,7 @@ function selectMove(index, isAttacker)
   elseif attackerConfirmed and defenderData.type == GYM then
     if aiDifficulty == 2 then
       local randomMove = math.random(1,3)
-      selectMove(randomMove, DEFENDER)
+      selectMove(randomMove, DEFENDER, true)
     end
   end
 end
@@ -1573,25 +1820,24 @@ function removeDefStatus(obj, player_clicker_color)
 end
 
 function evolve(params)
+  local playerColour = params.player
+  local attDefParams = {arenaAttack = params.arenaAttack, zPos = params.zPos}
 
-    local playerColour = params.player
-    attDefParams = {arenaAttack = params.arenaAttack, zPos = params.zPos}
+  if playerColour == "Blue" then
+    getObjectFromGUID(blueRack).call("evolveArena", attDefParams)
+  elseif playerColour == "Green" then
+    getObjectFromGUID(greenRack).call("evolveArena", attDefParams)
+  elseif playerColour == "Orange" then
+    getObjectFromGUID(orangeRack).call("evolveArena", attDefParams)
+  elseif playerColour == "Purple" then
+    getObjectFromGUID(purpleRack).call("evolveArena", attDefParams)
+  elseif playerColour == "Red" then
+    getObjectFromGUID(redRack).call("evolveArena", attDefParams)
+  elseif playerColour == "Yellow" then
+    getObjectFromGUID(yellowRack).call("evolveArena", attDefParams)
+  end
 
-    if playerColour == "Blue" then
-        getObjectFromGUID(blueRack).call("evolveArena", attDefParams)
-    elseif playerColour == "Green" then
-        getObjectFromGUID(greenRack).call("evolveArena", attDefParams)
-    elseif playerColour == "Orange" then
-        getObjectFromGUID(orangeRack).call("evolveArena", attDefParams)
-    elseif playerColour == "Purple" then
-        getObjectFromGUID(purpleRack).call("evolveArena", attDefParams)
-    elseif playerColour == "Red" then
-        getObjectFromGUID(redRack).call("evolveArena", attDefParams)
-    elseif playerColour == "Yellow" then
-        getObjectFromGUID(yellowRack).call("evolveArena", attDefParams)
-    end
-
-    attDefParams = nil
+  attDefParams = nil
 end
 
 function evolveTwo(passParams)
@@ -1764,13 +2010,25 @@ function sendToArenaGym(params)
 
   setTrainerType(DEFENDER, GYM, params)
 
-  defenderPokemon = defenderData.pokemon[1]
+  -- The model fields don't get passed in via params here because the gyms don't save it. Modifying all of
+  -- files would make me very sad.
+  local gymData = Global.call("GetGymDataByGUID", {guid=params.trainerGUID})
+
+  -- Update pokemon info.
+  local pokemonData = params.pokemon  -- This is a table with two pokemon.
+  defenderPokemon = {}
+  setNewPokemon(defenderPokemon, pokemonData[1], params.trainerGUID)
+  defenderPokemon.model_GUID = gymData.pokemon[1].model_GUID
+  defenderPokemon.pokemonGUID = params.trainerGUID
+  defenderPokemon.pokemon2 = pokemonData[2]
+  defenderPokemon.pokemon2.pokemonGUID = params.trainerGUID
+  defenderPokemon.pokemon2.model_GUID = gymData.pokemon[2].model_GUID
+  updateMoves(DEFENDER, defenderPokemon)
 
   -- Gym Leader
   local takeParams = {guid = defenderData.trainerGUID, position = {defenderPos.item[1], 1.5, defenderPos.item[2]}, rotation={0,180,0}}
-
   local gym = getObjectFromGUID(params.gymGUID)
-  gym.takeObject(takeParams)
+  local gymLeaderCard = gym.takeObject(takeParams)
 
   if params.isGymLeader then
       -- Take Badge
@@ -1793,22 +2051,108 @@ function sendToArenaGym(params)
       Global.call("PlayGymBattleMusic",{})
   end
 
-   printToAll(defenderData.trainerName .. " wants to fight!", {r=246/255,g=192/255,b=15/255})
+  printToAll(defenderData.trainerName .. " wants to fight!", {r=246/255,g=192/255,b=15/255})
 
-   inBattle = true
+  inBattle = true
 
-   updateMoves(DEFENDER, defenderPokemon)
+  if Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+    -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+    -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+    local pokemonModelData = {
+      chip_GUID = params.trainerGUID,
+      base = {
+        name = defenderPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        despawn_time = 1.0,
+        model_GUID = defenderPokemon.model_GUID,
+        custom_rotation = {gymLeaderCard.getRotation().x, gymLeaderCard.getRotation().y, gymLeaderCard.getRotation().z}
+      },
+      picked_up = false,
+      in_creation = false,
+      scale_set = {},
+      isTwoFaced = true
+    }
+    pokemonModelData.chip = params.trainerGUID
 
-   if scriptingEnabled then
-      defenderData.attackValue.level = defenderPokemon.baseLevel
-      updateAttackValue(DEFENDER)
+    -- Copy the base to a state.
+    pokemonModelData.state = pokemonModelData.base
 
-      aiDifficulty = Global.call("GetAIDifficulty")
+    -- Check if the params have field overrides.
+    if gymData.pokemon[1].offset == nil then pokemonModelData.base.offset = {x=0, y=0, z=-0.17} else pokemonModelData.base.offset = gymData.pokemon[1].offset end
+    if gymData.pokemon[1].custom_scale == nil then pokemonModelData.base.custom_scale = 1 else pokemonModelData.base.custom_scale = gymData.pokemon[1].custom_scale end
+    if gymData.pokemon[1].idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = gymData.pokemon[1].idle_effect end
+    if gymData.pokemon[1].spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = gymData.pokemon[1].spawn_effect end
+    if gymData.pokemon[1].run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = gymData.pokemon[1].run_effect end
+    if gymData.pokemon[1].faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = gymData.pokemon[1].faint_attack end
 
-      defenderConfirmed = true
-      if attackerConfirmed then
-        startBattle()
+    -- Add it to the active chips.
+    local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=params.trainerGUID, data=pokemonModelData})
+    pokemonModelData.base.created_before = model_already_created
+
+    -- Wait until the gym leader card is idle.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Spawn in the model with the above arguments.
+        Global.call("check_for_spawn_or_despawn", pokemonModelData)
+      end,
+      function() -- Condition function
+        return gymLeaderCard ~= nil and gymLeaderCard.resting
+      end,
+      2,
+      function() -- Timeout function.
+        -- Spawn in the model with the above arguments. But this time the card is still moving, darn.
+        Global.call("check_for_spawn_or_despawn", pokemonModelData)
       end
+    )
+    
+    -- Sometimes the model gets placed upside down (I have no idea why lol). Detect it and fix it if needed.
+    -- Sometimes models also get placed tilted backwards. Bah.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Get a handle to the model.
+        local model_guid = Global.call("get_model_guid", params.trainerGUID)
+        if model_guid == nil then return end
+        local model = getObjectFromGUID(model_guid)
+        if model ~= nil then
+          local model_rotation = model.getRotation()
+          if math.abs(model_rotation.z-180) < 1 or math.abs(model_rotation.x-0) then
+            model.setRotation({0, model_rotation.y, 0})
+          end
+        end
+      end,
+      function() -- Condition function
+        return Global.call("get_model_guid", params.trainerGUID) ~= nil
+      end,
+      2
+    )
+  end
+
+  -- Lock the gym leader card in place.
+  Wait.condition(
+    function()
+      -- Lock the gym leader card in place.
+      gymLeaderCard.lock()
+    end,
+    function() -- Condition function
+      return gymLeaderCard ~= nil and gymLeaderCard.resting
+    end,
+    2
+  )
+
+  if scriptingEnabled then
+    defenderData.attackValue.level = defenderPokemon.baseLevel
+    updateAttackValue(DEFENDER)
+
+    aiDifficulty = Global.call("GetAIDifficulty")
+
+    defenderConfirmed = true
+    if attackerConfirmed then
+      startBattle()
+    end
   else
     showFlipGymButton(true)
     showConfirmButton(DEFENDER, "RANDOM MOVE")
@@ -1861,6 +2205,27 @@ function sendToArenaTrainer(params)
     end
   end
 
+  if Global.call("get_models_enabled") then
+    -- Since the trainers use normal tokens we can relay on normal model logic except that it will be 
+    -- rotated 180 degrees from what we want.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Get a handle to the model.
+        local model_guid = Global.call("get_model_guid", pokemonGUID)
+        if model_guid == nil then return end
+        local model = getObjectFromGUID(model_guid)
+        local model_rotation = model.getRotation()
+        if model ~= nil then
+          model.setRotation({model_rotation.x, 0, model_rotation.z})
+        end
+      end,
+      function() -- Condition function
+        return Global.call("get_model_guid", pokemonGUID) ~= nil
+      end,
+      2
+    )
+  end
+
   return true
 end
 
@@ -1874,11 +2239,27 @@ function sendToArenaRival(params)
 
   setTrainerType(ATTACKER, RIVAL, params)
 
-  -- Params for deployment.
+  -- Get the rival token.
+  local takeParams = {guid = params.pokemonGUID, position = {attackerPos.pokemon[1], 0.96, attackerPos.pokemon[2]}, rotation={0,180,0}}
   local pokeball = getObjectFromGUID(params.pokeballGUID)
-  local takeParams = {guid = params.pokemonGUID, position = {attackerPos.pokemon[1], 1.5, attackerPos.pokemon[2]}, rotation={0,180,0}}
-  local pokemon = pokeball.takeObject(takeParams)
-  local pokemonData = params.pokemonData  -- This is a table with two pokemon.
+  local rivalToken = pokeball.takeObject(takeParams)
+  
+  -- Wait until the rival token is resting.
+  Wait.condition(
+    function()
+      -- Do nothing.
+    end,
+    function() -- Condition function
+      return rivalToken ~= nil and rivalToken.resting
+    end,
+    2
+  )
+
+  -- Do a sanity check.
+  -- TODO: Becaise of how Wait.condition() works, this is likely pointless.
+  if rivalToken == nil then
+    print("Failed to fetch rival " .. params.trainerName)
+  end
 
   -- Update battle state.
   inBattle = true
@@ -1886,12 +2267,67 @@ function sendToArenaRival(params)
   printToAll("Rival " .. params.trainerName .. " wants to fight!", {r=246/255, g=192/255, b=15/255})
   
   -- Update pokemon info.
+  local pokemonData = params.pokemonData  -- This is a table with two pokemon.
   attackerPokemon = {}
   setNewPokemon(attackerPokemon, pokemonData[1], params.pokemonGUID)
   attackerPokemon.pokemonGUID = params.pokemonGUID
   attackerPokemon.pokemon2 = pokemonData[2]
   attackerPokemon.pokemon2.pokemonGUID = params.pokemonGUID
   updateMoves(ATTACKER, attackerPokemon)
+  
+  if Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+    -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+    -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+    local pokemonModelData = {
+      chip_GUID = params.pokemonGUID,
+      base = {
+        name = params.pokemonData[1].name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        despawn_time = 1.0,
+        model_GUID = attackerPokemon.model_GUID,
+        custom_rotation = {rivalToken.getRotation().x, rivalToken.getRotation().y + 180.0, rivalToken.getRotation().z}
+      },
+      picked_up = false,
+      in_creation = false,
+      scale_set = {},
+      isTwoFaced = true
+    }
+    pokemonModelData.chip = attackerPokemon.pokemonGUID
+
+    -- Copy the base to a state.
+    pokemonModelData.state = pokemonModelData.base
+
+    -- Check if the params have field overrides.
+    if params.offset == nil then pokemonModelData.base.offset = {x=0, y=0, z=-0.17} else pokemonModelData.base.offset = params.offset end
+    if params.custom_scale == nil then pokemonModelData.base.custom_scale = 1 else pokemonModelData.base.custom_scale = params.custom_scale end
+    if params.idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = params.idle_effect end
+    if params.spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = params.spawn_effect end
+    if params.run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = params.run_effect end
+    if params.faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = params.faint_attack end
+
+    -- Add it to the active chips.
+    local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=params.pokemonGUID, data=pokemonModelData})
+
+    -- Spawn in the model with the above arguments.
+    pokemonModelData.base.created_before = model_already_created
+    Global.call("check_for_spawn_or_despawn", pokemonModelData)
+  end
+
+  -- Lock the rival in place.
+  Wait.condition(
+    function()
+      -- Unlock the rival in place.
+      rivalToken.lock()
+    end,
+    function() -- Condition function
+      return rivalToken ~= nil and rivalToken.resting
+    end,
+    2
+  )
 
   -- Update a few buttons.
   showFlipRivalButton(true)
@@ -1921,13 +2357,58 @@ function recallTrainer(params)
 end
 
 function recallGym()
+  -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+  -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+  -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+  if Global.call("get_models_enabled") then
+    -- Get the active model GUID. This prevents despawning the wrong model.
+    local model_guid = Global.call("get_model_guid", defenderPokemon.pokemonGUID)
+    if model_guid == nil then
+      model_guid = defenderPokemon.model_GUID
+    end
 
+    -- Generate the despawn data.
+    local despawn_data = {
+      chip = defenderPokemon.pokemonGUID,
+      state = defenderPokemon,
+      base = defenderPokemon,
+      model = model_guid
+    }
+
+    -- Despawn the (hopefully) correct model via its GUID.
+    Global.call("despawn_now", despawn_data)
+  end
+
+  -- Get a handle of the gym and gym leader.
   local gymLeader = getObjectFromGUID(defenderData.trainerGUID)
-  local gym = getObjectFromGUID(defenderData.gymGUID)
-  gym.putObject(gymLeader)
+  gymLeader.unlock()
 
-  text = getObjectFromGUID(defText)
-  text.setValue(" ")
+  -- If we were flipped, flip it back. This prevents the model from spawning in upside down next time.
+  if not Global.call("isFaceUp", gymLeader) then
+    gymLeader.flip()
+  end
+
+  -- Remove this chip from the active list.
+  Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
+
+  -- Lock the rival token in place. First save off the gym GUID.
+  local gym = getObjectFromGUID(defenderData.gymGUID)
+  Wait.condition(
+    function()
+      -- Put the gym leader back in its gym.
+       gym.putObject(gymLeader)
+    end,
+    function() -- Condition function
+      return gymLeader.resting
+    end,
+    2,
+    -- Timeout function.
+    function()
+     -- Put the gym leader back in its gym.
+      local gym = getObjectFromGUID(gymGUID)
+      gym.putObject(gymLeader)
+    end
+  )
 
   -- Collect Badge if it hasn't been taken
   local param = {}
@@ -1951,15 +2432,74 @@ function recallGym()
 
   clearPokemonData(DEFENDER)
   clearTrainerData(DEFENDER)
+
+  -- Clear the texts.
+  local attackerText = getObjectFromGUID(atkText)
+  attackerText.TextTool.setValue(" ")
+  local defenderText = getObjectFromGUID(defText)
+  defenderText.TextTool.setValue(" ")
 end
 
 function recallRival()
-  local rivalPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
-  local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
-  pokeball.putObject(rivalPokemon)
+  -- Get the active model GUID. This prevents despawning the wrong model.
+  local model_guid = Global.call("get_model_guid", attackerPokemon.pokemonGUID)
+  if model_guid == nil then
+    model_guid = attackerPokemon.model_GUID
+  end
 
-  local text = getObjectFromGUID(atkText)
-  text.setValue(" ")
+  -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
+  -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+  -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
+  if Global.call("get_models_enabled") then
+    local despawn_data = {
+      chip = attackerPokemon.pokemonGUID,
+      state = attackerPokemon,
+      base = attackerPokemon,
+      model = model_guid
+    }
+
+    Global.call("despawn_now", despawn_data)
+  end
+
+  -- Get the rival token object and unlock it in place.
+  local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  rivalToken.unlock()
+
+  -- If we were flipped, flip it back. This prevents the model from spawning in upside down next time.
+  if not Global.call("isFaceUp", rivalToken) then
+    rivalToken.flip()
+  end
+
+  -- Remove this chip from the active list.
+  Global.call("remove_from_active_chips_by_GUID", attackerPokemon.pokemonGUID)
+
+  -- Save the pokeball GUID.
+  local pokeballGUID = attackerData.pokeballGUID
+
+  -- Lock the rival token in place.
+  Wait.condition(
+    function()
+      -- Put the rival token back in its pokeball.
+      local pokeball = getObjectFromGUID(pokeballGUID)
+      pokeball.putObject(rivalToken)
+    end,
+    function() -- Condition function
+      return rivalToken.resting
+    end,
+    2,
+    -- Timeout function.
+    function()
+      -- Put the rival token back in its pokeball.
+      local pokeball = getObjectFromGUID(pokeballGUID)
+      pokeball.putObject(rivalToken)
+    end
+  )
+
+  -- Clear the texts.
+  local attackerText = getObjectFromGUID(atkText)
+  attackerText.TextTool.setValue(" ")
+  local defenderText = getObjectFromGUID(defText)
+  defenderText.TextTool.setValue(" ")
 
   if scriptingEnabled == false then
     hideConfirmButton(ATTACKER)
@@ -1971,31 +2511,53 @@ function recallRival()
 end
 
 function sendToArena(params)
-
     local isAttacker = params.isAttacker
-    local data = isAttacker and attackerData or defenderData
     local pokemonData = params.slotData
     local rack = getObjectFromGUID(params.rackGUID)
 
+    -- Get pokemon. The model may not be present here.
     local pokemon = getObjectFromGUID(pokemonData.pokemonGUID)
+
     if pokemon.getRotation().z == 180 then
-        print ("Cannot send a fainted Pokémon to the arena")
-        return
+      print ("Cannot send a fainted Pokémon to the arena")
+      return
     elseif attackerPokemon ~= nil and isAttacker == true or defenderPokemon ~= nil and isAttacker == false then
-        print ("There is already a Pokémon in the arena")
-        return
+      print ("There is already a Pokémon in the arena")
+      return
     end
 
     if params.autoCamera then
       Player[params.playerColour].lookAt({position = {x=-34.89,y=0.96,z=0.8}, pitch = 90, yaw = 0, distance = 22})
     end
 
+    -- Send the Pokemon to the arena.
     local arenaPos = isAttacker and attackerPos or defenderPos
     pokemon.setPosition({arenaPos.pokemon[1], 0.96, arenaPos.pokemon[2]})
     pokemon.setRotation({pokemon.getRotation().x + params.xRotSend, pokemon.getRotation().y + params.yRotSend, pokemon.getRotation().z + params.zRotSend})
     pokemon.setLock(true)
 
-    if Player[params.playerColour].steam_name != nil then
+    -- Get the active model GUID. This prevents despawning the wrong model.
+    local model_guid = Global.call("get_model_guid", pokemonData.pokemonGUID)
+    if model_guid == nil then
+      model_guid = pokemonData.model_GUID
+    end
+
+    -- Send the pokemon model to the arena, if present.
+    local pokemonModel = getObjectFromGUID(model_guid)
+    if pokemonModel ~= nil and Global.call("get_models_enabled") then
+      -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+      pokemonData.chip = pokemonData.pokemonGUID
+      pokemonData.base = {offset = pokemonData.offset}
+      pokemonModel.setPosition(Global.call("model_position", pokemonData))
+      local modelYRotSend = params.yRotSend
+      if isAttacker then
+        modelYRotSend = modelYRotSend - 180.0
+      end
+      pokemonModel.setRotation({pokemonModel.getRotation().x + params.xRotSend, pokemonModel.getRotation().y + modelYRotSend, pokemonModel.getRotation().z + params.zRotSend})
+      pokemonModel.setLock(true)
+    end
+
+    if Player[params.playerColour].steam_name ~= nil then
         printToAll(Player[params.playerColour].steam_name .. " sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
     else
         printToAll("This Player sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
@@ -2188,7 +2750,6 @@ end
 
 
 function recall(params)
-
     if scriptingEnabled and battleState ~= SELECT_POKEMON and battleState ~= NO_BATTLE then
       printToAll("Cannot recall pokemon in the middle of a battle")
       return
@@ -2206,21 +2767,53 @@ function recall(params)
       Player[params.playerColour].lookAt({position = params.rackPosition, pitch = 60, yaw = 360 + params.yRotRecall, distance = 25})
     end
 
-    -- Pokemon
+    -- Pokemon token recall.
     local pokemon = getObjectFromGUID(pokemonData.pokemonGUID)
-
     local position = rack.positionToWorld({params.pokemonXPos[params.index], 0.5, params.pokemonZPos})
     pokemon.setPosition(position)
     pokemon.setRotation({pokemon.getRotation().x + params.xRotRecall, pokemon.getRotation().y + params.yRotRecall, pokemon.getRotation().z + params.zRotRecall})
     pokemon.setLock(false)
 
+    -- Get the active model GUID. This prevents despawning the wrong model.
+    local model_guid = Global.call("get_model_guid", pokemonData.pokemonGUID)
+    if model_guid == nil then
+      model_guid = pokemonData.model_GUID
+    end
+
+    -- Move the model back to the rack. Since the token moved first, we can just copy its position and rotation.
+    local pokemonModel = getObjectFromGUID(model_guid)
+    if pokemonModel ~= nil and Global.call("get_models_enabled") then
+      -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+      pokemonData.chip = pokemonData.pokemonGUID
+      pokemonData.base = {offset = pokemonData.offset}
+      -- Lock the rival token in place.
+      Wait.condition(
+        function() -- Conditional function.
+          -- Move the model.
+          pokemonModel.setPosition(Global.call("model_position", pokemonData))
+          pokemonModel.setRotation({pokemon.getRotation().x, pokemon.getRotation().y, pokemon.getRotation().z})
+          pokemonModel.setLock(true)
+        end,
+        function() -- Condition function
+          return pokemon ~= nil and pokemon.resting
+        end,
+        2,
+        function() -- Timeout function.
+          -- Move the model. But the token is still moving, darn.
+          pokemonModel.setPosition(Global.call("model_position", pokemonData))
+          pokemonModel.setRotation({pokemon.getRotation().x, pokemon.getRotation().y, pokemon.getRotation().z})
+          pokemonModel.setLock(true)
+        end
+      )
+    end
+
     -- Level Die
     if pokemonData.levelDiceGUID ~= nil then
-        local dice = getObjectFromGUID(pokemonData.levelDiceGUID)
-        position = {params.pokemonXPos[params.index] - levelDiceXOffset, 1, params.pokemonZPos - levelDiceZOffset}
-        dice.setPosition(rack.positionToWorld(position))
-        dice.setRotation({dice.getRotation().x + params.xRotRecall, dice.getRotation().y + params.yRotRecall, dice.getRotation().z + params.zRotRecall})
-        dice.setLock(false)
+      local dice = getObjectFromGUID(pokemonData.levelDiceGUID)
+      position = {params.pokemonXPos[params.index] - levelDiceXOffset, 1, params.pokemonZPos - levelDiceZOffset}
+      dice.setPosition(rack.positionToWorld(position))
+      dice.setRotation({dice.getRotation().x + params.xRotRecall, dice.getRotation().y + params.yRotRecall, dice.getRotation().z + params.zRotRecall})
+      dice.setLock(false)
     end
 
     local castParams = {}
@@ -2571,7 +3164,7 @@ function setLevel(params)
       attackerPokemon.diceLevel = slotData.diceLevel
       attackerData.attackValue.level = level
     else
-      slotData.itemGUID = attackerPokemon.itemGUID
+      slotData.itemGUID = defenderPokemon.itemGUID
       defenderPokemon.levelDiceGUID = slotData.levelDiceGUID
       defenderPokemon.diceLevel = slotData.diceLevel
       defenderData.attackValue.level = level
@@ -2585,13 +3178,13 @@ end
 
 function updateEvolveButtons(params, slotData, level)
   local buttonParams = {
-      inArena = params.inArena,
-      isAttacker = params.isAttacker,
-      index = params.index,
-      yLoc = params.yLoc,
-      pokemonXPos = params.pokemonXPos,
-      pokemonZPos = params.pokemonZPos,
-      rackGUID = params.rackGUID
+    inArena = params.inArena,
+    isAttacker = params.isAttacker,
+    index = params.index,
+    yLoc = params.yLoc,
+    pokemonXPos = params.pokemonXPos,
+    pokemonZPos = params.pokemonZPos,
+    rackGUID = params.rackGUID
   }
 
   local selectedGens = Global.call("GetSelectedGens")
@@ -2637,7 +3230,6 @@ function updateEvolveButtons(params, slotData, level)
   end
   local numEvos = #evoList
   if numEvos > 0 then
-
     buttonParams.numEvos = numEvos
     if numEvos == 2 then
       for i=1, #evoList do
@@ -2835,12 +3427,13 @@ function evolvePoke(params)
       setNewPokemon(pokemonData, evolvedPokemonData, evolvedPokemonGUID)
 
       if params.inArena then
+        -- Pokemon is in the arena.
 
+        -- Get the position and set the evo pokemon.
         local tokenPosition = params.isAttacker and attackerPos or defenderPos
         local data = params.isAttacker and attackerPokemon or defenderPokemon
-
         setNewPokemon(data, evolvedPokemonData, evolvedPokemonGUID)
-        position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
+        local position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
         evolvedPokemon.setPosition(position)
 
         -- Check if there is a Z-Crystal card present.
@@ -2864,25 +3457,72 @@ function evolvePoke(params)
 
         updateMoves(params.isAttacker, pokemonData, cardMoveData)
 
+        -- Check if we are expecting a model.
+        if pokemonData.model_GUID ~= nil then
+          -- Get the spawn delay.
+          local spawn_delay = Global.call("get_spawn_delay")
+
+          -- This function will just give the model spawn delay + 1 seconds to spawn in.
+          Wait.condition(
+            function()
+              -- Handle the model, if present.
+              local pokemonModel = getObjectFromGUID(pokemonData.model_GUID)
+              if pokemonModel ~= nil then
+                local modelYRotSend = 0
+                if params.isAttacker then
+                  modelYRotSend = 180.0
+                end
+                -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+                evolvedPokemonData.chip = evolvedPokemonGUID
+                evolvedPokemonData.base = {offset = evolvedPokemonData.offset}
+                pokemonModel.setPosition(Global.call("model_position", evolvedPokemonData))
+                pokemonModel.setRotation({pokemonModel.getRotation().x, pokemonModel.getRotation().y + modelYRotSend, pokemonModel.getRotation().z})
+                pokemonModel.setLock(true)
+              end
+            end,
+            function() -- Condition function
+              return getObjectFromGUID(pokemonData.model_GUID) ~= nil
+            end,
+            spawn_delay + 1 -- timeout
+          )
+        end
       else
-        position = {params.pokemonXPos[params.index], 1, params.pokemonZPos}
-        rotation = {0, 0 + params.evolveRotation, 0}
+        -- Pokemon is not in the arena.
+
+        -- Get the position and set the evo pokemon.
+        local position = {params.pokemonXPos[params.index], 1, params.pokemonZPos}
+        local rotation = {0, 0 + params.evolveRotation, 0}
         evolvedPokemon.setPosition(rack.positionToWorld(position))
         evolvedPokemon.setRotation(rotation)
+
+        -- Rotate the model rotation.
+        local pokemonModel = getObjectFromGUID(pokemonData.model_GUID)
+        if pokemonModel ~= nil then
+          pokemonModel.setRotation(rotation)
+        end
       end
+
+      -- Update the evo buttons.
+      local evolveButtonParams = {
+        inArena = params.inArena,
+        isAttacker = params.isAttacker,
+        index = params.index,
+        yLoc = 0.21,
+        pokemonXPos = params.pokemonXPos,
+        pokemonZPos = params.pokemonZPos,
+        rackGUID = params.rackGUID
+      }
+      updateEvolveButtons(evolveButtonParams, evolvedPokemonData, diceLevel)
 
       return pokemonData
     end
 end
 
-
 function refreshPokemon(params)
-
     local xPos
     local startIndex = 0
     local hits
     local updatedRackData = {}
-    local selectedGens = Global.call("GetSelectedGens")
     local rack = getObjectFromGUID(params.rackGUID)
 
     local xPositions = params.pokemonXPos
@@ -2902,33 +3542,41 @@ function refreshPokemon(params)
 
     -- Check Each Slot to see if it contains a Pokémon
     for i=1, #xPositions do
-
         local newSlotData = params.rackData[i]
 
         xPos = -1.6 + ( 0.59 * (i - 1))
         buttonParams.xPos = xPos
         buttonParams.index = i
 
-        local origin = {xPositions[i], 0.95, params.pokemonZPos}
+        local origin = {xPositions[i], 0.94, params.pokemonZPos}
         castParams.origin = rack.positionToWorld(origin)
         hits = Physics.cast(castParams)
 
         if #hits ~= 0 then
-
           -- Show slot buttons
           showRackSlotButtons(buttonParams)
 
+          -- Get the pokemon token data.
           local pokemonGUID = hits[1].hit_object.guid
           local data = Global.call("GetPokemonDataByGUID",{guid=pokemonGUID})
 
+          -- If we didn't find pokemon data, it might be bacause models are enabled and the first item detected was a model.
+          if data == nil then
+            if Global.call("get_models_enabled") and #hits >= 2 then
+              pokemonGUID = hits[2].hit_object.guid
+              data = Global.call("GetPokemonDataByGUID",{guid=pokemonGUID})
+            end
+          end
+
           if data ~= nil then
-
             setNewPokemon(newSlotData, data, pokemonGUID)
-
             newSlotData.numStatusCounters = 0
             newSlotData.roundEffects = {}
             newSlotData.battleEffects = {}
             newSlotData.modifiers = {}
+          else
+            -- TODO: add this print out to each call to GetPokemonDataByGUID.
+            print("No Pokémon Data Found for GUID: " .. tostring(pokemonGUID))
           end
 
           local origin = {xPositions[i] - levelDiceXOffset, 1.5, params.pokemonZPos - levelDiceZOffset}
@@ -2976,6 +3624,18 @@ function setNewPokemon(data, newPokemonData, pokemonGUID)
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
   data.effects = {}
+
+  -- Model info.
+  data.model_GUID = newPokemonData.model_GUID
+  data.created_before = newPokemonData.created_before
+  data.custom_scale = newPokemonData.custom_scale
+  data.in_creation = newPokemonData.in_creation
+  data.idle_effect = newPokemonData.idle_effect
+  data.run_effect = newPokemonData.run_effect
+  data.spawn_effect = newPokemonData.spawn_effect
+  data.despawn_time = newPokemonData.despawn_time
+  data.offset = newPokemonData.offset
+  data.persistent_state = newPokemonData.persistent_state
 
   data.moves = copyTable(newPokemonData.moves)
   local movesData = {}
@@ -3301,10 +3961,39 @@ function multiEvolve(index)
     rack.call("updatePokemonData", {index=params.index, pokemonGUID=evolvedPokemonGUID})
   else
     rack.call("updatePokemonData", {index=params.index, pokemonGUID=evolvedPokemonGUID})
-    position = {params.pokemonXPos[params.index], 1, params.pokemonZPos}
-    rotation = {0, 0 + params.evolveRotation, 0}
-    evolvedPokemon.setPosition(rack.positionToWorld(position))
+    local position = rack.positionToWorld({params.pokemonXPos[params.index], 1, params.pokemonZPos})
+    local rotation = {0, 0 + params.evolveRotation, 0}
+
+    -- Move the evolved Pokemon model.
+    evolvedPokemon.setPosition(position)
     evolvedPokemon.setRotation(rotation)
+
+    -- Move the model once the evolved pokemon model is resting.
+    Wait.condition(
+      function()
+        -- Check if there is a model_GUID associated with this evo. Sparse array behavior prevents 
+        -- us from using nil in place of a nil model. Check for 0 instead.
+        if multiEvoGuids[index] ~= 0 and multiEvoGuids[index] ~= nil then
+          -- Get the model by its GUID and move it to ontop of the pokemon token. Smooth movements used so that the
+          -- token beats the model.
+          local pokemonModel = getObjectFromGUID(multiEvoGuids[index])
+          if pokemonModel ~= nil then
+            -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+            evolvedPokemonData.chip = evolvedPokemonGUID
+            evolvedPokemonData.base = {offset = evolvedPokemonData.offset}
+            pokemonModel.setPosition(Global.call("model_position", evolvedPokemonData))
+            pokemonModel.setRotation(rotation)
+          end
+        end
+
+        -- Clear the multi evo GUID table.
+        multiEvoGuids = {}
+      end,
+      function() -- Condition function
+        return evolvedPokemon.resting
+      end,
+      2
+    )
   end
 end
 
@@ -3333,7 +4022,6 @@ function updateRackEvoButtons(params)
     local rack = getObjectFromGUID(params.rackGUID)
     local buttonTooltip
     local buttonIndex = 2 + (8 * params.index)
-
     if params.numEvos == 2 then
       local buttonTooltip2
       buttonTooltip = "Evolve into " .. params.evoName
@@ -3524,24 +4212,31 @@ function showWildPokemonButton(visible)
 end
 
 function showMultiEvoButtons(evoData)
+  for evoIndex = 1, #evoData do
+    if evoData[evoIndex].model_GUID ~= nil then
+      table.insert(multiEvoGuids, evoData[evoIndex].model_GUID)
+    else
+      table.insert(multiEvoGuids, 0)
+    end
+  end
 
   local buttonIndex = 26
   local numEvos = #evoData
   local tokensWidth = ((numEvos * 2.8) + ((numEvos-1) * 0.2) )
 
   for i=1, numEvos do
-      local xPos = 1.4 + ((i-1) * 3) - (tokensWidth * 0.5)
-      local worldPos = {xPos, 1, -30}
-      local localPos = self.positionToLocal(worldPos)
-      localPos.x = -localPos.x
-      self.editButton({index=buttonIndex+i, position=localPos})
+    local xPos = 1.4 + ((i-1) * 3) - (tokensWidth * 0.5)
+    local worldPos = {xPos, 1, -30}
+    local localPos = self.positionToLocal(worldPos)
+    localPos.x = -localPos.x
+    self.editButton({index=buttonIndex+i, position=localPos})
   end
 end
 
 function hideMultiEvoButtons()
   local buttonIndex = 26
   for i=1, 9 do
-      self.editButton({index=buttonIndex+i, position={0, 1000, 0}})
+    self.editButton({index=buttonIndex+i, position={0, 1000, 0}})
   end
 end
 
