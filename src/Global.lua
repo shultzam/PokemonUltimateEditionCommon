@@ -4468,9 +4468,9 @@ function onLoad(saved_data)
   end
 
   -- Hide the models.
-  battlemodels.interactable = false
-  battlemodels.setLock(true)
-  battlemodels.setPosition({0, -15, 0})
+  --battlemodels.interactable = false
+  --battlemodels.setLock(true)
+  battlemodels.setPosition({-51, 0.5, 76})
 
   local save_table
   if saved_data and saved_data ~= "" then
@@ -5098,14 +5098,15 @@ function get_model_guid_on_top(pokemon)
   return nil
 end
 
--- TODO: see if we can make this a bit more restrictive.
 function has_something_on_top(pokemon)
   assert(pokemon.chip)
+  local check_size = pokemon.chip.getBounds().size
+  check_size = { x=check_size.x / 2, y=check_size.y / 2, z=check_size.z / 2 }
   local hits = Physics.cast({
     origin = model_position(pokemon, true),
     direction = {x=0, y=1, z=0},
     type = 3,
-    size = pokemon.chip.getBounds().size
+    size = check_size
   })
   for i=1,#hits do
     -- GUID de7152 is the BattleManager. Somehow, Gym Leaders cards register as having it on top. Not sure why lol.
