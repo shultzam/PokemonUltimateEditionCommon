@@ -1,10 +1,10 @@
 <Defaults>
     <Text class="UIText" fontSize="18" fontStyle="Bold" Color="#FFFFFF"/>
 </Defaults>
-<Panel id="Settings" visibility="false" width="620" height="515" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
+<Panel id="Settings" visibility="false" width="660" height="600" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <Text minHeight="30" fontSize="18" text="Select Pokemon Generations" alignment="LowerLeft" fontStyle="Bold"/>
-        <Text minHeight="20" fontSize="16" text="150 or more Pokémon are required to start the game" alignment="LowerLeft"/>
+        <Text minHeight="20" fontSize="16" text="150 or more Pokémon are suggested for this game." alignment="LowerLeft"/>
         <HorizontalLayout padding="0" spacing="15" childForceExpandHeight="false">
             <Toggle id="gen1ToggleBtn" onValueChanged="gen1Set" interactable="true" >Gen I (151 Pokémon) </Toggle>
             <Toggle id="gen2ToggleBtn" onValueChanged="gen2Set" interactable="true" >Gen II (100 Pokémon) </Toggle>
@@ -37,12 +37,11 @@
                     <Option>Gen VIII</Option>
                     <Option>Gen IX</Option>
                     <Option>Random</Option>
-                    <Option>Custom</Option>
                 </Dropdown>
             </VerticalLayout>
             <VerticalLayout>
                 <Text fontSize="18" text="Select Rival Region" alignment="MiddleLeft" fontStyle="Bold"/>
-                <Dropdown id="rivalRegionDropdown" tooltipOffset="-400" onValueChanged="rivalRegionSet" tooltip="Select the rival for events">
+                <Dropdown id="rivalRegionDropdown" nValueChanged="rivalRegionSet">
                     <Option selected="true">Kanto</Option>
                     <Option>Johto</Option>
                     <Option>Hoenn</Option>
@@ -54,6 +53,21 @@
                     <Option>Paldea</Option>
                     <Option>Random</Option>
                 </Dropdown>
+            </VerticalLayout>
+        </HorizontalLayout>
+        <HorizontalLayout padding="0" spacing="30">
+            <VerticalLayout>
+                <Text fontSize="18" text="Custom Gym Leader Options" alignment="MiddleLeft" fontStyle="Bold"/>
+                <ToggleGroup id="customGymLeaderOptions" onValueChanged="customGymLeadersOptionsSet">
+                    <VerticalLayout>
+                        <Toggle selected="true">None</Toggle>
+                        <Toggle tooltipOffset="-300" tooltip="Available custom gym leaders will be considered for their given tier.">Allow</Toggle>
+                        <Toggle tooltipOffset="-300" tooltip="Available custom gym leaders will always be used for their given tier.">Always Use</Toggle>
+                    </VerticalLayout>
+                </ToggleGroup>
+            </VerticalLayout>
+            <VerticalLayout>
+                <!--<Text fontSize="18" text="Select Scripted House Rules" alignment="MiddleLeft" fontStyle="Bold"/>-->
             </VerticalLayout>
         </HorizontalLayout>
         <Text minHeight="65" fontSize="16" text="Modifiers" alignment="LowerLeft" fontStyle="Bold"/>

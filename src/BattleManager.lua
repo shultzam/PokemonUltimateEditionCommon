@@ -142,7 +142,11 @@ battleState = NO_BATTLE
 local defenderPos = {pokemon={-36.01, 4.19}, dice={-36.03, 6.26}, status={-31.25, 4.44}, statusCounters={-31.25, 6.72}, item={-40.87, 4.26}, moveDice={-36.11, 8.66}}
 local attackerPos = {pokemon={-36.06,-4.23}, dice={-36.03,-6.15}, status={-31.25,-4.31}, statusCounters={-31.25,-6.74}, item={-40.87,-4.13}, moveDice={-36.11,-8.53}}
 
-function onLoad()
+function onSave()
+  return JSON.encode({in_battle = inBattle})
+end
+
+function onLoad(saved_data)
     -- Create Arena Buttons
     self.createButton({label="TEAM", click_function="seeAttackerRack",function_owner=self, tooltip="See Team",position={teamAtkPos.x, 1000, teamAtkPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="MOVES", click_function="seeMoveRules",function_owner=self, tooltip="Show Move Rules",position={movesAtkPos.x, 1000, movesAtkPos.z}, height=300, width=720, font_size=200})
@@ -190,10 +194,72 @@ function onLoad()
     self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     self.createButton({label="NEXT POKEMON", click_function="flipRivalPokemon", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
 
+    -- Check if there is saved data.
+    local save_table
+    if saved_data and saved_data ~= "" then
+      save_table = JSON.decode(saved_data)
+    end
+
+    -- Parse the saved data.
+    if save_table then
+      inBattle = save_table.in_battle
+    end
+  
+    -- Do some safety checks.
+    if inBattle == nil then
+      inBattle = false
+    end
+
+    -- Check if we are in battle.
+    if inBattle then
+      -- Panic, <wave hand>. We are no longer in battle.
+      inBattle = false
+
+      -- Clear texts.
+      clearMoveText(ATTACKER)
+      clearMoveText(DEFENDER)
+      
+      -- Mass clear of buttons and labels.
+      hideConfirmButton(DEFENDER)
+      showFlipRivalButton(false)
+      self.editButton({index=36, label="BATTLE"})
+      showWildPokemonButton(false)
+      showFlipGymButton(false)
+      hideConfirmButton(ATTACKER)
+      setBattleState(NO_BATTLE)
+      showAtkButtons(false)
+      showDefButtons(false)
+
+      -- Clear data.
+      clearPokemonData(DEFENDER)
+      clearTrainerData(DEFENDER)
+      clearPokemonData(ATTACKER)
+      clearTrainerData(ATTACKER)
+
+      Global.call("PlayRouteMusic",{})
+    end
 end
 
 function isBattleInProgress()
+  -- NOTE: I am dumb. I forgot there is a "inBattle" variable. Can it be trusted? >.>
+  if attackerData == nil or defenderData == nil then return false end
   return attackerData.type ~= nil or defenderData.type ~= nil
+end
+
+function getAttackerType()
+  if attackerData == nil or attackerData.type == nil then
+    return nil
+  end
+
+  return attackerData.type
+end
+
+function getDefenderType()
+  if defenderData == nil or defenderData.type == nil then
+    return nil
+  end
+
+  return defenderData.type
 end
 
 function changeAttackerTeraType()
@@ -261,6 +327,10 @@ function flipGymLeader()
   setNewPokemon(defenderPokemon, defenderPokemon.pokemon2, defenderPokemon.pokemonGUID)
   updateMoves(DEFENDER, defenderPokemon)
   showFlipGymButton(false)
+
+  -- Update the defender pokemon value counter.
+  defenderData.attackValue.level = defenderPokemon.pokemon2.baseLevel
+  updateAttackValue(DEFENDER)
 
   -- Get the rival token object handle.
   local gymLeaderCard = getObjectFromGUID(defenderData.trainerGUID)
@@ -365,10 +435,8 @@ function flipGymLeader()
   )
 
   -- Clear texts.
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+  clearMoveText(ATTACKER)
+  clearMoveText(DEFENDER)
 end
 
 function flipRivalPokemon()
@@ -403,6 +471,10 @@ function flipRivalPokemon()
   setNewPokemon(attackerPokemon, attackerPokemon.pokemon2, attackerPokemon.pokemonGUID)
   updateMoves(ATTACKER, attackerPokemon)
   showFlipRivalButton(false)
+
+  -- Update the attacker value counter.
+  attackerData.attackValue.level = attackerPokemon.baseLevel
+  updateAttackValue(ATTACKER)
 
   -- Get the rival token object handle.
   local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
@@ -470,63 +542,60 @@ function flipRivalPokemon()
   )
 
   -- Clear texts.
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+  clearMoveText(ATTACKER)
+  clearMoveText(DEFENDER)
 end
 
 function battleWildPokemon()
+  -- Check if in a battle.
+  if inBattle == false then
+    setTrainerType(DEFENDER, WILD)
 
-    if inBattle == false then
+    local pokemonData = Global.call("GetPokemonDataByGUID",{guid=wildPokemonGUID})
+    defenderPokemon = {}
+    setNewPokemon(defenderPokemon, pokemonData, wildPokemonGUID)
 
-      setTrainerType(DEFENDER, WILD)
+    inBattle = true
+    Global.call("PlayTrainerBattleMusic",{})
+    printToAll("Wild " .. defenderPokemon.name .. " appeared!")
 
-      local pokemonData = Global.call("GetPokemonDataByGUID",{guid=wildPokemonGUID})
-      defenderPokemon = {}
-      setNewPokemon(defenderPokemon, pokemonData, wildPokemonGUID)
+    updateMoves(DEFENDER, defenderPokemon)
 
-      inBattle = true
-      Global.call("PlayTrainerBattleMusic",{})
-      printToAll("Wild " .. defenderPokemon.name .. " appeared!")
+    -- Update the defender value counter.
+    defenderData.attackValue.level = defenderPokemon.baseLevel
+    updateAttackValue(DEFENDER)
 
-      updateMoves(DEFENDER, defenderPokemon)
+    aiDifficulty = Global.call("GetAIDifficulty")
 
-      aiDifficulty = Global.call("GetAIDifficulty")
-
-      if scriptingEnabled then
-        defenderData.attackValue.level = defenderPokemon.baseLevel
-        updateAttackValue(DEFENDER)
-        showWildPokemonButton(false)
-        defenderConfirmed = true
-        if attackerConfirmed then
-          startBattle()
-        end
-      else
-        local numMoves = #defenderPokemon.moves
-        if numMoves > 1 then
-          showConfirmButton(DEFENDER, "RANDOM MOVE")
-        end
-        self.editButton({index=36, label="END BATTLE"})
+    if scriptingEnabled then
+      showWildPokemonButton(false)
+      defenderConfirmed = true
+      if attackerConfirmed then
+        startBattle()
       end
     else
-      inBattle = false
-      text = getObjectFromGUID(defText)
-      text.setValue(" ")
-      hideConfirmButton(DEFENDER)
-
-      clearPokemonData(DEFENDER)
-      clearTrainerData(DEFENDER)
-      self.editButton({index=36, label="BATTLE"})
-
-      Global.call("PlayRouteMusic",{})
+      local numMoves = #defenderPokemon.moves
+      if numMoves > 1 then
+        showConfirmButton(DEFENDER, "RANDOM MOVE")
+      end
+      self.editButton({index=36, label="END BATTLE"})
     end
+  else
+    inBattle = false
+    text = getObjectFromGUID(defText)
+    text.setValue(" ")
+    hideConfirmButton(DEFENDER)
+
+    clearPokemonData(DEFENDER)
+    clearTrainerData(DEFENDER)
+    self.editButton({index=36, label="BATTLE"})
+
+    Global.call("PlayRouteMusic",{})
+  end
 end
 
 function setScriptingEnabled(enabled)
-
   scriptingEnabled = enabled
-
 end
 
 function setBattleState(state)
@@ -856,7 +925,6 @@ function calculateAttackRoll(isAttacker)
 end
 
 function calculateFinalAttack(isAttacker)
-
   if isAttacker then
     data = attackerData
     pokemonData = attackerPokemon
@@ -869,22 +937,22 @@ function calculateFinalAttack(isAttacker)
   local totalAttack = attackValue.attackRoll + attackValue.level + attackValue.movePower + attackValue.effectiveness + attackValue.item
   attackValue.total = totalAttack
 
-  printToAll(pokemonData.name .. " hits for " .. totalAttack .. " Attack!")
-  local calcString = attackValue.attackRoll .. " + " .. attackValue.level .. " (lvl) + " .. attackValue.movePower .. " (move)"
+  -- printToAll(pokemonData.name .. " hits for " .. totalAttack .. " Attack!")
+  -- local calcString = attackValue.attackRoll .. " + " .. attackValue.level .. " (lvl) + " .. attackValue.movePower .. " (move)"
 
-  if attackValue.effectiveness ~= 0 then
-    if attackValue.effectiveness > 0 then
-      calcString = calcString .. " + " .. attackValue.effectiveness .. " (effective)"
-    else
-      local abs = math.abs(attackValue.effectiveness)
-      calcString = calcString .. " - " .. abs .. " (weak)"
-    end
-  end
-  if attackValue.item ~= 0 then
-      calcString = calcString .. " + " .. attackValue.item  .. " (item)"
-  end
+  -- if attackValue.effectiveness ~= 0 then
+  --   if attackValue.effectiveness > 0 then
+  --     calcString = calcString .. " + " .. attackValue.effectiveness .. " (effective)"
+  --   else
+  --     local abs = math.abs(attackValue.effectiveness)
+  --     calcString = calcString .. " - " .. abs .. " (weak)"
+  --   end
+  -- end
+  -- if attackValue.item ~= 0 then
+  --     calcString = calcString .. " + " .. attackValue.item  .. " (item)"
+  -- end
 
-  printToAll(calcString)
+  -- printToAll(calcString)
 
   updateAttackValue(isAttacker)
 end
@@ -894,10 +962,9 @@ function resolveRound()
 
   setBattleState(RESOLVE)
 
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+  -- Clear the text fields.
+  clearMoveText(ATTACKER)
+  clearMoveText(DEFENDER)
 
   local attackerWon = attackerData.attackValue.total > defenderData.attackValue.total
 
@@ -1141,11 +1208,19 @@ function selectMove(index, isAttacker, isRandom)
     isRandom = false
   end
 
+  local pokemon = nil
+  local pokemonData = nil
+  local moveData = nil
+  local text = nil
   if isAttacker then
+    pokemon = attackerPokemon
+    pokemonData = attackerData
     moveData = attackerPokemon.movesData[index]
     attackerData.selectedMoveIndex = index
     text = getObjectFromGUID(atkText)
   else
+    pokemon = defenderPokemon
+    pokemonData = defenderData
     moveData = defenderPokemon.movesData[index]
     defenderData.selectedMoveIndex = index
     text = getObjectFromGUID(defText)
@@ -1155,16 +1230,56 @@ function selectMove(index, isAttacker, isRandom)
     return
   end
 
+  -- Update the appropriate value counter.
+  -- NOTE: could also leverage pokemonData.attackValue.attackRoll + pokemonData.attackValue.item here.
+  pokemonData.attackValue.movePower = moveData.power
+  -- If the pokemon is the same type then add 1 to the attack power.
+  if type(pokemonData.attackValue.movePower) == "string" then pokemonData.attackValue.movePower = 0 end
+  if (moveData.type == pokemon.types[1] or moveData.type == pokemon.types[2]) and pokemonData.attackValue.movePower > 0 and moveData.STAB then 
+    pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1 
+  end
+  pokemonData.attackValue.effectiveness = DEFAULT
+  local oppenent_data = isAttacker and defenderPokemon or attackerPokemon
+  local opponent_types = { "N/A" }
+  if oppenent_data ~= nil and oppenent_data.types ~= nil then
+    opponent_types[1] = oppenent_data.types[1] -- Only the first type is used for effectiveness. For now. :()
+    if oppenent_data.types[2] ~= nil then
+      opponent_types[2] = oppenent_data.types[2]
+    else
+      opponent_types[2] = "N/A"
+    end
+  end
+  local typeData = Global.call("GetTypeDataByName", moveData.type)
+  for j=1, #typeData.effective do
+    if typeData.effective[j] == opponent_types[1] then  -- or typeData.effective[j] == opponent_types[2]
+      pokemonData.attackValue.effectiveness = 2
+      break
+    end
+  end
+
+  if pokemonData.attackValue.effectiveness == DEFAULT then
+    for j=1, #typeData.weak do
+      if typeData.weak[j] == opponent_types[1] then     -- or typeData.weak[j] == opponent_types[2]
+        pokemonData.attackValue.effectiveness= -2
+        break
+      end
+    end
+  end
+  calculateFinalAttack(isAttacker)
+
+  -- Update the move text tool.
   local moveName = moveData.name
   text.TextTool.setValue(moveName)
 
-
   -- Get the active model GUID. This prevents calling animations for the wrong model.
-  local data_model_GUID = isAttacker and attackerPokemon.model_GUID or defenderPokemon.model_GUID
-  local chip_guid = isAttacker and attackerPokemon.pokemonGUID or defenderPokemon.pokemonGUID
-  local model_guid = Global.call("get_model_guid", chip_guid)
-  if model_guid == nil then
-    model_guid = data_model_GUID
+  local model_guid = nil
+  local pokemonData = isAttacker and attackerPokemon or defenderPokemon
+  if pokemonData ~= nil then
+    local chip_guid = isAttacker and attackerPokemon.pokemonGUID or defenderPokemon.pokemonGUID
+    model_guid = Global.call("get_model_guid", chip_guid)
+    if model_guid == nil then
+      model_guid = pokemonData.model_GUID
+    end
   end
 
   -- Call animations.
@@ -1210,7 +1325,6 @@ function selectMove(index, isAttacker, isRandom)
 
   if attackerConfirmed and defenderConfirmed then
     activateMoves()
-
   elseif attackerConfirmed and defenderData.type == GYM then
     if aiDifficulty == 2 then
       local randomMove = math.random(1,3)
@@ -1218,7 +1332,6 @@ function selectMove(index, isAttacker, isRandom)
     end
   end
 end
-
 
 function activateMoves()
 
@@ -1648,8 +1761,6 @@ end
 
 function autoRollDice()
 
-
-
 end
 
 function spawnDice(move, isAttacker, effects)
@@ -1862,79 +1973,73 @@ function evolveTwo(passParams)
 end
 
 function recallArena(passParams)
-    local playerColour = passParams.player
-    attDefParams = {arenaAttack = passParams.arenaAttack, zPos = passParams.zPos}
+  local playerColour = passParams.player
+  attDefParams = {arenaAttack = passParams.arenaAttack, zPos = passParams.zPos}
 
-    if playerColour == "Blue" then
-        getObjectFromGUID(blueRack).call("rackRecall", attDefParams)
-    elseif playerColour == "Green" then
-        getObjectFromGUID(greenRack).call("rackRecall", attDefParams)
-    elseif playerColour == "Orange" then
-        getObjectFromGUID(orangeRack).call("rackRecall", attDefParams)
-    elseif playerColour == "Purple" then
-        getObjectFromGUID(purpleRack).call("rackRecall", attDefParams)
-    elseif playerColour == "Red" then
-        getObjectFromGUID(redRack).call("rackRecall")
-    elseif playerColour == "Yellow" then
-        getObjectFromGUID(yellowRack).call("rackRecall", attDefParams)
-    end
-
+  if playerColour == "Blue" then
+    getObjectFromGUID(blueRack).call("rackRecall", attDefParams)
+  elseif playerColour == "Green" then
+    getObjectFromGUID(greenRack).call("rackRecall", attDefParams)
+  elseif playerColour == "Orange" then
+    getObjectFromGUID(orangeRack).call("rackRecall", attDefParams)
+  elseif playerColour == "Purple" then
+    getObjectFromGUID(purpleRack).call("rackRecall", attDefParams)
+  elseif playerColour == "Red" then
+    getObjectFromGUID(redRack).call("rackRecall")
+  elseif playerColour == "Yellow" then
+    getObjectFromGUID(yellowRack).call("rackRecall", attDefParams)
+  end
 end
 
 function increaseArena(passParams)
-    local playerColour = passParams.player
-    mParams = {modifier = passParams.modifier, arenaAttack = passParams.arenaAttack}
+  local playerColour = passParams.player
+  mParams = {modifier = passParams.modifier, arenaAttack = passParams.arenaAttack}
 
-    if playerColour == "Blue" then
-        getObjectFromGUID(blueRack).call("increase", mParams)
-    elseif playerColour == "Green" then
-        getObjectFromGUID(greenRack).call("increase", mParams)
-    elseif playerColour == "Orange" then
-        getObjectFromGUID(orangeRack).call("increase", mParams)
-    elseif playerColour == "Purple" then
-        getObjectFromGUID(purpleRack).call("increase", mParams)
-    elseif playerColour == "Red" then
-        getObjectFromGUID(redRack).call("increase", mParams)
-    elseif playerColour == "Yellow" then
-        getObjectFromGUID(yellowRack).call("increase", mParams)
-    end
-
+  if playerColour == "Blue" then
+    getObjectFromGUID(blueRack).call("increase", mParams)
+  elseif playerColour == "Green" then
+    getObjectFromGUID(greenRack).call("increase", mParams)
+  elseif playerColour == "Orange" then
+    getObjectFromGUID(orangeRack).call("increase", mParams)
+  elseif playerColour == "Purple" then
+    getObjectFromGUID(purpleRack).call("increase", mParams)
+  elseif playerColour == "Red" then
+    getObjectFromGUID(redRack).call("increase", mParams)
+  elseif playerColour == "Yellow" then
+    getObjectFromGUID(yellowRack).call("increase", mParams)
+  end
 end
 
 function decreaseArena(passParams)
-    local playerColour = passParams.player
-    mParams = {modifier = passParams.modifier, arenaAttack = passParams.arenaAttack}
+  local playerColour = passParams.player
+  mParams = {modifier = passParams.modifier, arenaAttack = passParams.arenaAttack}
 
-    if playerColour == "Blue" then
-        getObjectFromGUID(blueRack).call("decrease", mParams)
-    elseif playerColour == "Green" then
-        getObjectFromGUID(greenRack).call("decrease", mParams)
-    elseif playerColour == "Orange" then
-        getObjectFromGUID(orangeRack).call("decrease", mParams)
-    elseif playerColour == "Purple" then
-        getObjectFromGUID(purpleRack).call("decrease", mParams)
-    elseif playerColour == "Red" then
-        getObjectFromGUID(redRack).call("decrease", mParams)
-    elseif playerColour == "Yellow" then
-        getObjectFromGUID(yellowRack).call("decrease", mParams)
-    end
-
+  if playerColour == "Blue" then
+    getObjectFromGUID(blueRack).call("decrease", mParams)
+  elseif playerColour == "Green" then
+    getObjectFromGUID(greenRack).call("decrease", mParams)
+  elseif playerColour == "Orange" then
+    getObjectFromGUID(orangeRack).call("decrease", mParams)
+  elseif playerColour == "Purple" then
+    getObjectFromGUID(purpleRack).call("decrease", mParams)
+  elseif playerColour == "Red" then
+    getObjectFromGUID(redRack).call("decrease", mParams)
+  elseif playerColour == "Yellow" then
+    getObjectFromGUID(yellowRack).call("decrease", mParams)
+  end
 end
 
 -- Move Camera Buttons
 
 function seeAttackerRack(obj, player_clicker_color)
-
     viewTeam(obj, player_clicker_color, attackerData.playerColor)
 end
 
 function seeDefenderRack(obj, player_clicker_color)
-
     viewTeam(obj, player_clicker_color, defenderData.playerColor)
 end
 
 function viewTeam(obj, playerClicker, team)
-
   if team == "Blue" then
       showPosition = {x=-65,y=0.96,z=21.5}
       camYaw = 90
@@ -2000,7 +2105,6 @@ function seeMoveRules(obj, player_clicker_color)
 end
 
 function sendToArenaGym(params)
-
   if defenderData.type ~= nil then
     print ("There is already a Pokémon in the arena")
     return false
@@ -2025,6 +2129,10 @@ function sendToArenaGym(params)
   defenderPokemon.pokemon2.model_GUID = gymData.pokemon[2].model_GUID
   updateMoves(DEFENDER, defenderPokemon)
 
+  -- Update the defender value counter.
+  defenderData.attackValue.level = pokemonData[1].baseLevel
+  updateAttackValue(DEFENDER)
+
   -- Gym Leader
   local takeParams = {guid = defenderData.trainerGUID, position = {defenderPos.item[1], 1.5, defenderPos.item[2]}, rotation={0,180,0}}
   local gym = getObjectFromGUID(params.gymGUID)
@@ -2045,7 +2153,7 @@ function sendToArenaGym(params)
   elseif params.isElite4 then
       Global.call("PlayFinalBattleMusic",{})
   elseif params.isRival then
-      Global.call("PlayCynthiaRivalMusic",{})
+      Global.call("PlayRivalMusic",{})
   else
       print("ERROR: uncertain which battle music to play")
       Global.call("PlayGymBattleMusic",{})
@@ -2188,6 +2296,10 @@ function sendToArenaTrainer(params)
 
   updateMoves(ATTACKER, attackerPokemon)
 
+  -- Update the attacker value counter.
+  attackerData.attackValue.level = attackerPokemon.baseLevel
+  updateAttackValue(ATTACKER)
+
    if scriptingEnabled then
       attackerData.attackValue.level = attackerPokemon.baseLevel
       updateAttackValue(ATTACKER)
@@ -2274,6 +2386,10 @@ function sendToArenaRival(params)
   attackerPokemon.pokemon2 = pokemonData[2]
   attackerPokemon.pokemon2.pokemonGUID = params.pokemonGUID
   updateMoves(ATTACKER, attackerPokemon)
+
+  -- Update the attacker value counter.
+  attackerData.attackValue.level = attackerPokemon.baseLevel
+  updateAttackValue(ATTACKER)
   
   if Global.call("get_models_enabled") then
     -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -2434,10 +2550,8 @@ function recallGym()
   clearTrainerData(DEFENDER)
 
   -- Clear the texts.
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+  clearMoveText(ATTACKER)
+  clearMoveText(DEFENDER)
 end
 
 function recallRival()
@@ -2496,10 +2610,8 @@ function recallRival()
   )
 
   -- Clear the texts.
-  local attackerText = getObjectFromGUID(atkText)
-  attackerText.TextTool.setValue(" ")
-  local defenderText = getObjectFromGUID(defText)
-  defenderText.TextTool.setValue(" ")
+  clearMoveText(ATTACKER)
+  clearMoveText(DEFENDER)
 
   if scriptingEnabled == false then
     hideConfirmButton(ATTACKER)
@@ -2512,6 +2624,7 @@ end
 
 function sendToArena(params)
     local isAttacker = params.isAttacker
+    local arenaData = isAttacker and attackerPokemon or defenderPokemon
     local pokemonData = params.slotData
     local rack = getObjectFromGUID(params.rackGUID)
 
@@ -2521,7 +2634,7 @@ function sendToArena(params)
     if pokemon.getRotation().z == 180 then
       print ("Cannot send a fainted Pokémon to the arena")
       return
-    elseif attackerPokemon ~= nil and isAttacker == true or defenderPokemon ~= nil and isAttacker == false then
+    elseif attackerPokemon ~= nil and isAttacker or defenderPokemon ~= nil and not isAttacker then
       print ("There is already a Pokémon in the arena")
       return
     end
@@ -2609,7 +2722,7 @@ function sendToArena(params)
     origin = {params.pokemonXPos[params.index], 0.95, params.itemZPos}
     castParams.origin = rack.positionToWorld(origin)
     local itemHits = Physics.cast(castParams)
-    hasTMCard = false
+    local hasTMCard = false
     local cardMoveData = nil
     local teraType = nil
     if #itemHits ~= 0 then
@@ -2633,6 +2746,7 @@ function sendToArena(params)
             cardMoveData.name = zCrystalData.displayName
           end
         elseif itemCard.hasTag("TeraType") then
+          pokemonData.teraType = true
           local teraData = Global.call("GetTeraDataByGUID", itemCard.getGUID())
           if teraData ~= nil then
             if isAttacker then
@@ -2680,18 +2794,16 @@ function sendToArena(params)
 
     updateMoves(params.isAttacker, pokemonData, cardMoveData)
 
+    -- Update the appropriate value counter.
+    if isAttacker then
+      attackerData.attackValue.level = pokemonData.baseLevel + pokemonData.diceLevel
+    else
+      defenderData.attackValue.level = pokemonData.baseLevel + pokemonData.diceLevel
+    end
+    updateAttackValue(params.isAttacker)
+
     if scriptingEnabled then
-
-      if isAttacker then
-        attackerData.attackValue.level = pokemonData.baseLevel + pokemonData.diceLevel
-      else
-        defenderData.attackValue.level = pokemonData.baseLevel + pokemonData.diceLevel
-      end
-
-      updateAttackValue(params.isAttacker)
-
       showConfirmButton(params.isAttacker, "CONFIRM")
-
     elseif attackerPokemon ~= nil and defenderPokemon ~= nil and inBattle == false then
       inBattle = true
       Global.call("PlayTrainerBattleMusic",{})
@@ -2906,9 +3018,10 @@ function clearPokemonData(isAttacker)
 
   hideArenaEffectiness(not isAttacker)
 
-  if scriptingEnabled then
+  -- Clear the attack counter even without scripting.
+  clearAttackCounter(isAttacker)
 
-    clearAttackCounter(isAttacker)
+  if scriptingEnabled then
     clearDice(isAttacker)
 
     if battleState ~= NO_BATTLE then
@@ -2918,7 +3031,6 @@ function clearPokemonData(isAttacker)
 end
 
 function endBattle()
-
   if battleState == NO_BATTLE and scriptingEnabled then
     return
   end
@@ -3083,9 +3195,9 @@ function copyTable (original)
 	return copy
 end
 
-
 function updateAttackValue(isAttacker)
-
+  local atkVal = nil
+  local counterGUID = nil
   if isAttacker then
     counterGUID = atkCounter
     atkVal = attackerData.attackValue
@@ -3099,13 +3211,10 @@ function updateAttackValue(isAttacker)
   counter.Counter.setValue(totalAttack)
 end
 
-
 function clearAttackCounter(isAttacker)
-
   local counterGUID = isAttacker and atkCounter or defCounter
   local counter = getObjectFromGUID(counterGUID)
   counter.Counter.setValue(0)
-
 end
 
 function setLevel(params)
@@ -3175,8 +3284,13 @@ function setLevel(params)
   return slotData
 end
 
-
 function updateEvolveButtons(params, slotData, level)
+  -- Check if we have even started the game yet. <.<
+  local starterPokeball = getObjectFromGUID("ec1e4b")
+  if starterPokeball ~= nil then
+    return false
+  end
+
   local buttonParams = {
     inArena = params.inArena,
     isAttacker = params.isAttacker,
@@ -3252,8 +3366,15 @@ function updateEvolveButtons(params, slotData, level)
   end
 end
 
-
 function evolvePoke(params)
+    -- Check if we have even started the game yet. <.<
+    local starterPokeball = getObjectFromGUID("ec1e4b")
+    if starterPokeball ~= nil then
+      printToAll("You need to start the game before evolving Pokémon")
+      return false
+    end
+
+    -- Init some params.
     local pokemonData = params.slotData
     local selectedGens = Global.call("GetSelectedGens")
     local rack = getObjectFromGUID(params.rackGUID)
@@ -3262,6 +3383,7 @@ function evolvePoke(params)
     local evolvedPokemonData
     local diceLevel = pokemonData.diceLevel
 
+    -- Put away the old token.
     local evolvingPokemon = getObjectFromGUID(pokemonData.pokemonGUID)
     local evolvedPokeball = getObjectFromGUID(evolvedPokeballGUID)
     evolvedPokeball.putObject(evolvingPokemon)
@@ -3289,7 +3411,6 @@ function evolvePoke(params)
     end
 
     if #evoList > 2 then -- More than 2 evos available so we need to spread them out
-
       -- Use this to keep track of the evos already retrieved, by name.
       local evosRetreivedTable = {}
 
@@ -3424,10 +3545,17 @@ function evolvePoke(params)
         end
       end
       
+      -- Update the pokemon data.
       setNewPokemon(pokemonData, evolvedPokemonData, evolvedPokemonGUID)
 
       if params.inArena then
         -- Pokemon is in the arena.
+
+        -- Clear the appropriate move selected text.
+        clearMoveText(params.isAttacker)
+
+        -- Save off the arena data for potential tera info.
+        local arenaData = params.isAttacker and attackerPokemon or defenderPokemon
 
         -- Get the position and set the evo pokemon.
         local tokenPosition = params.isAttacker and attackerPos or defenderPos
@@ -3438,19 +3566,33 @@ function evolvePoke(params)
 
         -- Check if there is a Z-Crystal card present.
         local cardMoveData = nil
-        if data.itemCardGUID ~= nil then
+        if arenaData.itemCardGUID ~= nil then
           -- Check if the attached card is a TM card.
-          if pokemonData.tmCard then
-            local moveData = Global.call("GetTmDataByGUID", data.itemCardGUID)
+          if arenaData.tmCard then
+            local moveData = Global.call("GetTmDataByGUID", arenaData.itemCardGUID)
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
             end
           -- Check if the attached card is a Z-Crystal card.
-          elseif pokemonData.zCrystalCard then
-            local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=data.itemCardGUID, pokemonGuid=nil})
+          elseif arenaData.zCrystalCard then
+            local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=arenaData.itemCardGUID, pokemonGuid=nil})
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
               cardMoveData.name = moveData.displayName
+            end
+          elseif arenaData.teraType then
+            local teraData = Global.call("GetTeraDataByGUID", arenaData.itemCardGUID)
+            if teraData ~= nil then
+              -- NOTE: If we ever do dual-type effectiveness this gets much more complicated.
+              if params.isAttacker then
+                arenaData.teraType = teraData.type
+                showAttackerTeraButton(false)
+                showAttackerTeraButton(true, attackerPokemon.types[1])
+              else
+                arenaData.teraType = teraData.type
+                showDefenderTeraButton(false)
+                showDefenderTeraButton(true, defenderPokemon.types[1])
+              end
             end
           end
         end
@@ -3652,6 +3794,17 @@ function setNewPokemon(data, newPokemonData, pokemonGUID)
     data.evoData = copyTable(newPokemonData.evoData)
   else
     data.evoData = nil
+  end
+end
+
+function clearMoveText(isAttacker)
+  if isAttacker then
+    -- Clear text.
+    local attackerText = getObjectFromGUID(atkText)
+    attackerText.TextTool.setValue(" ")
+  else
+    local defenderText = getObjectFromGUID(defText)
+    defenderText.TextTool.setValue(" ")
   end
 end
 

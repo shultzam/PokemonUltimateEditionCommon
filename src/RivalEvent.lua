@@ -12,13 +12,20 @@ local battleManager = "de7152"
 -- Model button fields.
 -- NOTE: It is pretty silly to tie the model buttons to this object but Rival Event object is permanent and really close to 
 --       the button locations. I am not proud, but may the future developers here not judge me too harshly.
-local MODEL_SIZE_CHANGE_STEP = 1.5
+local MODEL_SIZE_CHANGE_STEP = 1.0
 local SPAWN_DELAY_CHANGE_STEP = 0.1
-local optionX = -45.0
-local optionY = -3.15
-local optionZ = -3.2
-local options_shown = false
-local option_buttons = {}
+local modelOptionX = -45.0
+local modelOptionY = -3.15
+local modelOptionZ = -3.2
+local modelOptionsShown = false
+local modelOptionButtons = {}
+
+-- Model button fields.
+local musicOptionX = -30.0
+local musicOptionY = -3.15
+local musicOptionZ = -3.2
+local musicOptionsShown = false
+local musicOptionButtons = {}
 
 -- Event Rival region table.
 local REGION_TABLE = {
@@ -52,12 +59,19 @@ function onLoad(saved_data)
   createButtons()
   moveAllButtons(pokemonData ~= nil)
 
-  -- Model button functionality
+  -- Model button functionality.
   self.tooltip = false
   self.createButton({ --Apply settings button
       label="3D Model Options", click_function="click_model_options",
-      function_owner=self, tooltip="Click to show options for the 3D models",
-      position={optionX, optionY, optionZ}, height=2000, width=7000, font_size=1000,
+      function_owner=self,
+      position={modelOptionX, modelOptionY, modelOptionZ}, height=2000, width=7000, font_size=1000,
+  })
+
+  -- Music button functionality.
+  self.createButton({ --Apply settings button
+      label="Music Options", click_function="click_music_options",
+      function_owner=self,
+      position={musicOptionX, musicOptionY, musicOptionZ}, height=2000, width=7000, font_size=1000,
   })
 end
 
@@ -229,82 +243,82 @@ function dump_table(o)
 end
 
 function click_model_options()
-  if options_shown then
-    options_shown = false
-    for _,button_id in ipairs(option_buttons) do
-      local button = findButton(button_id)
+  if modelOptionsShown then
+    modelOptionsShown = false
+    for _, button_id in ipairs(modelOptionButtons) do
+      local button = find_button(button_id)
       if button then self.removeButton(button.index) end
     end
-    option_buttons = {}
+    modelOptionButtons = {}
   else
-    options_shown = true
+    modelOptionsShown = true
 
     -- Enable Models
     self.createButton({
       label="Enable Models", click_function="splash", function_owner=self,
-      position={optionX-3.0,optionY,optionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.0,modelOptionY,modelOptionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
-    register_button("Enable Models")
+    register_model_button("Enable Models")
     self.createButton({
       label="", click_function="toggle_models",
       function_owner=self, tooltip="Check to enable 3D models",
-      position={optionX+2.0,optionY,optionZ+3.0}, height=400, width=400, font_size=600
+      position={modelOptionX+3.0,modelOptionY,modelOptionZ+3.0}, height=400, width=400, font_size=600
     })
-    register_button("toggle_models")
+    register_model_button("toggle_models")
     set_enable_button()
 
     -- Model size
     self.createButton({
       label="Model Size", click_function="splash", function_owner=self,
-      position={optionX-3.0,optionY,optionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.0,modelOptionY,modelOptionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
-    register_button("Model Size")
+    register_model_button("Model Size")
     self.createButton({
       click_function="decrease_model_size",
       function_owner=self, tooltip="Click to decrease the model size",
-      position={optionX+1.5,optionY,optionZ+4.5}, height=400, width=400, font_size=600, label="-"
+      position={modelOptionX+2.5,modelOptionY,modelOptionZ+4.5}, height=400, width=400, font_size=600, label="-"
     })
-    register_button("decrease_model_size")
+    register_model_button("decrease_model_size")
     self.createButton({
       click_function="increase_model_size",
       function_owner=self, tooltip="Click to increase the model size",
-      position={optionX+2.5,optionY,optionZ+4.5}, height=400, width=400, font_size=600, label="+"
+      position={modelOptionX+3.5,modelOptionY,modelOptionZ+4.5}, height=400, width=400, font_size=600, label="+"
     })
-    register_button("increase_model_size")
+    register_model_button("increase_model_size")
 
     -- Spawn delay
     self.createButton({
       label="Spawn Delay", click_function="splash", function_owner=self,
-      position={optionX-3.25,optionY,optionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.25,modelOptionY,modelOptionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
-    register_button("Spawn Delay")
+    register_model_button("Spawn Delay")
     self.createButton({
       label="", click_function="splash_spawn_delay", function_owner=self,
-      position={optionX+4.7,optionY,optionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX+5.7,modelOptionY,modelOptionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
-    register_button("splash_spawn_delay")
+    register_model_button("splash_spawn_delay")
     set_spawn_delay_label()
     self.createButton({
       click_function="decrease_spawn_delay",
       function_owner=self, tooltip="Click to decrease the delay before the spawn animation shows (useful if some players cannot see the spawn animations).",
-      position={optionX+1.5,optionY,optionZ+6.0}, height=400, width=400, font_size=600, label="-"
+      position={modelOptionX+2.5,modelOptionY,modelOptionZ+6.0}, height=400, width=400, font_size=600, label="-"
     })
-    register_button("decrease_spawn_delay")
+    register_model_button("decrease_spawn_delay")
     self.createButton({
       click_function="increase_spawn_delay",
       function_owner=self, tooltip="Click to increase the delay before the spawn animation shows (useful if some players cannot see the spawn animations).",
-      position={optionX+2.5,optionY,optionZ+6.0}, height=400, width=400, font_size=600, label="+"
+      position={modelOptionX+3.5,modelOptionY,modelOptionZ+6.0}, height=400, width=400, font_size=600, label="+"
     })
-    register_button("increase_spawn_delay")
+    register_model_button("increase_spawn_delay")
   end
 end
 
-function register_button(button_id)
-  option_buttons[#option_buttons+1] = button_id
+function register_model_button(button_id)
+  modelOptionButtons[#modelOptionButtons+1] = button_id
 end
 
 --Locates a button with a helper function
-function findButton(button_id)
+function find_button(button_id)
   for _, button in ipairs(self.getButtons()) do
     if button.label == button_id or button.click_function == button_id then
       return button
@@ -314,7 +328,7 @@ function findButton(button_id)
 end
 
 function set_enable_button()
-  local enable_button = findButton("toggle_models")
+  local enable_button = find_button("toggle_models")
   if Global.call("get_models_enabled") then
     self.editButton({index=enable_button.index, label=string.char(10004), color={0,1,0}})
   else
@@ -336,7 +350,7 @@ function decrease_model_size()
 end
 
 function set_spawn_delay_label()
-  local spawn_delay_label = findButton("splash_spawn_delay")
+  local spawn_delay_label = find_button("splash_spawn_delay")
   self.editButton({index=spawn_delay_label.index, label=string.format("(%.1fs)", Global.Call("get_spawn_delay"))})
 end
 
@@ -356,4 +370,77 @@ end
 
 function splash_spawn_delay()
   --Nothing happened! But with style.
+end
+
+function click_music_options()
+  if musicOptionsShown then
+    musicOptionsShown = false
+    for _,button_id in ipairs(musicOptionButtons) do
+      local button = find_button(button_id)
+      if button then self.removeButton(button.index) end
+    end
+    musicOptionButtons = {}
+  else
+    musicOptionsShown = true
+
+    -- Enable original music.
+    self.createButton({
+      label="Original Music", click_function="splash", function_owner=self,
+      position={musicOptionX-2.0,musicOptionY,musicOptionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+    })
+    register_music_button("Original Music")
+    self.createButton({
+      label="", click_function="toggle_original_music",
+      function_owner=self, tooltip="Check to enable the more traditional music",
+      position={musicOptionX+3.0,musicOptionY,musicOptionZ+3.0}, height=400, width=400, font_size=600
+    })
+    register_music_button("toggle_original_music")
+    set_enable_originals_button()
+
+    -- Enable remix music.
+    self.createButton({
+      label="Remixes", click_function="splash", function_owner=self,
+      position={musicOptionX-0.5,musicOptionY,musicOptionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
+    })
+    register_music_button("Remixes")
+    self.createButton({
+      label="", click_function="toggle_remix_music",
+      function_owner=self, tooltip="Check to enable some dope remixes :D",
+      position={musicOptionX+3.0,musicOptionY,musicOptionZ+4.5}, height=400, width=400, font_size=600
+    })
+    register_music_button("toggle_remix_music")
+    set_enable_remixes_button()
+  end
+end
+
+function register_music_button(button_id)
+  musicOptionButtons[#musicOptionButtons+1] = button_id
+end
+
+function set_enable_originals_button()
+  local enable_originals_button = find_button("toggle_original_music")
+  if Global.call("get_original_music_enabled") then
+    self.editButton({index=enable_originals_button.index, label=string.char(10004), color={0,1,0}})
+  else
+    self.editButton({index=enable_originals_button.index, label="", color={1,1,1}})
+  end
+end
+
+function toggle_original_music()
+  Global.Call("toggle_original_music_enabled")
+  set_enable_originals_button()
+end
+
+function set_enable_remixes_button()
+  local enable_remixes_button = find_button("toggle_remix_music")
+  if Global.call("get_remix_music_enabled") then
+    self.editButton({index=enable_remixes_button.index, label=string.char(10004), color={0,1,0}})
+  else
+    self.editButton({index=enable_remixes_button.index, label="", color={1,1,1}})
+  end
+end
+
+function toggle_remix_music()
+  Global.Call("toggle_remix_music_enabled")
+  set_enable_remixes_button()
 end

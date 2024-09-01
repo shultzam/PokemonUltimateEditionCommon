@@ -33,7 +33,11 @@ GEN_7_SELECT = "Gen VII"
 GEN_8_SELECT = "Gen VIII"
 GEN_9_SELECT = "Gen IX"
 RANDOM_SELECT = "Random"
-CUSTOM_SELECT = "Custom"
+
+-- Custom Gym Leader Options.
+local NONE_SELECT = 0
+local ALLOW_SELECT = 1
+local ALWAYS_SELECT = 2
 
 -- Event Rival region selection.
 KANTO_REGION = "Kanto"
@@ -57,6 +61,7 @@ aiDifficulty = 0
 -- Save Data
 customGen = false
 eventRivalRegion = KANTO_REGION
+customGymLeaderOption = NONE_SELECT
 
 --[[ 
   NOTE: Lua cannot handle sparse arrays and, apparently, false terms can create sparse array
@@ -74,24 +79,46 @@ global_scale = 2
 spawn_delay = 0
 spawn_scale = 100
 
-local playlist =
+-- Funky music variables. Most remix tracks were created by GlitchxCity.
+original_music_enabled = true
+remix_music_enabled = false
+
+-- The current route playlist.
+local route_playlist = {}
+
+local original_route_tracks =
 {
   { url = "http://cloud-3.steamusercontent.com/ugc/1023948871898689460/46D48965B1EEDADAB14C15184FCDB41C9998C83D/", title = "Route Music 1" },
   { url = "http://cloud-3.steamusercontent.com/ugc/1023948871898697980/2D46041C40896534AC54D157FC6C3CAC1F00A7E9/", title = "Route Music 2" },
   { url = "http://cloud-3.steamusercontent.com/ugc/1023948871898696675/0CC89B7B48CAF248149CF2DE43DADBC1FDD260E2/", title = "Route Music 3" },
   { url = "http://cloud-3.steamusercontent.com/ugc/1023948871898694456/A95CDF7833368368BFB8EDCDB6E77E19785F3B7F/", title = "Route Music 4" },
-  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713830665/51AFCA6A1D2F74287F7065D153AE4893CFE65EE4/", title = "Gen V Route 10" },
-  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713833558/A53A7FA0DDCE1D5B076B323E61F603370D958414/", title = "Gen VIII Route 209" },
-  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713839101/D00A83FF04F6E8E7EC93A284D1264B3A88618721/", title = "Gen VIII Route 201" },
-  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713842461/880B9A4E1D19545259DC3B3A27EE29D8EADB0047/", title = "Gen III Route 101" },
-  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713845152/8C7AF47689CE1827BF64C68D710A231B4A943F33/", title = "Gen VIII Route 216" },
-  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563305438/9B9E73DCD8DF26F6B187C8F338E4D1286222AC61/", title = "Gen IV Route 203" },
-  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563295753/F290CFB65047AA9D078CA6A20879C7CDB03FB781/", title = "Eterna Forest (Remix)" },
-  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563298173/F7FEAAE3F5A0F2FCF535CE4CDF4AB12C2F7EBA11/", title = "Blueberry Academy (Remix)" },
+  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713830665/51AFCA6A1D2F74287F7065D153AE4893CFE65EE4/", title = "Route 10" },
+  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713833558/A53A7FA0DDCE1D5B076B323E61F603370D958414/", title = "Route 209" },
+  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713839101/D00A83FF04F6E8E7EC93A284D1264B3A88618721/", title = "Route 201" },
+  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713842461/880B9A4E1D19545259DC3B3A27EE29D8EADB0047/", title = "Route 101" },
+  { url = "http://cloud-3.steamusercontent.com/ugc/2469738072713845152/8C7AF47689CE1827BF64C68D710A231B4A943F33/", title = "Route 216" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563305438/9B9E73DCD8DF26F6B187C8F338E4D1286222AC61/", title = "Route 203" },
   { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563478724/47F188A77141A2ECF0A6B93682CC2619ABAA1551/", title = "Eterna Forest" }
 }
 
-local teamRocketPlaylist =
+local remix_route_tracks =
+{
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028803851/B22ED35F5A56BEA363EC533F15644DD7E0374638/", title = "Victory Road (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028803230/A4A5840B1A37900C68C985CA1521B4CED2366044/", title = "Route 113 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563295753/F290CFB65047AA9D078CA6A20879C7CDB03FB781/", title = "Eterna Forest (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563298173/F7FEAAE3F5A0F2FCF535CE4CDF4AB12C2F7EBA11/", title = "Blueberry Academy (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028802590/99A2EF8299E6FE2DE426B61942EB407780A33FF6/", title = "Route 111 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028802137/77BDABC8614017705FAD5AAEF5C96D15E561AA8B/", title = "Route 12 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028801573/7FE76872DEDF6387994FE1ED00507AE6F1DF9FA5/", title = "Route 47 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028801082/87616A87332EEA03D724CC620EB9E8248C6B0E62/", title = "Route 209 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028800688/408BCF30B46E9BF7F98B45095DB123401484A2AD/", title = "Route 201 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028800156/2F35C1E183D28E7CE2E177B6BFD34B01667403F8/", title = "Route 10 (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028799577/FE8FC0E512097D4E2FC1F99E4D186219D7C08AD2/", title = "Route 19 (Remix)" }
+}
+
+local team_rocket_playlist = {}
+
+local original_team_rocket_tracks =
 {
   { url = "http://cloud-3.steamusercontent.com/ugc/2465233915448769574/09A09106156072F227DB6D44211395F1545DFB9C/", title = "Team Rocket Battle Music" },
   { url = "http://cloud-3.steamusercontent.com/ugc/2469738708351494466/E735E7793EFD0FB37790D2B6E394FAB5DBBE9419/", title = "Rocket Powered Disaster 20" },
@@ -100,7 +127,14 @@ local teamRocketPlaylist =
   { url = "https://steamusercontent-a.akamaihd.net/ugc/2468621052563309229/7B364DC85C8BFD0F9F29AAFCD79D463ED1E7E9CF/", title = "Team Flare" }
 }
 
-local battlePlaylist =
+local remix_team_rocket_tracks =
+{
+
+}
+
+local battle_playlist = {}
+
+local original_battle_tracks =
 {
   { url = "http://cloud-3.steamusercontent.com/ugc/1023949407635181294/DF75C7F7429A20B290E9C39CA1A391F5217CB3BB/", title = "Gym Battle Music 1" },
   { url = "http://cloud-3.steamusercontent.com/ugc/2469738708351469017/83C3A3A8906183F09ED5F3FBED856E3DE94BF847/", title = "A Formidable Opponent Appears"},
@@ -111,14 +145,213 @@ local battlePlaylist =
   { url = "http://cloud-3.steamusercontent.com/ugc/2469738708351490133/C15770511BBAEE88551E1C332FCD8A26A4F543EB/", title = "Gym Battle Music - Johto" }
 }
 
+local remix_battle_tracks =
+{
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028870838/2ED898438B7BB0C8A5A4D2FE28AEC3AE7C97FAD2/", title = "Marnie Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028870236/21D89ADDAEBBAD59826034DB8DF6E9B591EE9ED4/", title = "Gym Leader Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028869777/4E36D699DE8AC0A123C587F5F335F48B03E351C7/", title = "Chariman Rose Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028869358/A1810B013A118E3D91C22E5C3351D45E57839C69/", title = "Wild Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028868963/B8C4D01C5DDAA157C84D98A5F3F956D8BA629CF7/", title = "Crescent Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028868419/62544351CC026B12CE6502471C4BA741FD16B04A/", title = "Lake Trio Battle (Remix)" }
+}
+
+local rival_playlist = {}
+
+local original_rival_tracks =
+{
+  { url = "http://cloud-3.steamusercontent.com/ugc/2465233915448687664/638298CFD4041533322CB8E537B98923EAA776EE/", title = "Cynthia Battle Music" }
+}
+
+local remix_rival_tracks =
+{
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028911521/6139DD8F3476B4A76B6B12147527CAE049ECE117/", title = "Hop Battle (Remix)" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802345028911129/145437929E36475541505FDDE1EB0C3A99F6AF16/", title = "Hoenn Rival Battle (Remix)" },
+}
+
+local elite_4_playlist = {}
+
+local original_elite_4_tracks =
+{
+  { url = "http://cloud-3.steamusercontent.com/ugc/1023948871898724461/766C5BF1EB28C474D2366F8223F98C5F083770D0/", title = "Elite 4 Battle Music" },
+  { url = "https://steamusercontent-a.akamaihd.net/ugc/2380802651775268813/AA1A5E098A632268F8CAB404F79C913868FF6A72/", title = "XY Elite 4 Battle Music" }
+}
+
+local remix_elite_4_tracks =
+{
+  
+}
+
+-- Supported camera locations.
+local ARENA = 0
+local FIGURE = 1
+local RACK = 2
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Custom data fields
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------
+-- Custom Gym Data
+--
+-- You no longer need to create a complete suite of Gym Leaders to have your custom Gym Leaders used!
+-- Just create what you want and the available Gym Leaders, Rivals, etc. will be used to fill in the
+-- rest.
+--
+-- In order for this data to be utilizied, you must choose the appropriate Custom Gym Leader option 
+-- during setup. Here are the options:
+--  * None       - Default. Your custom gym leaders will not be considered when choosing Gym Leaders,
+--                 even if Random Gym Leaders are chosen.
+--  * Allow      - Custom Gym Leaders will be considered when the game is choosing Gym Leaders. This
+--                 means that if you chose Gen II Gym Leaders, your Gym Leader has a 1/X chance of 
+--                 being chosen when the game selects Gym Leaders.
+--  * Always Use - Custom Gym Leaders will be considered first. If there is one custom available for
+--                 a aprticular tier (Gym II, Rival, Team Rocket, etc.) it will always be chosen. If
+--                 You made multiple for a particular tier, as many will be chosen as needed before
+--                 using default Gym Leaders for the chosen Gen of Gym Leaders. For example, if you
+--                 made 2 Rivals then both would be chosen at Setup and then the third Rival would
+--                 be chosen based on the selcted Gen of Gym Leaders (Gen Whatever or Random).
+--
+-- RECOMMENDATION: To properly edit this field do the following:
+--   1- This only works at setup. So first, save your game.
+--   2- In the TTS script editor: Copy the entirety of this script and paste it into a text editor
+--       of your choice (Npp or VS Code offer syntax highlighting which helps prevent silly mistakes)
+--   3- In the text editor: make your changes as needed
+--   OPTIONAL: Save off your customGymData field into a text file on your Desktop so you don't have 
+--             to recreate it in the future
+--   4- In the text editor: CTRL+A -> CTRL+C to copy the entirety of this script with your changes
+--   5- In the TTS script editor: CTRL+A -> CTRL+V to overwrite the entirety of the old script with
+--       your new version
+--   6- In the TTS script editor: at the top-left of the window, click Save & Play.
+--   7- Now, move your Gym Leader to their appropriate Pokeball (Custom Gym Leaders, Custom Elite 4, etc.)
+--   8- Save your game *again*.
+--   9- Start the game whenever you are ready. Ensure you choose the appropriate Custom Gym Leader option.
+--   10-You did it. :)
+--
+-- MODEL NOTES:
+--   1- To use a custom model:
+--      * get the Model GUID and add it to the custom Gym data below
+--         - right-click the custom model > Scripting > Copy GUID to clipboard
+--      * prior to starting the game, put the model in the models Pokeball (tiny, black, top-left of the table)
+--   2- To use an existing model: look for the model_GUID field in the existing Pokemon data. I suggest you copy any effects and offsets as well.
+--
+-- LEADER POKEMON NOTES:
+--   1- The first type is the only type that matters for opponent effectiveness. Dual-type effectiveness is not in this game (yet?).
+--   2- STAB calculations, though not perfect, are calulated using both types (dumb, I know). But it really only affects the inital counter values on the table.
+
+-- gymTier field values:
+--    gyms tiers: 1-8
+--    elite4    : 9
+--    champion  : 10
+--    TR        : 11
+--
+-- Any questions, ask us in Discord: https://discord.gg/kU9XD7tXAV
+customGymData =
+{
+  -- Champion Example.
+  {
+    guid = "5aae38",          -- Card GUID. (Host: right-click the card > Scripting > Copy GUID to clipboard)
+    trainerName = "Kyruya",   -- Name of the trainer.
+    gen = "custom",           -- Gen field. Always use "custom".
+    gymTier = 10,             -- Gym Tier. See the comment above this table for valid values.
+    pokemon = {               -- The leader's Pokemon. NOTE: Unique moves also need to be added to customMoveData. CTRL+F to see if the move is already in the moveData table.
+      { name = "Noivern",   level = 9,  types = { "Dragon" },          moves = { "Flamethrower", "Hurricane", "Draco Meteor" }, model_GUID = "212e94", spawn_effect="Status Attack" },
+      { name = "Cramorant", level = 10, types = { "Electric", "Ice" }, moves = { "Gulping Missle", "Ice Beam", "Surf" },        model_GUID = "2b1b24"  } }
+  }
+}
+
+-----------------------------------------------------------------------------------------
+-- Custom Move Data
+--
+-- RECOMMENDATION: To properly edit this field do the following:
+--   1- Save your game
+--   2- In the TTS script editor: Copy the entirety of this script and paste it into a text editor
+--       of your choice (Npp or VS Code offer syntax highlighting which helps prevent silly mistakes)
+--   3- In the text editor: make your changes as needed
+--   OPTIONAL: Save off your customMoveData field into a text file on your Desktop so you don't have 
+--             to recreate it in the future
+--   4- In the text editor: CTRL+A -> CTRL+C to copy the entirety of this script with your changes
+--   5- In the TTS script editor: CTRL+A -> CTRL+V to overwrite the entirety of the old script with
+--       your new version
+--   6- In the TTS script editor: at the top-left of the window, click Save & Play. You did it. :)
+--
+-- NOTES: 
+--   1- The dice field is mandatory but does not affect the game in its current state
+--   2- The STAB field is mandatory but only affects the initial counter values on the table
+--   3- The effects field is optional and does not affect the game in its current state
+--   4- The name, power and type fields are actually important. If you want your move to behave 
+--       appropriately with the Battle Arena, fill them out in a case-sensitive matter with care.
+--   5- If you are entering moves here, they should not share the same name with an existing move.
+--       The move logic searches through the base game moves first and if the move names are identical
+--       then the custom version will never get seen.
+--
+-- Any questions, ask us in Discord: https://discord.gg/kU9XD7tXAV
+customMoveData = 
+{
+  -- Example moves.
+  {name="Draco Meteor",     power=3,   type="Dragon",   dice=6, STAB=true,     effects={{name="AttackDown", target="Self"}} },
+  {name="Gulping Missle",   power=1,   type="Electric", dice=6, STAB=true,     effects={{name="Paralyse", target="Enemy"}} },
+}
+
+-----------------------------------------------------------------------------------------
+-- Custom Pokemon Data
+--
+-- In order for this data to be utilizied, you must choose the appropriate Pokemon Generation option 
+-- during setup. When choosing your Gens of Pokemon, ensure Custom is also toggled.
+--
+-- RECOMMENDATION: To properly edit this field do the following:
+--   1- This only works at setup. So first, save your game.
+--   2- In the TTS script editor: Copy the entirety of this script and paste it into a text editor
+--       of your choice (Npp or VS Code offer syntax highlighting which helps prevent silly mistakes)
+--   3- In the text editor: make your changes as needed
+--   OPTIONAL: Save off your customPokemonData field into a text file on your Desktop so you don't have 
+--             to recreate it in the future
+--   4- In the text editor: CTRL+A -> CTRL+C to copy the entirety of this script with your changes
+--   5- In the TTS script editor: CTRL+A -> CTRL+V to overwrite the entirety of the old script with
+--       your new version
+--   6- In the TTS script editor: at the top-left of the window, click Save & Play.
+--   7- Now, move your Custom Tokens to their appropriate Pokeballs (Custom Pink, Green, Yellow, etc.),
+--      NOTE: If they are an evo token, they must go in the evo Pokeball for their color.
+--   8- Save your game *again*.
+--   9- Start the game whenever you are ready. Ensure Custom Pokemon are enabled in the setup window.
+--   10-You did it. :)
+--
+-- MODEL NOTES:
+--   1- To use a custom model:
+--      * get the Model GUID and add it to the custom Gym data below
+--         - right-click the custom model > Scripting > Copy GUID to clipboard
+--      * prior to starting the game, put the model in the models Pokeball (tiny, black, top-left of the table)
+--   2- To use an existing model: look for the model_GUID field in the existing Pokemon data. I suggest you copy any effects and offsets as well.
+--
+-- DATA NOTES:
+--   1- Pokemon evolutions require duplicate tokens - one for catching as a wild and one or more for evolution purposes. There are examples all 
+--       throughout the codebase that you can reference. Shown below is how Bulbasaur knows it evolves into Ivysaur and how Ivysaur evolves into 
+--       to which tokens are available to grab. The duplicate GUIDs are mandatory because there can be multiple Venesaurs at the same time. 
+--       Venusaur. Note the duplicate guids fields as they give reference  For example, the first Venasaur could be caught on a red tile. In 
+--       addition, an Ivysaur could be caught and evolve into the second Venasaur. Finally, a Trainer could start with Bulbasaur and evolve it 
+--       all the way to Venasaur - making the third concurrent Venasaur on the table. This is how it do :).
+--       Example evolving code:
+--       { name = "Bulbasaur",   level = 1, types = { "Grass", "Poison" },    moves = { "Vine Whip", "Tackle" },          guids = { "d79fc7" },                    evoData = { { cost = 2, ball = BLUE, gen = 1, guids = { "8d43e0" } } } },
+--       { name = "Ivysaur",     level = 3, types = { "Grass", "Poison" },    moves = { "Poison Powder", "Razor Leaf" },  guids = { "60bde3", "8d43e0" },          evoData = { { cost = 2, ball = RED, gen = 1, guids = { "85a0be", "6e6869" } } } },
+--       { name = "Venusaur",    level = 5, types = { "Grass", "Poison" },    moves = { "Double-Edge", "Solar Beam" },    guids = { "e69464", "85a0be", "6e6869" },evoData = { { cost = "Mega", ball = MEGA, gen = 1, cycle = true, guids = { "c941db", "305e33" } }, 
+--                                                                                                                                                                             { cost = "GMax", ball = MEGA, gen = 1, cycle = true, guids = { "0fdf45", "55e05e" } } },
+--       As you can see, Bulbasaur has one entry called evoData that describes the Ivysaur that it can evolve to. Only the evo token (8d43e0) for 
+--       Ivysaur is specified in the evoData, not the wild token (60bde3). For simplicty, in a guids field, the left GUID will be the wild, and after 
+--       that are for evo GUIDs. Continuing on, the Ivysaur lists two GUIDs in its evoData (85a0be & 6e6869) that correspond to the evo GUIDs of Venusaur. 
+--       Venasaur is interesting because it can evolve into two different variants (the Mega and GMax variants). These evolutions are special and are 
+--       identified by the "cost" field being set to "Mega" or "GMax" as appropriate and also the presence of the cycle=true field. This allows Mega and 
+--       Gmax Pokemon to devolve.
+--
+--       Aside from evolution info, the level field identifies its base level, types and moves are self-explanatory. For models, use the model_GUID field.
+--
+-- Any questions, ask us in Discord: https://discord.gg/kU9XD7tXAV
+customPokemonData =
+{
+  { name = "Pikachu", level = 1, types = { "Electric" }, moves = { "Electroweb", "Leer" }, guids = { "77331c", "d7835d" } }
+}
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --  DATA
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-customPokemonData =
-{
-  { name = "Pikachu", level = 1, types = { "Electric" }, moves = { "Electroweb", "Leer" }, guids = { "77331c" } }
-}
 
 -- Add Pokemon here that are always included regardless of gens configured at the start of the game.
 boardPokemonData = 
@@ -126,7 +359,7 @@ boardPokemonData =
   -- Gen I only.
   { name = "Snorlax",     level = 4, types = { "Normal" },moves = { "Body Slam", "Yawn" },         guids = { "d1ee94", "d4b8d9" },          evoData = { { cost = "Mega", ball = MEGA, gen = 1, cycle = true, guids = { "318baa", "cc9678" } } }, model_GUID = "829f1b", spawn_effect="Physical Attack", custom_scale=0.8 },
   -- Gen II only.
-  { name = "Red Gyarados",level = 5, types = { "Water" }, moves = { "Dragon Rage", "Waterfall" },  guids = { "390ee2" },                    evoData = { { cost = "Mega", ball = MEGA, gen = 2, cycle = true, guids = { "bc99f5" } } } },
+  { name = "Red Gyarados",level = 5, types = { "Water" }, moves = { "Dragon Rage", "Waterfall" },  guids = { "390ee2" },                    evoData = { { cost = "Mega", ball = MEGA, gen = 2, cycle = true, guids = { "bc99f5" } } }, model_GUID = "628aa3", custom_scale=0.75 },
   { name = "Sudowoodo",   level = 3, types = { "Rock" },  moves = { "Rock Throw", "Mimic" },       guids = { "315879" }, model_GUID = "b0f59f", spawn_effect="Physical Attack" }
 }
 
@@ -329,7 +562,7 @@ gen1PokemonData =
                                                                                                                                                                         { cost = 2, ball = YELLOW, gen = 4, guids = { "25ef7b" }, model_GUID = "9f14e6" }, 
                                                                                                                                                                         { cost = 2, ball = YELLOW, gen = 4, guids = { "549166" }, model_GUID = "8884ba" },
                                                                                                                                                                         { cost = 2, ball = YELLOW, gen = 6, guids = { "7ea880" }, model_GUID = "381a03" },
-                                                                                                                                                                        { cost = "GMax", ball = MEGA, gen = 1, cycle = true, guids = { "6041c6" }, model_GUID = "ba671c" } }, 
+                                                                                                                                                                        { cost = "GMax", ball = MEGA, gen = 1, cycle = true, guids = { "6041c6" }, model_GUID = "b49fe8" } }, 
                                                                                                                                                             model_GUID = "b37bcd" },
   { name = "Vaporeon",    level = 5, types = { "Water" },              moves = { "Aurora Beam", "Hydro Pump" },    guids = { "dc74f4", "98756d" }, model_GUID = "b8e8a6" },
   { name = "Jolteon",     level = 5, types = { "Electric" },           moves = { "Pin Missile", "Thunder" },       guids = { "7309b7", "090cce" }, model_GUID = "c86032" },
@@ -352,32 +585,32 @@ gen1PokemonData =
 
   -- Mega evolutions.
   { name = "Mega Blastoise",    level = 6,    types = { "Water" },     moves = { "Flash Cannon", "Scald" },         guids = { "b28b0e", "0845e3" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "80eaa8", "1783ad", "427b16" }, model_GUID = "54ea11" } }, model_GUID = "08b8f9", spawn_effect="Mega Evolve" },
-  { name = "GMax Blastoise",    level = 5,    types = { "Water" },     moves = { "Cannonade", "Strike" },           guids = { "308530", "b981cd" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "80eaa8", "1783ad", "427b16" }, model_GUID = "54ea11" } } },
+  { name = "GMax Blastoise",    level = 5,    types = { "Water" },     moves = { "Cannonade", "Strike" },           guids = { "308530", "b981cd" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "80eaa8", "1783ad", "427b16" }, model_GUID = "54ea11" } }, model_GUID = "d1dd67", custom_scale=0.45, offset={x=0, y=0, z=-0.03} },
   { name = "Mega Venusaur",     level = 6,    types = { "Grass" },     moves = { "Sludge Bomb", "Petal Dance" },    guids = { "c941db", "305e33" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "e69464", "85a0be", "6e6869" }, model_GUID = "452ac8", spawn_effect="Physical Attack" } }, model_GUID = "40331c", spawn_effect="Mega Evolve", custom_scale=0.65 },
-  { name = "GMax Venusaur",     level = 5,    types = { "Grass" },     moves = { "Vine Lash", "Strike" },           guids = { "0fdf45", "55e05e" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "e69464", "85a0be", "6e6869" }, model_GUID = "452ac8", spawn_effect="Physical Attack" } } },
-  { name = "Mega Charizard X",  level = 6,    types = { "Fire" },      moves = { "Dragon Claw", "Inferno" },        guids = { "79685a", "f0024f" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } }, model_GUID = "29611d", spawn_effect="Mega Evolve" },
-  { name = "Mega Charizard Y",  level = 6,    types = { "Fire" },      moves = { "Air Slash", "Inferno" },          guids = { "1344e7", "64108c" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } }, model_GUID = "3da16c", spawn_effect="Mega Evolve" },
-  { name = "GMax Charizard",    level = 6,    types = { "Fire" },      moves = { "Wildfire", "Airstream" },         guids = { "9cb6b5", "c4abad" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } } },
+  { name = "GMax Venusaur",     level = 5,    types = { "Grass" },     moves = { "Vine Lash", "Strike" },           guids = { "0fdf45", "55e05e" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "e69464", "85a0be", "6e6869" }, model_GUID = "452ac8", spawn_effect="Physical Attack" } }, model_GUID = "8f8e22", custom_scale=0.35, offset={x=0, y=0, z=-0.03} },
+  { name = "Mega Charizard X",  level = 6,    types = { "Fire", "Dragon" }, moves = { "Dragon Claw", "Inferno" },   guids = { "79685a", "f0024f" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } }, model_GUID = "29611d", spawn_effect="Mega Evolve" },
+  { name = "Mega Charizard Y",  level = 6,    types = { "Fire", "Flying" }, moves = { "Air Slash", "Inferno" },     guids = { "1344e7", "64108c" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } }, model_GUID = "3da16c", spawn_effect="Mega Evolve" },
+  { name = "GMax Charizard",    level = 6,    types = { "Fire" },      moves = { "Wildfire", "Airstream" },         guids = { "9cb6b5", "c4abad" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1c82ed", "6a3112", "8b9dab" }, model_GUID = "27261b", spawn_effect="Status Attack" } }, model_GUID = "156d05", custom_scale=0.5, offset={x=0, y=0, z=-0.03} },
   { name = "Mega Alakazam",     level = 6,    types = { "Psychic" },   moves = { "Dazzling Gleam", "Future Sight" },guids = { "9eade5", "8132c3" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "7117a7", "fa44b9", "74c0b4" } } }, model_GUID = "ef33f5", spawn_effect="Mega Evolve" },
-  { name = "GMax Pikachu",      level = 1,    types = { "Electric" },  moves = { "Volt Crash", "Guard" },           guids = { "e932e9", "558a12" },         evoData = { { cost = 0, ball = PINK, gen = 1, cycle = true, guids = { "a17986", "e5c82a" } } }, model_GUID = "bdd4bc", custom_scale=1.2 },
-  { name = "GMax Butterfree",   level = 3,    types = { "Bug" },       moves = { "Befuddle", "Airstream" },         guids = { "614df5", "47362b" },         evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "3cb9ed", "25d791", "d36522" } } } },
-  { name = "GMax Machamp",      level = 6,    types = { "Fighting" },  moves = { "Chi Strike", "Strike" },          guids = { "8d22d5", "1bc1d8" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "b5109b", "ff6a7f", "518720" } } } },
-  { name = "GMax Meowth",       level = 2,    types = { "Normal" },    moves = { "Gold Rush", "Darkness"},          guids = { "48e2c5" },                   evoData = { { cost = 0, ball = PINK, gen = 1, cycle = true, guids = { "312c52" } } } },
+  { name = "GMax Pikachu",      level = 1,    types = { "Electric" },  moves = { "Volt Crash", "Guard" },           guids = { "e932e9", "558a12" },         evoData = { { cost = 0, ball = PINK, gen = 1, cycle = true, guids = { "a17986", "e5c82a" } } }, model_GUID = "18bec8", custom_scale=1.1 },
+  { name = "GMax Butterfree",   level = 3,    types = { "Bug" },       moves = { "Befuddle", "Airstream" },         guids = { "614df5", "47362b" },         evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "3cb9ed", "25d791", "d36522" } } }, model_GUID = "f8fc86" },
+  { name = "GMax Machamp",      level = 6,    types = { "Fighting" },  moves = { "Chi Strike", "Strike" },          guids = { "8d22d5", "1bc1d8" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "b5109b", "ff6a7f", "518720" } } }, model_GUID = "9636c9", custom_scale=0.65, offset={x=0, y=0, z=-0.03} },
+  { name = "GMax Meowth",       level = 2,    types = { "Normal" },    moves = { "Gold Rush", "Darkness"},          guids = { "48e2c5" },                   evoData = { { cost = 0, ball = PINK, gen = 1, cycle = true, guids = { "312c52" } } }, model_GUID = "bc9ef1" },
   { name = "Mega Pidgeot",      level = 6,    types = { "Flying" },    moves = { "Steel Wing", "Hurricane"},        guids = { "9844cb", "9be58b" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "1d36ba", "45e30a", "9f1834" } } }, model_GUID = "a6d82a", spawn_effect="Mega Evolve" },
   { name = "Mega Beedrill",     level = 4,    types = { "Bug" },       moves = { "Poison Jab", "X-Scissor"},        guids = { "d4066d", "f8819a" },         evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "f8894f", "73c602", "61f84a" } } }, model_GUID = "ef20d1", spawn_effect="Mega Evolve" },
-  { name = "GMax Gengar",       level = 5,    types = { "Ghost" },     moves = { "Terror", "Ooze" },                guids = { "774eaa", "1b8bc7" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "fe0809", "7d5d39", "ad0856" } } } },
+  { name = "GMax Gengar",       level = 5,    types = { "Ghost" },     moves = { "Terror", "Ooze" },                guids = { "774eaa", "1b8bc7" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "fe0809", "7d5d39", "ad0856" } } }, model_GUID = "501df0", custom_scale=0.3 },
   { name = "Mega Slowbro",      level = 6,    types = { "Water" },     moves = { "Zen Headbutt", "Blizzard" },      guids = { "6060e8", "083e93" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "adce28", "4b8280" } } }, model_GUID = "53ee2c", spawn_effect="Mega Evolve" },
-  { name = "GMax Kingler",      level = 4,    types = { "Water" },     moves = { "Foam Burst", "Guard" },           guids = { "1fa11f", "9edb28" },         evoData = { { cost = 0, ball = YELLOW, gen = 1, cycle = true, guids = { "f18035", "aa3008" } } } },
+  { name = "GMax Kingler",      level = 4,    types = { "Water" },     moves = { "Foam Burst", "Guard" },           guids = { "1fa11f", "9edb28" },         evoData = { { cost = 0, ball = YELLOW, gen = 1, cycle = true, guids = { "f18035", "aa3008" } } }, model_GUID = "dc1beb", custom_scale=0.6 },
   { name = "Mega Pinsir",       level = 5,    types = { "Bug" },       moves = { "Struggle Bug", "Seismic Toss" },  guids = { "202a18" },                   evoData = { { cost = 0, ball = YELLOW, gen = 1, cycle = true, guids = { "141f37" } } }, model_GUID = "9a4265", spawn_effect="Mega Evolve" },
   { name = "Mega Kangaskhan",   level = 5,    types = { "Normal" },    moves = { "Hyper Beam", "Focus Blast" },     guids = { "0eb8c8" },                   evoData = { { cost = 0, ball = YELLOW, gen = 1, cycle = true, guids = { "cf2b95" } } }, model_GUID = "62422f", spawn_effect="Mega Evolve", custom_scale=0.9 },
-  { name = "GMax Lapras",       level = 3,    types = { "Water" },     moves = { "Resonance", "Strike" },           guids = { "f23aef" },                   evoData = { { cost = 0, ball = BLUE, gen = 1, cycle = true, guids = { "a465e9" } } }, model_GUID = "bb623e", offset={x=0, y=1.5, z=0} },
-  { name = "GMax Eevee",        level = 3,    types = { "Normal" },    moves = { "Darkness", "Cuddle" },            guids = { "6041c6" },                   evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "690870" } } }, model_GUID = "ba671c" },
+  { name = "GMax Lapras",       level = 3,    types = { "Water" },     moves = { "Resonance", "Strike" },           guids = { "f23aef" },                   evoData = { { cost = 0, ball = BLUE, gen = 1, cycle = true, guids = { "a465e9" } } }, model_GUID = "404c5e", offset={x=0, y=2, z=0}, custom_scale=0.35 },
+  { name = "GMax Eevee",        level = 3,    types = { "Normal" },    moves = { "Darkness", "Cuddle" },            guids = { "6041c6" },                   evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "690870" } } }, model_GUID = "b49fe8", custom_scale=0.8 },
   { name = "Mega Aerodactyl",   level = 5,    types = { "Rock" },      moves = { "Ancient Power", "Iron Head" },    guids = { "5ffdbe" },                   evoData = { { cost = 0, ball = YELLOW, gen = 1, cycle = true, guids = { "b69470" } } }, model_GUID = "411f15", spawn_effect="Mega Evolve" },
-  { name = "GMax Snorlax",      level = 4,    types = { "Normal" },    moves = { "Replenish", "Strike" },           guids = { "318baa", "cc9678" },         evoData = { { cost = 0, ball = BLUE, gen = 1, cycle = true, guids = { "81f09a", "a017f9" } } } },
+  { name = "GMax Snorlax",      level = 4,    types = { "Normal" },    moves = { "Replenish", "Strike" },           guids = { "318baa", "cc9678" },         evoData = { { cost = 0, ball = BLUE, gen = 1, cycle = true, guids = { "81f09a", "a017f9" } } }, model_GUID = "7bff14", offset={x=0, y=1.25, z=0}, custom_scale=0.6 },
   { name = "Mega Gyarados",     level = 4,    types = { "Water" },     moves = { "Water Pulse", "Crunch" },         guids = { "f45bf6", "4d5c16" },         evoData = { { cost = 0, ball = GREEN, gen = 1, cycle = true, guids = { "d14d19", "985830" } } }, model_GUID = "601ecc", spawn_effect="Mega Evolve", custom_scale=0.75 },
   { name = "Mega Mewtwo X",     level = 7,    types = { "Psychic" },   moves = { "Aura Sphere", "Psystrike" },      guids = { "bf8dc5" },                   evoData = { { cost = 0, ball = LEGENDARY, gen = 1, cycle = true, guids = { "d78d06" } } }, model_GUID = "fb5dae", spawn_effect="Mega Evolve" },
   { name = "Mega Mewtwo Y",     level = 7,    types = { "Psychic" },   moves = { "Psycho Cut", "Me First" },        guids = { "a4bdc6" },                   evoData = { { cost = 0, ball = LEGENDARY, gen = 1, cycle = true, guids = { "d78d06" } } }, model_GUID = "18fa55", spawn_effect="Mega Evolve" },
-  { name = "Mega Gengar",       level = 7,    types = { "Ghost" },     moves = { "Shadow Ball", "Dreameater" },     guids = { "5ef98c", "68c539" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "fe0809", "7d5d39", "ad0856" } } }, model_GUID = "72228f", offset={x=0, y=1.0, z=0} },
+  { name = "Mega Gengar",       level = 6,    types = { "Ghost" },     moves = { "Shadow Ball", "Dreameater" },     guids = { "5ef98c", "68c539" },         evoData = { { cost = 0, ball = RED, gen = 1, cycle = true, guids = { "fe0809", "7d5d39", "ad0856" } } }, model_GUID = "72228f", offset={x=0, y=1.0, z=0} },
 } 
 
 gen2PokemonData =
@@ -489,7 +722,7 @@ gen2PokemonData =
 
   -- Mega evolutions.
   { name = "Mega Ampharos",     level = 5,    types = { "Electric" },   moves = { "Charge Beam", "Dragon Pulse" },guids = { "f282f0", "16d003" },            evoData = { { cost = 0, ball = YELLOW, gen = 2, cycle = true, guids = { "57b26e", "433542", "089edd" } } }, model_GUID = "333b22", spawn_effect="Mega Evolve" },
-  { name = "Mega Red Gyarados", level = 6,    types = { "Water" },      moves = { "Water Pulse", "Crunch" },      guids = { "bc99f5" },                      evoData = { { cost = 0, ball = YELLOW, gen = 2, cycle = true, guids = { "390ee2" } } } },     -- Technically gen II only.
+  { name = "Mega Red Gyarados", level = 6,    types = { "Water" },      moves = { "Water Pulse", "Crunch" },      guids = { "bc99f5" },                      evoData = { { cost = 0, ball = YELLOW, gen = 2, cycle = true, guids = { "390ee2" } } }, model_GUID = "55036d" },     -- Technically gen II only.
   { name = "Mega Steelix",      level = 5,    types = { "Steel" },      moves = { "Earthquake", "Rock Slide" },   guids = { "8b5001", "86038a" },            evoData = { { cost = 0, ball = BLUE, gen = 2, cycle = true, guids = { "93482a", "9248b4" } } }, model_GUID = "f5a482", spawn_effect="Physical Attack", custom_scale=0.7, offset={x=0, y=0, z=0.5} },
   { name = "Mega Scizor",       level = 6,    types = { "Bug" },        moves = { "Night Slash", "X-Scissor" },   guids = { "ae958f", "1bb3d8" },            evoData = { { cost = 0, ball = RED, gen = 2, cycle = true, guids = { "7e05b1", "22e6a3" } } }, model_GUID = "4175df", spawn_effect="Mega Evolve" },
   { name = "Mega Heracross",    level = 5,    types = { "Bug" },        moves = { "Close Combat", "Megahorn" },   guids = { "926476" },                      evoData = { { cost = 0, ball = BLUE, gen = 2, cycle = true, guids = { "6f8ffe" } } }, model_GUID = "cbdd77", spawn_effect="Mega Evolve" },
@@ -504,11 +737,11 @@ gen3PokemonData =
   { name = "Grovyle",    level = 3, types = { "Grass" },    moves = { "Leaf Blade", "Slam" },                 guids = { "fc07df", "71f6d0" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "6acdb2", "8d967c" } } }, model_GUID = "7c33a8" },
   { name = "Sceptile",   level = 5, types = { "Grass" },    moves = { "Solar Beam", "Iron Tail" },            guids = { "01d5b8", "6acdb2", "8d967c" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "3921c1", "3563ba" } } }, model_GUID = "cb8b63", spawn_effect="Status Attack", custom_scale=0.9 },
   { name = "Torchic",    level = 1, types = { "Fire" },     moves = { "Ember", "Growl" },                     guids = { "dfac41" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "0d3fc1" } } }, model_GUID = "215780", spawn_effect="Physical Attack" },
-  { name = "Combusken",  level = 3, types = { "Fire" },     moves = { "Double Kick", "Blaze Kick" },          guids = { "af5888", "0d3fc1" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "6b6eaa", "e4fcc7" } } }, model_GUID = "87fbb3", spawn_effect="Physical Attack" },
-  { name = "Blaziken",   level = 5, types = { "Fire" },     moves = { "Sky Uppercut", "Overheat" },           guids = { "b3e3d0", "6b6eaa", "e4fcc7" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "7b81ef", "641ef5" } } }, model_GUID = "868292", spawn_effect="Status Attack" },
+  { name = "Combusken",  level = 3, types = { "Fire", "Fighting" }, moves = { "Double Kick", "Blaze Kick" },  guids = { "af5888", "0d3fc1" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "6b6eaa", "e4fcc7" } } }, model_GUID = "87fbb3", spawn_effect="Physical Attack" },
+  { name = "Blaziken",   level = 5, types = { "Fire", "Fighting" },     moves = { "Sky Uppercut", "Overheat" }, guids = { "b3e3d0", "6b6eaa", "e4fcc7" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "7b81ef", "641ef5" } } }, model_GUID = "868292", spawn_effect="Status Attack" },
   { name = "Mudkip",     level = 1, types = { "Water" },    moves = { "Mud-Slap", "Water Gun" },              guids = { "18d937" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "80e724" } } }, model_GUID = "7bb712" },
-  { name = "Marshtomp",  level = 3, types = { "Water" },    moves = { "Muddy Water", "Take Down" },           guids = { "9d8a4b", "80e724" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "0f2fe4", "93c652" } } }, model_GUID = "e7b84a" },
-  { name = "Swampert",   level = 5, types = { "Water" },    moves = { "Hydro Pump", "Earthquake" },           guids = { "46c207", "0f2fe4", "93c652" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "f5dc2f", "045bc8" } } }, model_GUID = "215a22", spawn_effect="Status Attack", custom_scale=0.7, offset={x=0, y=0, z=-0.05} },
+  { name = "Marshtomp",  level = 3, types = { "Water", "Ground" }, moves = { "Muddy Water", "Take Down" },    guids = { "9d8a4b", "80e724" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "0f2fe4", "93c652" } } }, model_GUID = "e7b84a" },
+  { name = "Swampert",   level = 5, types = { "Water", "Ground" }, moves = { "Hydro Pump", "Earthquake" },    guids = { "46c207", "0f2fe4", "93c652" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "f5dc2f", "045bc8" } } }, model_GUID = "215a22", spawn_effect="Status Attack", custom_scale=0.7, offset={x=0, y=0, z=-0.05} },
   { name = "Poochyena",  level = 1, types = { "Dark" },     moves = { "Howl", "Tackle" },                     guids = { "484c8e" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "ad5677" } } }, model_GUID = "0266ca" },
   { name = "Mightyena",  level = 3, types = { "Dark" },     moves = { "Take Down", "Crunch" },                guids = { "d14a45", "ad5677" }, model_GUID = "4e25db" },
   { name = "Zigzagoon",  level = 1, types = { "Normal" },   moves = { "Sand Attack", "Tackle" },              guids = { "8effad" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "fea2c0" } } }, model_GUID = "fa2eb0" },
@@ -529,13 +762,13 @@ gen3PokemonData =
   { name = "Swellow",    level = 4, types = { "Flying" },   moves = { "Quick Attack", "Aerial Ace" },         guids = { "fd1fd2", "3e7919" }, model_GUID = "430ab8", spawn_effect="Physical Attack" },
   { name = "Wingull",    level = 1, types = { "Water" },    moves = { "Water Gun", "Mist" },                  guids = { "018621" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "b53aec" } } }, model_GUID = "2ba1b1" },
   { name = "Pelipper",   level = 3, types = { "Water" },    moves = { "Water Pulse", "Wing Attack" },         guids = { "3fd851", "b53aec" }, model_GUID = "dff0ed" },
-  { name = "Ralts",      level = 1, types = { "Psychic" },  moves = { "Confusion" },                          guids = { "92ca7a" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "61a3fe" } } }, model_GUID = "3240f8" },
-  { name = "Kirlia",     level = 3, types = { "Psychic" },  moves = { "Will-O-Wisp", "Psychic" },             guids = { "260dd4", "61a3fe" },           evoData = { { cost = 2, ball = RED, gen = 4, guids = { "491632", "2956c7" } }, { cost = 2, ball = RED, gen = 3, guids = { "a58279", "9ef381" } } }, model_GUID = "9624b5", spawn_effect="Physical Attack" },
-  { name = "Gardevoir",  level = 5, types = { "Psychic" },  moves = { "Shock Wave", "Future Sight" },         guids = { "fe8f9a", "a58279", "9ef381" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "13d6a2", "7f7d21" } } }, model_GUID = "8c5fec" },
+  { name = "Ralts",      level = 1, types = { "Psychic", "Fairy" },  moves = { "Confusion" },                 guids = { "92ca7a" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "61a3fe" } } }, model_GUID = "3240f8" },
+  { name = "Kirlia",     level = 3, types = { "Psychic", "Fairy" },  moves = { "Will-O-Wisp", "Psychic" },    guids = { "260dd4", "61a3fe" },           evoData = { { cost = 2, ball = RED, gen = 4, guids = { "491632", "2956c7" } }, { cost = 2, ball = RED, gen = 3, guids = { "a58279", "9ef381" } } }, model_GUID = "9624b5", spawn_effect="Physical Attack" },
+  { name = "Gardevoir",  level = 5, types = { "Psychic", "Fairy" },  moves = { "Shock Wave", "Future Sight" },guids = { "fe8f9a", "a58279", "9ef381" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "13d6a2", "7f7d21" } } }, model_GUID = "8c5fec" },
   { name = "Surskit",    level = 1, types = { "Bug" },      moves = { "Bubble" },                             guids = { "f47f95" },                     evoData = { { cost = 2, ball = GREEN, gen = 3, guids = { "899d71" } } }, model_GUID = "15b02f" },
   { name = "Masquerain", level = 3, types = { "Bug" },      moves = { "Silver Wind", "Bubble Beam" },         guids = { "6f6a4b", "899d71" }, model_GUID = "f71175" },
   { name = "Shroomish",  level = 1, types = { "Grass" },    moves = { "Stun Spore", "Tackle" },               guids = { "afce65" },                     evoData = { { cost = 2, ball = GREEN, gen = 3, guids = { "b2b675" } } }, model_GUID = "f9ef26" },
-  { name = "Breloom",    level = 3, types = { "Grass" },    moves = { "Dynamic Punch", "Mega Drain" },        guids = { "54f6b2", "b2b675" }, model_GUID = "d12809" },
+  { name = "Breloom",    level = 3, types = { "Grass", "Fighting" },    moves = { "Dynamic Punch", "Mega Drain" },        guids = { "54f6b2", "b2b675" }, model_GUID = "d12809" },
   { name = "Slakoth",    level = 2, types = { "Normal" },   moves = { "Scratch" },                            guids = { "0e7e5b" },                     evoData = { { cost = 1, ball = BLUE, gen = 3, guids = { "bb497c" } } }, model_GUID = "33417e" },
   { name = "Vigoroth",   level = 3, types = { "Normal" },   moves = { "Counter", "Slash" },                   guids = { "167d17", "bb497c" },           evoData = { { cost = 3, ball = RED, gen = 3, guids = { "9e0b51", "eed73b" } } }, model_GUID = "4d9117" },
   { name = "Slaking",    level = 6, types = { "Normal" },   moves = { "Feint Attack", "Covet" },              guids = { "beea0e", "9e0b51", "eed73b" }, model_GUID = "66bcca" },
@@ -557,7 +790,7 @@ gen3PokemonData =
   { name = "Aron",       level = 2, types = { "Steel" },    moves = { "Headbutt", "Mud-Slap" },               guids = { "2bdf79" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "1ad335" } } }, model_GUID = "156c85", spawn_effect="Physical Attack" },
   { name = "Lairon",     level = 4, types = { "Steel" },    moves = { "Metal Claw", "Rock Throw" },           guids = { "fc819f", "1ad335" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "19c95d", "037e57" } } }, model_GUID = "d48d21", custom_scale=0.75 },
   { name = "Aggron",     level = 6, types = { "Steel" },    moves = { "Earthquake", "Iron Tail" },            guids = { "a5daad", "19c95d", "037e57" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "8f5016", "b94e60" } } }, model_GUID = "ce1109", custom_scale=0.8 },
-  { name = "Meditite",   level = 2, types = { "Fighting" }, moves = { "Hidden Power", "Detect" },             guids = { "8cae23" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "925a8f" } } }, model_GUID = "da149f" },
+  { name = "Meditite",   level = 2, types = { "Fighting", "Psychic" }, moves = { "Hidden Power", "Detect" },             guids = { "8cae23" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "925a8f" } } }, model_GUID = "da149f" },
   { name = "Medicham",   level = 4, types = { "Fighting" }, moves = { "Confusion", "Brick Break" },           guids = { "1b2da9", "925a8f" },           evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "19680e", "97834f" } } }, model_GUID = "1e9b7e" },
   { name = "Electrike",  level = 2, types = { "Electric" }, moves = { "Thunder Wave", "Quick Attack" },       guids = { "e37270" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "24b582" } } }, model_GUID = "b0e819" },
   { name = "Manectric",  level = 4, types = { "Electric" }, moves = { "Thunder", "Bite" },                    guids = { "66eddf", "24b582" },           evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "a96290", "70bf71" } } }, model_GUID = "27ca2d", custom_scale=0.9, offset={x=0, y=0, z=-0.03} },
@@ -641,19 +874,19 @@ gen3PokemonData =
   { name = "Kyogre",     level = 7, types = { "Water" },    moves = { "Water Spout", "Ice Beam" },            guids = { "2fd702" },                     evoData = { { cost = "Blue Orb", ball = LEGENDARY, gen = 3, cycle = true, guids = { "b31acd" } } }, model_GUID = "a7e721", offset={x=0, y=1.25, z=-0.3} },
   { name = "Primal Kyogre", level = 7, types = { "Water" }, moves = { "Ancient Power", "Origin Pulse" },      guids = { "b31acd" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 3, cycle = true, guids = { "2fd702" } } }, model_GUID = "ec46fa", spawn_effect="Primal Evolution", custom_scale=0.5, offset={x=0, y=1.0, z=0} },
   { name = "Groudon",    level = 7, types = { "Ground" },   moves = { "Earthquake", "Fire Blast" },           guids = { "ef5ee2" },                     evoData = { { cost = "Red Orb", ball = LEGENDARY, gen = 3, cycle = true, guids = { "0d318f" } } }, model_GUID = "2bba90", custom_scale=0.3 },
-  { name = "Primal Groudon", level = 7, types = { "Ground" }, moves = { "Precipise Blades", "Lava Plume" },   guids = { "0d318f" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 3, cycle = true, guids = { "ef5ee2" } } }, model_GUID = "0e9a71", spawn_effect="Primal Evolution", custom_scale=0.3 },
+  { name = "Primal Groudon", level = 7, types = { "Ground", "Fire" }, moves = { "Precipise Blades", "Lava Plume" },   guids = { "0d318f" },             evoData = { { cost = 0, ball = LEGENDARY, gen = 3, cycle = true, guids = { "ef5ee2" } } }, model_GUID = "0e9a71", spawn_effect="Primal Evolution", custom_scale=0.3 },
   { name = "Rayquaza",   level = 7, types = { "Dragon" },   moves = { "Extreme Speed", "Dragon Claw" },       guids = { "3ae691" },                     evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "45f389" } } }, model_GUID = "265715" },
   { name = "Jirachi",    level = 7, types = { "Steel" },    moves = { "Doom Desire", "Psychic" },             guids = { "48d5bf" }, model_GUID = "3df5b6" },
   { name = "Deoxys",     level = 7, types = { "Psychic" },  moves = { "Psycho Boost", "Night Shade" },        guids = { "f4e2fe" }, model_GUID = "87e928", spawn_effect="Status Attack" },
 
   -- Mega evolutions.
   { name = "Mega Sceptile",     level = 6,    types = { "Grass" },   moves = { "Dual Chop", "Leaf Storm" },   guids = { "3921c1", "3563ba" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "01d5b8", "6acdb2", "8d967c" } } }, model_GUID = "d3060f", spawn_effect="Mega Evolve" },
-  { name = "Mega Blaziken",     level = 6,    types = { "Fire" },    moves = { "Brave Bird", "Flare Blitz" }, guids = { "7b81ef", "641ef5" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "b3e3d0", "6b6eaa", "e4fcc7" } } }, model_GUID = "54893e", spawn_effect="Mega Evolve" },
-  { name = "Mega Swampert",     level = 6,    types = { "Water" },   moves = { "Focus Blast", "Scald" },      guids = { "f5dc2f", "045bc8" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "46c207", "0f2fe4", "93c652" } } }, model_GUID = "436a81", spawn_effect="Mega Evolve", custom_scale=0.75 },
-  { name = "Mega Gardevoir",    level = 6,    types = { "Psychic" }, moves = { "Magical Leaf", "Moonblast" }, guids = { "13d6a2", "7f7d21" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "fe8f9a", "a58279", "9ef381" } } }, model_GUID = "17dce9", spawn_effect="Mega Evolve" },
+  { name = "Mega Blaziken",     level = 6,    types = { "Fire", "Fighting" },    moves = { "Brave Bird", "Flare Blitz" }, guids = { "7b81ef", "641ef5" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "b3e3d0", "6b6eaa", "e4fcc7" } } }, model_GUID = "54893e", spawn_effect="Mega Evolve" },
+  { name = "Mega Swampert",     level = 6,    types = { "Water", "Ground" },   moves = { "Focus Blast", "Scald" },      guids = { "f5dc2f", "045bc8" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "46c207", "0f2fe4", "93c652" } } }, model_GUID = "436a81", spawn_effect="Mega Evolve", custom_scale=0.75 },
+  { name = "Mega Gardevoir",    level = 6,    types = { "Psychic", "Fairy" }, moves = { "Magical Leaf", "Moonblast" }, guids = { "13d6a2", "7f7d21" }, evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "fe8f9a", "a58279", "9ef381" } } }, model_GUID = "17dce9", spawn_effect="Mega Evolve" },
   { name = "Mega Sableye",      level = 5,    types = { "Dark" },    moves = { "Shadow Claw", "Dreameater" }, guids = { "ad6245" },                evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "d0ddb7" } } }, model_GUID = "6f99c4", spawn_effect="Physical Attack" },
   { name = "Mega Mawile",       level = 5,    types = { "Steel" },   moves = { "Play Rough", "Iron Head" },   guids = { "901321" },                evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "825f3c" } } }, model_GUID = "de3150", spawn_effect="Mega Evolve" },
-  { name = "Mega Aggron",       level = 7,    types = { "Steel" },   moves = { "Iron Head", "Stone Edge" },    guids = { "8f5016", "b94e60" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "a5daad", "19c95d", "037e57" } } }, model_GUID = "103b64", spawn_effect="Mega Evolve", custom_scale=0.4 },
+  { name = "Mega Aggron",       level = 7,    types = { "Steel", "Rock" },   moves = { "Iron Head", "Stone Edge" },    guids = { "8f5016", "b94e60" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "a5daad", "19c95d", "037e57" } } }, model_GUID = "103b64", spawn_effect="Mega Evolve", custom_scale=0.4 },
   { name = "Mega Medicham",     level = 5,    types = { "Fighting" },moves = { "Zen Headbutt", "Ice Punch" }, guids = { "19680e", "97834f" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "1b2da9", "925a8f" } } }, model_GUID = "2c439f", spawn_effect="Mega Evolve" },
   { name = "Mega Manectric",    level = 5,    types = { "Electric" },moves = { "Thunder Fang", "Hyper Beam" },guids = { "a96290", "70bf71" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "66eddf", "24b582" } } }, model_GUID = "f4b774", spawn_effect="Mega Evolve", custom_scale=0.7, offset={x=0, y=0, z=-0.1} },
   { name = "Mega Sharpedo",     level = 5,    types = { "Water" },   moves = { "Night Slash", "Scald" },      guids = { "3127db", "b7e979" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "852350", "7d206a" } } }, model_GUID = "16ed43", spawn_effect="Mega Evolve" },
@@ -674,8 +907,8 @@ gen4PokemonData =
   -- Gen 4 387-400
   { name = "Turtwig",    level = 1, types = { "Grass" },    moves = { "Withdraw", "Tackle" },            guids = { "cacd94" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "ff1b43" } } }, model_GUID = "02eeef" },
   { name = "Grotle",     level = 3, types = { "Grass" },    moves = { "Razor Leaf", "Bite" },            guids = { "20d958", "ff1b43" },                    evoData = { { cost = 2, ball = RED, gen = 4, guids = { "cfebcb", "3f2eaa" } } }, model_GUID = "89af8c", custom_scale=0.9 },
-  { name = "Torterra",   level = 5, types = { "Grass" },    moves = { "Leaf Storm", "Earthquake" },      guids = { "902030", "cfebcb", "3f2eaa" }, model_GUID = "542b09", custom_scale=0.65 },
-  { name = "Chimchar",   level = 1, types = { "Fire" },     moves = { "Ember", "Taunt" },          guids = { "cd904d" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "8cd8f7" } } }, model_GUID = "cc51f2", spawn_effect="Physical Attack" },
+  { name = "Torterra",   level = 5, types = { "Grass", "Ground" }, moves = { "Leaf Storm", "Earthquake" }, guids = { "902030", "cfebcb", "3f2eaa" }, model_GUID = "542b09", custom_scale=0.65 },
+  { name = "Chimchar",   level = 1, types = { "Fire" },     moves = { "Ember", "Taunt" },                guids = { "cd904d" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "8cd8f7" } } }, model_GUID = "cc51f2", spawn_effect="Physical Attack" },
   { name = "Monferno",   level = 3, types = { "Fire" },     moves = { "Flame Wheel", "Mach Punch" },     guids = { "2ba1c0", "8cd8f7" },                    evoData = { { cost = 2, ball = RED, gen = 4, guids = { "aa0bb2", "38ad9f" } } }, model_GUID = "c2e9c2", spawn_effect="Physical Attack" },
   { name = "Infernape",  level = 5, types = { "Fire" },     moves = { "Close Combat", "Flare Blitz" },   guids = { "6c7166", "aa0bb2", "38ad9f" }, model_GUID = "b04364", custom_scale=0.85 },
   { name = "Piplup",     level = 1, types = { "Water" },    moves = { "Growl", "Peck" },                 guids = { "ad1a53" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "707fe1" } } }, model_GUID = "c9b643" },
@@ -728,7 +961,7 @@ gen4PokemonData =
   { name = "Purugly",    level = 4, types = { "Normal" },   moves = { "Sucker Punch", "Slash" },         guids = { "739efa", "468535" }, model_GUID = "40381a" },
   { name = "Chingling",  level = 2, types = { "Psychic" },  moves = { "Confusion", "Wrap" },             guids = { "3c321b" },                              evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "a78de8" } } }, model_GUID = "077587" },
   { name = "Stunky",     level = 2, types = { "Poison" },   moves = { "Poison Gas", "Scratch" },         guids = { "350900" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "ce1be6" } } }, model_GUID = "4f2c9f" },
-  { name = "Skuntank",   level = 4, types = { "Poison" },   moves = { "Flamethrower", "Night Slash" },   guids = { "b80e55", "ce1be6" }, model_GUID = "142926" },
+  { name = "Skuntank",   level = 4, types = { "Poison", "Dark" }, moves = { "Flamethrower", "Night Slash" }, guids = { "b80e55", "ce1be6" }, model_GUID = "142926" },
   { name = "Bronzor",    level = 2, types = { "Steel" },    moves = { "Confuse Ray", "Confusion" },      guids = { "76ab01" },                              evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "793185" } } }, model_GUID = "f3570a", spawn_effect="Physical Attack" },
   { name = "Bronzong",   level = 4, types = { "Steel" },    moves = { "Extrasensory", "Iron Head" },     guids = { "c70883", "793185" }, model_GUID = "422285" },
   { name = "Bonsly",     level = 1, types = { "Rock" },     moves = { "Fake Tears" },                    guids = { "992ede" },                              evoData = { { cost = 2, ball = GREEN, gen = 2, guids = { "eeca81" } } }, model_GUID = "e95207", spawn_effect="Physical Attack" },
@@ -748,7 +981,7 @@ gen4PokemonData =
   { name = "Skorupi",    level = 2, types = { "Poison" },   moves = { "Poison Fang", "Pin Missile" },    guids = { "12a4d7" },                              evoData = { { cost = 2, ball = YELLOW, gen = 4, guids = { "2cdfe7" } } }, model_GUID = "f7b7d8" },
   { name = "Drapion",    level = 4, types = { "Poison" },   moves = { "Cross Poison", "Crunch" },        guids = { "7faa88", "2cdfe7" }, model_GUID = "5178e7", custom_scale=0.8 },
   { name = "Croagunk",   level = 2, types = { "Poison" },   moves = { "Mud-Slap", "Pursuit" },           guids = { "8a87c5" },                              evoData = { { cost = 2, ball = YELLOW, gen = 4, guids = { "edeba6" } } }, model_GUID = "924639" },
-  { name = "Toxicroak",  level = 4, types = { "Poison" },   moves = { "Poison Jab", "Revenge" },         guids = { "2f6517", "edeba6" }, model_GUID = "8604f0" },
+  { name = "Toxicroak",  level = 4, types = { "Poison", "Fighting" }, moves = { "Poison Jab", "Revenge" }, guids = { "2f6517", "edeba6" }, model_GUID = "8604f0" },
   { name = "Carnivine",  level = 3, types = { "Grass" },    moves = { "Power Whip", "Feint Attack" },    guids = { "6ae25c" }, model_GUID = "f29340" },
   { name = "Finneon",    level = 2, types = { "Water" },    moves = { "Water Gun", "Attract" },          guids = { "4e7881" },                              evoData = { { cost = 2, ball = YELLOW, gen = 4, guids = { "eff442" } } }, model_GUID = "ee9976" },
   { name = "Lumineon",   level = 4, types = { "Water" },    moves = { "Water Pulse", "U-Turn" },         guids = { "5e8443", "eff442" }, model_GUID = "5d8ca7", spawn_effect="Physical Attack" },
@@ -769,7 +1002,7 @@ gen4PokemonData =
   { name = "Gliscor",    level = 5, types = { "Ground" },   moves = { "Poison Jab", "X-Scissor" },       guids = { "9344ba", "96a4fa" }, model_GUID = "0389d0" },
   { name = "Mamoswine",  level = 6, types = { "Ice" },      moves = { "Earthquake", "Blizzard" },        guids = { "ae18c1", "bac5e2", "3e9a5e" }, model_GUID = "3f4e29", custom_scale=0.6 },
   { name = "Porygon-Z",  level = 5, types = { "Normal" },   moves = { "Zap Cannon", "Hyper Beam" },      guids = { "8b5275", "89624f", "ccdbee" }, model_GUID = "42158e" },
-  { name = "Gallade",    level = 5, types = { "Psychic" },  moves = { "Close Combat", "Psycho Cut" },    guids = { "e00be3", "491632", "2956c7" },          evoData = { { cost = "Mega", ball = MEGA, gen = 4, cycle = true, guids = { "762e3d", "f77da3" } } }, model_GUID = "04f582" },
+  { name = "Gallade",    level = 5, types = { "Psychic", "Fighting" },  moves = { "Close Combat", "Psycho Cut" },    guids = { "e00be3", "491632", "2956c7" },          evoData = { { cost = "Mega", ball = MEGA, gen = 4, cycle = true, guids = { "762e3d", "f77da3" } } }, model_GUID = "04f582" },
   -- Gen 4 476-493
   { name = "Probopass",  level = 5, types = { "Rock" },     moves = { "Magnet Bomb", "Stone Edge" },     guids = { "c36f28", "261bac" }, model_GUID = "3a1a8d" },
   { name = "Dusknoir",   level = 6, types = { "Ghost" },    moves = { "Shadow Punch", "Seismic Toss" },  guids = { "40e69b", "59c3d9", "0a1b22" }, model_GUID = "14f5fa" },
@@ -778,12 +1011,12 @@ gen4PokemonData =
   { name = "Grass Rotom",level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Leaf Storm" },    guids = { "9c2b53" }, model_GUID = "cd771b" },
   { name = "Fire Rotom", level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Overheat" },      guids = { "119ba7" }, model_GUID = "154dd8" },
   { name = "Water Rotom",level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Hydro Pump" },    guids = { "e60f49" }, model_GUID = "c5364f" },
-  { name = "Flying Rotom",level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Air Slash" },     guids = { "2fc387" }, model_GUID = "274d14", spawn_effect="Physical Attack" },
+  { name = "Flying Rotom",level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Air Slash" },    guids = { "2fc387" }, model_GUID = "274d14", spawn_effect="Physical Attack" },
   { name = "Ice Rotom",  level = 3, types = { "Electric" }, moves = { "Ominous Wind", "Blizzard" },      guids = { "313204" }, model_GUID = "671b5d" },
   { name = "Uxie",       level = 7, types = { "Psychic" },  moves = { "Thunder Punch", "Psychic" },      guids = { "7161bc" }, model_GUID = "0d927b", spawn_effect="Physical Attack" },
   { name = "Mesprit",    level = 7, types = { "Psychic" },  moves = { "Extrasensory", "Fire Punch" },    guids = { "206d05" }, model_GUID = "ac091c" },
   { name = "Azelf",      level = 7, types = { "Psychic" },  moves = { "Zen Headbutt", "Ice Punch" },     guids = { "51e346" }, model_GUID = "5e98bd", spawn_effect="Physical Attack" },
-  { name = "Dialga",     level = 7, types = { "Steel" },    moves = { "Flash Cannon", "Roar of Time" },  guids = { "99da0e" }, model_GUID = "a47881", spawn_effect="Physical Attack", custom_scale=0.7 },
+  { name = "Dialga",     level = 7, types = { "Steel" },    moves = { "Flash Cannon", "Roar of Time" },  guids = { "99da0e" }, model_GUID = "776fdc", spawn_effect="Physical Attack", custom_scale=0.35, offset={x=0, y=0, z=-0.03} },
   { name = "Palkia",     level = 7, types = { "Water" },    moves = { "Spacial Rend", "Aqua Tail" },     guids = { "99bbae" }, model_GUID = "42a6d1", custom_scale=0.35, offset={x=0, y=0, z=-0.03} },
   { name = "Heatran",    level = 7, types = { "Fire" },     moves = { "Magma Storm", "Earth Power" },    guids = { "d6bd2b" }, model_GUID = "7343d2", spawn_effect="Status Attack", custom_scale=0.4, offset={x=0, y=0, z=-0.06}  },
   { name = "Regigigas",  level = 7, types = { "Normal" },   moves = { "Dizzy Punch", "Revenge" },        guids = { "04ae8e" }, model_GUID = "0ddf47", spawn_effect="Status Attack", custom_scale=0.45, offset={x=0, y=0, z=-0.03} },
@@ -800,7 +1033,7 @@ gen4PokemonData =
   { name = "Mega Garchomp",    level = 7,    types = { "Dragon" },moves = { "Dragon Claw", "Stone Edge" },     guids = { "c45879", "e044da" },      evoData = { { cost = 0, ball = RED, gen = 3, cycle = true, guids = { "16aa2c", "998146", "935739" } } }, model_GUID = "233df5", spawn_effect="Mega Evolve" },
   { name = "Mega Lucario",     level = 5,    types = { "Fighting" },moves = { "Flash Cannon", "Focus Blast" }, guids = { "c203c6", "95d4d4" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "cd3901", "153e4f" } } }, model_GUID = "a2c359", spawn_effect="Mega Evolve" },
   { name = "Mega Abomasnow",   level = 7,    types = { "Grass" }, moves = { "Focus Blast", "Blizzard" },       guids = { "c0f0bc", "72076f" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "fc423f", "985066" } } }, model_GUID = "b1ae77", spawn_effect="Mega Evolve", custom_scale=0.8, offset={x=0, y=0, z=-0.05} },
-  { name = "Mega Gallade",     level = 6,    types = { "Psychic" }, moves = { "Focus Blast", "Night Slash" },  guids = { "762e3d", "f77da3" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "e00be3", "491632", "2956c7" } } }, model_GUID = "8ad8e0", spawn_effect="Mega Evolve", offset={x=0, y=0, z=-0.05} },
+  { name = "Mega Gallade",     level = 6,    types = { "Psychic", "Fighting" }, moves = { "Focus Blast", "Night Slash" },  guids = { "762e3d", "f77da3" },      evoData = { { cost = 0, ball = YELLOW, gen = 3, cycle = true, guids = { "e00be3", "491632", "2956c7" } } }, model_GUID = "8ad8e0", spawn_effect="Mega Evolve", offset={x=0, y=0, z=-0.05} },
 }
 
 gen5PokemonData =
@@ -871,16 +1104,16 @@ gen5PokemonData =
   { name = "Red Basculin",    level = 2, types = { "Water" },    moves = { "Aqua Jet", "Bite" },               guids = { "8e451c" }, model_GUID = "1aad2b" },
   -- Gen 5 551-576
   { name = "Sandile",         level = 2, types = { "Ground" },   moves = { "Sand Attack", "Bite" },            guids = { "0ec450" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "89573c" }, model_GUID = "4cf233" } }, model_GUID = "2e2c75" },
-  { name = "Krokorok",        level = 4, types = { "Ground" },   moves = { "Sandstorm", "Assurance" },         guids = { "9857a1", "89573c" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "5d317d", "abaa08" }, model_GUID = "1455fe" } }, model_GUID = "4cf233", offset={x=0, y=0, z=0.06} },
+  { name = "Krokorok",        level = 4, types = { "Ground", "Dark" }, moves = { "Sandstorm", "Assurance" },   guids = { "9857a1", "89573c" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "5d317d", "abaa08" }, model_GUID = "1455fe" } }, model_GUID = "4cf233", offset={x=0, y=0, z=0.06} },
   { name = "Krookodile",      level = 6, types = { "Ground" },   moves = { "Earthquake", "Foul Play" },        guids = { "ab0970", "5d317d", "abaa08" }, model_GUID = "1455fe" },
   { name = "Darumaka",        level = 3, types = { "Fire" },     moves = { "Fire Fang", "Rollout" },           guids = { "fd08bc" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "929881" }, model_GUID = "4693f5" },
                                                                                                                                                                      { cost = 2, ball = YELLOW, gen = 5, guids = { "8425ea" }, model_GUID = "e68195" } }, 
                                                                                                                                                          model_GUID = "5f8571", spawn_effect="Physical Attack" },
   { name = "Darmanitan",      level = 5, types = { "Fire" },     moves = { "Fire Punch", "Superpower" },       guids = { "1c3955", "8425ea" }, model_GUID = "e68195", offset={x=0, y=0, z=-0.1} },  -- Red
-  { name = "Zen Darmanitan",  level = 5, types = { "Fire" },     moves = { "Zen Headbutt", "Fire Punch" },     guids = { "7c085e", "929881" }, model_GUID = "4693f5" },  -- Blue
+  { name = "Zen Darmanitan",  level = 5, types = { "Fire", "Psychic" }, moves = { "Zen Headbutt", "Fire Punch" }, guids = { "7c085e", "929881" }, model_GUID = "4693f5" },  -- Blue
   { name = "Maractus",        level = 3, types = { "Grass" },    moves = { "Needle Arm", "Peck" },             guids = { "b2f6e7" }, model_GUID = "3832b0" },
   { name = "Dwebble",         level = 2, types = { "Bug" },      moves = { "Rock Blast", "Fury Cutter" },      guids = { "68671d" },                     evoData = { { cost = 2, ball = BLUE, gen = 5, guids = { "eb163e" }, model_GUID = "de316c" } }, model_GUID = "553572" },
-  { name = "Crustle",         level = 4, types = { "Bug" },      moves = { "Rock Slide", "X-Scissor" },        guids = { "459bcf", "eb163e" }, model_GUID = "de316c", custom_scale=0.7, offset={x=0, y=0, z=-0.1} },
+  { name = "Crustle",         level = 4, types = { "Bug", "Rock" }, moves = { "Rock Slide", "X-Scissor" },     guids = { "459bcf", "eb163e" }, model_GUID = "de316c", custom_scale=0.7, offset={x=0, y=0, z=-0.1} },
   { name = "Scraggy",         level = 3, types = { "Dark" },     moves = { "Headbutt", "Low Kick" },           guids = { "aaaf84" },                     evoData = { { cost = 2, ball = RED, gen = 5, guids = { "d2d70d" }, model_GUID = "b9d27b", spawn_effect="Physical Attack" } }, model_GUID = "6e59e2" },
   { name = "Scrafty",         level = 5, types = { "Dark" },     moves = { "High Jump Kick", "Payback" },      guids = { "ef3715", "d2d70d" }, model_GUID = "b9d27b", spawn_effect="Physical Attack" },
   { name = "Sigilyph",        level = 5, types = { "Psychic" },  moves = { "Mirror Move", "Psybeam" },         guids = { "53ef88" }, model_GUID = "71ed95" },
@@ -904,7 +1137,7 @@ gen5PokemonData =
   { name = "Duosion",         level = 4, types = { "Psychic" },  moves = { "Hidden Power", "Light Screen" },   guids = { "6251de", "428bdd" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "783bd2", "e40ad5" }, model_GUID = "43a8c7", spawn_effect="Physical Attack" } }, model_GUID = "5681e1" },
   { name = "Reuniclus",       level = 6, types = { "Psychic" },  moves = { "Dizzy Punch", "Psychic" },         guids = { "fd8189", "783bd2", "e40ad5" }, model_GUID = "43a8c7", spawn_effect="Physical Attack" },
   { name = "Ducklett",        level = 2, types = { "Water" },    moves = { "Feather Dance", "Water Gun" },     guids = { "194e14" },                     evoData = { { cost = 3, ball = YELLOW, gen = 5, guids = { "e43f99" }, model_GUID = "653e11" } }, model_GUID = "0ea94c" },
-  { name = "Swanna",          level = 5, types = { "Water" },    moves = { "Water Pulse", "Air Slash" },       guids = { "955306", "e43f99" }, model_GUID = "653e11" },
+  { name = "Swanna",          level = 5, types = { "Water", "Flying" }, moves = { "Water Pulse", "Air Slash" }, guids = { "955306", "e43f99" }, model_GUID = "653e11" },
   { name = "Vanillite",       level = 2, types = { "Ice" },      moves = { "Icicle Spear", "Astonish" },       guids = { "746959" },                     evoData = { { cost = 2, ball = BLUE, gen = 5, guids = { "67e645" }, model_GUID = "aa33f1", spawn_effect="Physical Attack" } }, model_GUID = "a60d6e" },
   { name = "Vanillish",       level = 4, types = { "Ice" },      moves = { "Mirror Shot", "Icy Wind" },        guids = { "a2fe81", "67e645" },           evoData = { { cost = 2, ball = RED, gen = 4, guids = { "642461", "98f88f" }, model_GUID = "7abd8f" } }, model_GUID = "aa33f1", spawn_effect="Physical Attack" },
   { name = "Vanilluxe",       level = 6, types = { "Ice" },      moves = { "Mirror Coat", "Blizzard" },        guids = { "c69af0", "642461", "98f88f" }, model_GUID = "7abd8f" },
@@ -916,7 +1149,7 @@ gen5PokemonData =
   { name = "Summer Sawsbuck", level = 4, types = { "Normal" },   moves = { "Take Down", "Nature Power" },      guids = { "a1bde0", "426c52" }, model_GUID = "8bb6ad" },                                                                                                            -- Summer
   { name = "Winter Deerling", level = 2, types = { "Normal" },   moves = { "Camouflage", "Tackle" },           guids = { "90a5b6" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "4ef3be" }, model_GUID = "77fc07" } }, model_GUID = "b1f364" }, -- Winter
   { name = "Winter Sawsbuck", level = 4, types = { "Normal" },   moves = { "Take Down", "Nature Power" },      guids = { "853bba", "4ef3be" }, model_GUID = "77fc07" },                                                                                                            -- Winter
-  { name = "Emolga",          level = 3, types = { "Electric" }, moves = { "Quick Attack", "Spark" },          guids = { "21c0e7" }, model_GUID = "dad8a0", spawn_effect="Physical Attack" },
+  { name = "Emolga",          level = 3, types = { "Electric", "Flying" }, moves = { "Quick Attack", "Spark" }, guids = { "21c0e7" }, model_GUID = "dad8a0", spawn_effect="Physical Attack" },
   { name = "Karrablast",      level = 3, types = { "Bug" },      moves = { "Fury Cutter", "Peck" },            guids = { "a987fe" },                     evoData = { { cost = 1, ball = YELLOW, gen = 5, guids = { "2fbc4e" }, model_GUID = "e4c099" } }, model_GUID = "66ec18" },
   { name = "Escavalier",      level = 4, types = { "Bug" },      moves = { "Iron Head", "Bug Buzz" },          guids = { "79dfaa", "2fbc4e" }, model_GUID = "e4c099" },
   { name = "Foongus",         level = 3, types = { "Grass" },    moves = { "Astonish", "Absorb" },             guids = { "ee2a78" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "13d1d6" }, model_GUID = "b1f388" } }, model_GUID = "06f3ae" },
@@ -926,7 +1159,7 @@ gen5PokemonData =
   { name = "Frillish (F)",    level = 4, types = { "Water" },    moves = { "Bubble Beam", "Absorb" },          guids = { "60ba9e" },                     evoData = { { cost = 2, ball = RED, gen = 5, guids = { "8fd291" }, model_GUID = "82eae8", spawn_effect="Physical Attack" } }, model_GUID = "f693fb" }, -- Pink
   { name = "Jellicent (F)",   level = 6, types = { "Water" },    moves = { "Ominous Wind", "Water Pulse" },    guids = { "598d9a", "8fd291" }, model_GUID = "82eae8", spawn_effect="Physical Attack" },                                                                                                         -- Pink
   { name = "Alomomola",       level = 3, types = { "Water" },    moves = { "Safeguard", "Brine" },             guids = { "9c2e47" }, model_GUID = "987107" },
-  { name = "Joltik",          level = 2, types = { "Bug" },      moves = { "Fury Cutter", "Absorb" },          guids = { "c4adc9" },                     evoData = { { cost = 3, ball = YELLOW, gen = 5, guids = { "4f2f10" }, model_GUID = "f565f0" } }, model_GUID = "b967c0", spawn_effect="Physical Attack" },
+  { name = "Joltik",          level = 2, types = { "Bug" },      moves = { "Fury Cutter", "Absorb" },          guids = { "c4adc9" },                     evoData = { { cost = 3, ball = YELLOW, gen = 5, guids = { "4f2f10" }, model_GUID = "f565f0" } }, model_GUID = "b967c0", spawn_effect="Physical Attack", custom_scale=3.0 },
   { name = "Galvantula",      level = 5, types = { "Bug" },      moves = { "Electroweb", "Bug Bite" },         guids = { "1e7df7", "4f2f10" }, model_GUID = "f565f0", custom_scale=0.9 },
   { name = "Ferroseed",       level = 3, types = { "Grass" },    moves = { "Pin Missile", "Mirror Shot" },     guids = { "4801d8" },                     evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "d1ce01" }, model_GUID = "37e34d" } }, model_GUID = "46fbe9" },
   { name = "Ferrothorn",      level = 5, types = { "Grass" },    moves = { "Iron Defense", "Power Whip" },     guids = { "1419cf", "d1ce01" }, model_GUID = "37e34d", custom_scale=0.5, offset={x=0, y=0, z=-0.03} },
@@ -962,7 +1195,7 @@ gen5PokemonData =
   { name = "Rufflet",         level = 3, types = { "Flying" },   moves = { "Hone Claws", "Peck" },             guids = { "f52196" },                     evoData = { { cost = 3, ball = RED, gen = 5, guids = { "f1a656" }, model_GUID = "3f59cc" }, 
                                                                                                                                                                      { cost = 3, ball = RED, gen = 8, guids = { "aaa239" } } }, 
                                                                                                                                                          model_GUID = "bc0883" },
-  { name = "Braviary",        level = 6, types = { "Flying" },   moves = { "Crush Claw", "Aerial Ace" },       guids = { "8def45", "f1a656" }, model_GUID = "3f59cc" },
+  { name = "Braviary",        level = 6, types = { "Flying" },   moves = { "Crush Claw", "Aerial Ace" },       guids = { "8def45", "f1a656" }, model_GUID = "a5fe68" },
   { name = "Vullaby",         level = 3, types = { "Dark" },     moves = { "Fury Attack", "Nasty Plot" },      guids = { "8c8d4a" },                     evoData = { { cost = 3, ball = RED, gen = 5, guids = { "d9a365" }, model_GUID = "fa9bd5" } }, model_GUID = "bc6308" },
   { name = "Mandibuzz",       level = 6, types = { "Dark" },     moves = { "Bone Rush", "Air Slash" },         guids = { "21182a", "d9a365" }, model_GUID = "fa9bd5" },
   { name = "Heatmor",         level = 4, types = { "Fire" },     moves = { "Incinerate", "Odor Sleuth" },      guids = { "cd2a36" }, model_GUID = "571def" },
@@ -980,17 +1213,17 @@ gen5PokemonData =
   { name = "Therian Tornadus",level = 7, types = { "Flying" },   moves = { "Bleakwind Storm", "Focus Blast" }, guids = { "916000" }, model_GUID = "f7abb5" },
   { name = "Incarnate Thundurus",  level = 7, types = { "Electric" }, moves = { "Wildbolt Storm", "Fly" },     guids = { "723ca9" }, model_GUID = "0a0b98" },
   { name = "Therian Thundurus", level = 7, types = { "Electric" }, moves = { "Wildbolt Storm", "Focus Blast" },guids = { "a2c518" }, model_GUID = "13842a" },
-  { name = "Reshiram",        level = 7, types = { "Dragon" },   moves = { "Blue Flare", "Dragon Pulse" },     guids = { "5b8987" },                     evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "d5117a" }, model_GUID = "33c20a" } }, model_GUID = "d9cc98", spawn_effect="Status Attack", offset={x=0, y=1.0, z=0}, idle_effect="Run" },
-  { name = "White Kyurem",    level = 7, types = { "Dragon" },   moves = { "Fusion Flare", "Ice Beam" },       guids = { "d5117a" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "5b8987" }, model_GUID = "d9cc98", spawn_effect="Status Attack" } }, model_GUID = "33c20a", offset={x=0, y=1.0, z=0}, idle_effect="Run" }, -- White Kyurem (for Reshiram)
-  { name = "Zekrom",          level = 7, types = { "Dragon" },   moves = { "Bolt Strike", "Dragon Claw" },     guids = { "879958" },                     evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "d20352" }, model_GUID = "69c378" } }, model_GUID = "463700", spawn_effect="Status Attack", offset={x=0, y=1.0, z=0}, idle_effect="Run" },
-  { name = "Black Kyurem",    level = 7, types = { "Dragon" },   moves = { "Fusion Bolt", "Ice Beam" },        guids = { "d20352" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "879958" } } }, model_GUID = "69c378", offset={x=0, y=1.0, z=0}, idle_effect="Run" }, -- Black Kyurem (for Zekrom)
+  { name = "Reshiram",        level = 7, types = { "Dragon" },   moves = { "Blue Flare", "Dragon Pulse" },     guids = { "5b8987" },                     evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "d5117a" }, model_GUID = "653151" } }, model_GUID = "d9cc98", spawn_effect="Status Attack", offset={x=0, y=1.0, z=0}, idle_effect="Run" },
+  { name = "White Kyurem",    level = 7, types = { "Dragon", "Ice" },   moves = { "Fusion Flare", "Ice Beam" },       guids = { "d5117a" },              evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "5b8987" }, model_GUID = "d9cc98", spawn_effect="Status Attack" } }, model_GUID = "653151", offset={x=0, y=1.0, z=0}, idle_effect="Run", custom_scale=0.75 }, -- White Kyurem (for Reshiram)
+  { name = "Zekrom",          level = 7, types = { "Dragon" },   moves = { "Bolt Strike", "Dragon Claw" },     guids = { "879958" },                     evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "d20352" }, model_GUID = "9f42db" } }, model_GUID = "463700", spawn_effect="Status Attack", offset={x=0, y=1.0, z=0}, idle_effect="Run" },
+  { name = "Black Kyurem",    level = 7, types = { "Dragon", "Ice" },   moves = { "Fusion Bolt", "Ice Beam" },        guids = { "d20352" },              evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "879958" } } }, model_GUID = "9f42db", offset={x=0, y=1.0, z=0}, idle_effect="Run", custom_scale=0.75 }, -- Black Kyurem (for Zekrom)
   { name = "Incarnate Landorus", level = 7, types = { "Ground" },moves = { "Sandsear Storm", "Focus Blast" },  guids = { "ee0f97" }, model_GUID = "a7e86f", spawn_effect="Status Attack" },
   { name = "Therian Landorus",level = 7, types = { "Ground" },   moves = { "Sandsear Storm", "Stone Edge" },   guids = { "596a60" }, model_GUID = "604304" },
-  { name = "Kyurem",          level = 7, types = { "Dragon" },   moves = { "Dragon Breath", "Glaciate" },      guids = { "3a2734" },                     evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, guids = { "6be4f3" }, model_GUID = "69c378" }, 
-                                                                                                                                                                     { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, guids = { "28742a" }, model_GUID = "33c20a" } }, 
+  { name = "Kyurem",          level = 7, types = { "Dragon", "Ice" },   moves = { "Dragon Breath", "Glaciate" },      guids = { "3a2734" },              evoData = { { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "6be4f3" }, model_GUID = "9f42db" }, 
+                                                                                                                                                                     { cost = "DNA Splicers", ball = LEGENDARY, gen = 5, cycle = true, guids = { "28742a" }, model_GUID = "653151" } }, 
                                                                                                                                                          model_GUID = "be9a02", spawn_effect="Status Attack", custom_scale=0.6 },
-  { name = "Black Kyurem",    level = 7, types = { "Dragon" },   moves = { "Fusion Bolt", "Ice Beam" },        guids = { "6be4f3" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "3a2734" }, model_GUID = "be9a02", spawn_effect="Status Attack" } }, model_GUID = "69c378", offset={x=0, y=1.0, z=0}, idle_effect="Run" }, -- Black Kyurem (for Kyurem)
-  { name = "White Kyurem",    level = 7, types = { "Dragon" },   moves = { "Fusion Flare", "Ice Beam" },       guids = { "28742a" },                     evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "3a2734" }, model_GUID = "be9a02", spawn_effect="Status Attack" } }, model_GUID = "33c20a", offset={x=0, y=1.0, z=0}, idle_effect="Run" }, -- White Kyurem (for Kyurem)
+  { name = "Black Kyurem",    level = 7, types = { "Dragon", "Ice" },   moves = { "Fusion Bolt", "Ice Beam" },        guids = { "6be4f3" },              evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "3a2734" }, model_GUID = "be9a02", spawn_effect="Status Attack" } }, model_GUID = "9f42db", offset={x=0, y=1.0, z=0}, idle_effect="Run", custom_scale=0.75 }, -- Black Kyurem (for Kyurem)
+  { name = "White Kyurem",    level = 7, types = { "Dragon", "Ice" },   moves = { "Fusion Flare", "Ice Beam" },       guids = { "28742a" },              evoData = { { cost = 0, ball = LEGENDARY, gen = 5, cycle = true, guids = { "3a2734" }, model_GUID = "be9a02", spawn_effect="Status Attack" } }, model_GUID = "653151", offset={x=0, y=1.0, z=0}, idle_effect="Run", custom_scale=0.75 }, -- White Kyurem (for Kyurem)
   { name = "Keldeo",          level = 7, types = { "Water" },    moves = { "Sacred Sword", "Aqua Tail" },      guids = { "d825d0" }, model_GUID = "97905c" },
   { name = "Resolute Keldeo", level = 7, types = { "Water" },    moves = { "Sacred Sword", "Hydro Pump" },     guids = { "e0356d" }, model_GUID = "4465a6" },
   { name = "Meloetta",        level = 7, types = { "Normal" },   moves = { "Relic Song", "Psychic" },          guids = { "893ae6" }, model_GUID = "eb62fb" },
@@ -999,7 +1232,7 @@ gen5PokemonData =
 
   -- Mega evolutions.
   { name = "Mega Audino",     level = 5,    types = { "Fairy" }, moves = { "Disarming Voice", "Double-Edge" },  guids = { "0c7909" },                      evoData = { { cost = 0, ball = BLUE, gen = 5, cycle = true, guids = { "b81637" }, model_GUID = "134409" } }, model_GUID = "793f23", spawn_effect="Mega Evolve" },
-  { name = "GMax Garbodor",   level = 5,    types = { "Poison" },moves = { "Malador", "Strike" },               guids = { "43b26e", "a13dc7" },            evoData = { { cost = 0, ball = YELLOW, gen = 5, cycle = true, guids = { "5e6faf", "427e7e" }, model_GUID = "317f1f" } } },
+  { name = "GMax Garbodor",   level = 5,    types = { "Poison" },moves = { "Malador", "Strike" },               guids = { "43b26e", "a13dc7" },            evoData = { { cost = 0, ball = YELLOW, gen = 5, cycle = true, guids = { "5e6faf", "427e7e" }, model_GUID = "317f1f" } }, model_GUID = "3a0074", offset={x=0, y=1.25, z=0}, custom_scale=0.45 },
 }
 
 gen6PokemonData =
@@ -1007,18 +1240,18 @@ gen6PokemonData =
   -- Gen 6 650-678
   { name = "Chespin",     level = 1, types = { "Grass" },    moves = { "Growl", "Vine Whip" },               guids = { "68e630" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "742ae2" }, model_GUID = "11c320" } }, model_GUID = "bfb1c9" },
   { name = "Quilladin",   level = 3, types = { "Grass" },    moves = { "Pin Missile", "Needle Arm" },        guids = { "001c72", "742ae2" },           evoData = { { cost = 2, ball = RED, gen = 6, guids = { "4b2bfb", "b1fb69" }, model_GUID = "176400" } }, model_GUID = "11c320" },
-  { name = "Chesnaught",  level = 5, types = { "Grass" },    moves = { "Spiky Shield", "Hammer Arm" },       guids = { "9377c5", "4b2bfb", "b1fb69" }, model_GUID = "176400" },
+  { name = "Chesnaught",  level = 5, types = { "Grass", "Fighting" }, moves = { "Spiky Shield", "Hammer Arm" }, guids = { "9377c5", "4b2bfb", "b1fb69" }, model_GUID = "176400" },
   { name = "Fennekin",    level = 1, types = { "Fire" },     moves = { "Ember", "Howl" },                    guids = { "311f76" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "2b10a5" }, model_GUID = "61a7d9" } }, model_GUID = "95501e", spawn_effect="Status Attack" },
   { name = "Braixen",     level = 3, types = { "Fire" },     moves = { "Fire Spin", "Light Screen" },        guids = { "c5d7f0", "2b10a5" },           evoData = { { cost = 2, ball = RED, gen = 6, guids = { "9d0714", "ab189f" }, model_GUID = "8879bd" } }, model_GUID = "61a7d9" },
-  { name = "Delphox",     level = 5, types = { "Fire" },     moves = { "Mystical Fire", "Psyshock" },        guids = { "cab045", "9d0714", "ab189f" }, model_GUID = "8879bd" },
+  { name = "Delphox",     level = 5, types = { "Fire", "Psychic" }, moves = { "Mystical Fire", "Psyshock" }, guids = { "cab045", "9d0714", "ab189f" }, model_GUID = "8879bd" },
   { name = "Froakie",     level = 1, types = { "Water" },    moves = { "Quick Attack", "Bubble" },           guids = { "2e6ec8" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "d74138" }, model_GUID = "1c8a04" } }, model_GUID = "8d83d9" },
   { name = "Frogadier",   level = 3, types = { "Water" },    moves = { "Water Pulse", "Bounce" },            guids = { "2ac3d0", "d74138" },           evoData = { { cost = 2, ball = RED, gen = 6, guids = { "5dbd84", "3bf77c" }, model_GUID = "222e7b", spawn_effect="Status Attack" } }, model_GUID = "1c8a04" },
-  { name = "Greninja",    level = 5, types = { "Water" },    moves = { "Water Shuriken", "Night Slash" },    guids = { "6e82bc", "5dbd84", "3bf77c" }, model_GUID = "222e7b", spawn_effect="Status Attack", custom_scale=0.8, offset={x=0, y=0, z=-0.1} },
+  { name = "Greninja",    level = 5, types = { "Water", "Dark" }, moves = { "Water Shuriken", "Night Slash" }, guids = { "6e82bc", "5dbd84", "3bf77c" }, model_GUID = "222e7b", spawn_effect="Status Attack", custom_scale=0.8, offset={x=0, y=0, z=-0.1} },
   { name = "Bunnelby",    level = 1, types = { "Normal" },   moves = { "Double Slap", "Leer" },              guids = { "dd60c8" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "fa6708" }, model_GUID = "016627" } }, model_GUID = "0a6a17" },
   { name = "Diggersby",   level = 3, types = { "Normal" },   moves = { "Super Fang", "Dig" },                guids = { "f7395c", "fa6708" }, model_GUID = "016627" },
-  { name = "Fletchling",  level = 1, types = { "Flying" },   moves = { "Growl", "Peck" },                    guids = { "10f8ac" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "d4e15c" }, model_GUID = "516206", spawn_effect="Physical Attack" } }, model_GUID = "1a27c7" },
-  { name = "Fletchinder", level = 3, types = { "Fire" },     moves = { "Razor Wind", "Ember" },              guids = { "780fa6", "d4e15c" },           evoData = { { cost = 2, ball = RED, gen = 6, guids = { "562fca", "b7ce61" }, model_GUID = "efd523", spawn_effect="Physical Attack" } }, model_GUID = "516206", spawn_effect="Physical Attack" },
-  { name = "Talonflame",  level = 5, types = { "Fire" },     moves = { "Steel Wing", "Flare Blitz" },        guids = { "2b826a", "562fca", "b7ce61" }, model_GUID = "efd523", spawn_effect="Physical Attack" },
+  { name = "Fletchling",  level = 1, types = { "Flying", "Normal" }, moves = { "Growl", "Peck" },            guids = { "10f8ac" },                     evoData = { { cost = 2, ball = BLUE, gen = 6, guids = { "d4e15c" }, model_GUID = "516206", spawn_effect="Physical Attack" } }, model_GUID = "1a27c7" },
+  { name = "Fletchinder", level = 3, types = { "Fire", "Flying" },   moves = { "Razor Wind", "Ember" },      guids = { "780fa6", "d4e15c" },           evoData = { { cost = 2, ball = RED, gen = 6, guids = { "562fca", "b7ce61" }, model_GUID = "efd523", spawn_effect="Physical Attack" } }, model_GUID = "516206", spawn_effect="Physical Attack" },
+  { name = "Talonflame",  level = 5, types = { "Fire", "Flying" },   moves = { "Steel Wing", "Flare Blitz" }, guids = { "2b826a", "562fca", "b7ce61" }, model_GUID = "efd523", spawn_effect="Physical Attack" },
   { name = "Scatterbug",  level = 1, types = { "Bug" },      moves = { "String Shot", "Tackle" },            guids = { "2fc6c4" },                     evoData = { { cost = 1, ball = PINK, gen = 6, guids = { "4a3c46" }, model_GUID = "a4a4dc" } }, model_GUID = "2e6d23" },
   { name = "Spewpa",      level = 2, types = { "Bug" },      moves = { "Protect", "Harden" },                guids = { "88a3f1", "4a3c46" },           evoData = { { cost = 1, ball = GREEN, gen = 6, guids = { "d4e7b2", "a619c3" }, model_GUID = "4ea111" } }, model_GUID = "a4a4dc" },
   { name = "Vivillon",    level = 3, types = { "Bug" },      moves = { "Quiver Dance", "Gust" },             guids = { "68cecb", "d4e7b2", "a619c3" }, model_GUID = "4ea111" },
@@ -1042,8 +1275,8 @@ gen6PokemonData =
   { name = "Doublade",    level = 5, types = { "Steel" },    moves = { "Shadow Sneak", "Slash" },            guids = { "7456e9", "889a70" },           evoData = { { cost = 1, ball = RED, gen = 6, guids = { "a22c4a", "cc32a1" }, model_GUID = "eed99a", idle_effect="Shield Idle", run_effect="Shield Move", spawn_effect="Shield Stance", faint_effect="Shield Faint" }, 
                                                                                                                                                                    { cost = 1, ball = RED, gen = 6, guids = { "52ba90", "f7ff82" }, model_GUID = "a6b120", spawn_effect="Blade Stance" } },
                                                                                                                                                        model_GUID = "429a84", spawn_effect="Physical Attack" },
-  { name = "Blade Aegislash",   level = 6, types = { "Steel" }, moves = { "Sacred Sword", "Iron Head" },     guids = { "94735b", "52ba90", "f7ff82" }, model_GUID = "a6b120", spawn_effect="Blade Stance" },                                                                                     -- Sword Version
-  { name = "Shield Aegislash",   level = 6, types = { "Steel" }, moves = { "Sacred Sword", "King's Shield" }, guids = { "adf3ec", "a22c4a", "cc32a1" }, model_GUID = "eed99a", idle_effect="Shield Idle", run_effect="Shield Move", spawn_effect="Shield Stance", faint_effect="Shield Faint" },  -- Shield Version
+  { name = "Blade Aegislash", level = 6, types = { "Steel", "Ghost" }, moves = { "Sacred Sword", "Iron Head" },     guids = { "94735b", "52ba90", "f7ff82" }, model_GUID = "a6b120", spawn_effect="Blade Stance" },                                                                                     -- Sword Version
+  { name = "Shield Aegislash", level = 6, types = { "Steel", "Ghost" }, moves = { "Sacred Sword", "King's Shield" }, guids = { "adf3ec", "a22c4a", "cc32a1" }, model_GUID = "eed99a", idle_effect="Shield Idle", run_effect="Shield Move", spawn_effect="Shield Stance", faint_effect="Shield Faint" },  -- Shield Version
   { name = "Spritzee",    level = 3, types = { "Fairy" },    moves = { "Fairy Wind", "Attract" },            guids = { "ee6a18" },                     evoData = { { cost = 1, ball = BLUE, gen = 6, guids = { "b0e63a" }, model_GUID = "c86d86" } }, model_GUID = "24fb10" },
   { name = "Aromatisse",  level = 4, types = { "Fairy" },    moves = { "Moonblast", "Heal Pulse" },          guids = { "ee7504", "b0e63a" }, model_GUID = "c86d86" },
   { name = "Swirlix",     level = 3, types = { "Fairy" },    moves = { "Play Nice", "Fairy Wind" },          guids = { "bfc548" },                     evoData = { { cost = 1, ball = BLUE, gen = 6, guids = { "45a974" }, model_GUID = "f15bb3" } }, model_GUID = "f67993" },
@@ -1072,7 +1305,7 @@ gen6PokemonData =
   { name = "Goodra",      level = 7, types = { "Dragon" },   moves = { "Power Whip", "Outrage" },            guids = { "4010f0", "84a03d", "980868" }, model_GUID = "35c5e9", spawn_effect="Status Attack" },
   { name = "Klefki",      level = 3, types = { "Steel" },    moves = { "Metal Sound", "Fairy Wind" },        guids = { "72532e" }, model_GUID = "4b6f52", spawn_effect="Physical Attack" },
   { name = "Phantump",    level = 3, types = { "Ghost" },    moves = { "Feint Attack", "Curse" },            guids = { "c97328" },                     evoData = { { cost = 1, ball = YELLOW, gen = 6, guids = { "e3f03d" } } }, model_GUID = "fc0113" },
-  { name = "Trevenant",   level = 4, types = { "Ghost" },    moves = { "Wood Hammer", "Phantom Force" },     guids = { "eea302", "e3f03d" }, model_GUID = "4a56ba" },
+  { name = "Trevenant",   level = 4, types = { "Ghost", "Grass" }, moves = { "Wood Hammer", "Phantom Force" }, guids = { "eea302", "e3f03d" }, model_GUID = "4a56ba" },
   { name = "Pumpkaboo",   level = 3, types = { "Ghost" },    moves = { "Bullet Seed", "Astonish" },          guids = { "a2221a" },                     evoData = { { cost = 1, ball = YELLOW, gen = 6, guids = { "607cf8" }, model_GUID = "16c782" } }, model_GUID = "c5c891" },
   { name = "Gourgeist",   level = 4, types = { "Ghost" },    moves = { "Seed Bomb", "Explosion" },           guids = { "0bae76", "607cf8" }, model_GUID = "16c782" },
   { name = "Bergmite",    level = 3, types = { "Ice" },      moves = { "Icy Wind", "Harden" },               guids = { "cc9804" },                     evoData = { { cost = 2, ball = RED, gen = 6, guids = { "9c5313" }, model_GUID = "fc938c", spawn_effect="Status Attack" }, 
@@ -1098,10 +1331,10 @@ gen6PokemonData =
 gen7PokemonData =
 {
   -- Gen 7 722-750
-  { name = "Rowlet",       level = 1, types = { "Grass" },    moves = { "Leafage", "Growl" },                  guids = { "df9287" }, model_GUID = "494cbe",           evoData = { { cost = 2, ball = BLUE, gen = 7, guids = { "1c84d5" }, model_GUID = "7a6739" } } },
-  { name = "Dartrix",      level = 3, types = { "Grass" },    moves = { "Razor Leaf", "Peck" },                guids = { "71d957", "1c84d5" }, model_GUID = "7a6739", evoData = { { cost = 2, ball = RED, gen = 7, guids = { "2416c8", "9bef15" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} }, 
+  { name = "Rowlet",       level = 1, types = { "Grass", "Flying" },    moves = { "Leafage", "Growl" },        guids = { "df9287" }, model_GUID = "494cbe",           evoData = { { cost = 2, ball = BLUE, gen = 7, guids = { "1c84d5" }, model_GUID = "7a6739" } } },
+  { name = "Dartrix",      level = 3, types = { "Grass", "Flying" },    moves = { "Razor Leaf", "Peck" },      guids = { "71d957", "1c84d5" }, model_GUID = "7a6739", evoData = { { cost = 2, ball = RED, gen = 7, guids = { "2416c8", "9bef15" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} }, 
                                                                                                                                                                                   { cost = 2, ball = RED, gen = 8, guids = { "cf7b80", "5ada77" } } } }, 
-  { name = "Decidueye",    level = 5, types = { "Grass" },    moves = { "Spirit Shackle", "Leaf Blade" },      guids = { "d50f86", "2416c8", "9bef15" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} },
+  { name = "Decidueye",    level = 5, types = { "Grass", "Ghost" }, moves = { "Spirit Shackle", "Leaf Blade" }, guids = { "d50f86", "2416c8", "9bef15" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} },
   { name = "Litten",       level = 1, types = { "Fire" },     moves = { "Ember", "Growl" },                    guids = { "03a2c1" }, model_GUID = "bc40dd", evoData = { { cost = 2, ball = BLUE, gen = 7, guids = { "1ae631" }, model_GUID = "84c6db" } } },
   { name = "Torracat",     level = 3, types = { "Fire" },     moves = { "Fury Swipes", "Fire Fang" },          guids = { "4d7ec6", "1ae631" }, model_GUID = "84c6db", evoData = { { cost = 2, ball = RED, gen = 7, guids = { "38e353", "45ba93" }, model_GUID = "bc10fb" } } },
   { name = "Incineroar",   level = 5, types = { "Fire" },     moves = { "Flare Blitz", "Darkest Lariat" },     guids = { "3f1566", "38e353", "45ba93" }, model_GUID = "bc10fb" },
@@ -1115,9 +1348,9 @@ gen7PokemonData =
   { name = "Gumshoos",     level = 3, types = { "Normal" },   moves = { "Super Fang", "Crunch" },              guids = { "28ee0f", "fa17b3" }, model_GUID = "902af6" },
   { name = "Grubbin",      level = 1, types = { "Bug" },      moves = { "Vise Grip", "String Shot" },          guids = { "505be7" }, model_GUID = "094700", evoData = { { cost = 2, ball = GREEN, gen = 7, guids = { "545c8d" }, model_GUID = "f5e6f0" } } },
   { name = "Charjabug",    level = 3, types = { "Bug" },      moves = { "Mud-Slap", "Bug Bite" },              guids = { "918808", "545c8d" }, model_GUID = "f5e6f0", evoData = { { cost = 1, ball = YELLOW, gen = 7, guids = { "be9f22", "59664c" }, model_GUID = "d539ed" } } },
-  { name = "Vikavolt",     level = 4, types = { "Bug" },      moves = { "Zap Cannon", "X-Scissor" },           guids = { "8ee928", "be9f22", "59664c" }, model_GUID = "d539ed" },
+  { name = "Vikavolt",     level = 4, types = { "Bug", "Electric" }, moves = { "Zap Cannon", "X-Scissor" },    guids = { "8ee928", "be9f22", "59664c" }, model_GUID = "d539ed" },
   { name = "Crabrawler",   level = 3, types = { "Fighting" }, moves = { "Rock Smash", "Crabhammer" },          guids = { "ff2869" }, model_GUID = "cc10c3", spawn_effect="Physical Attack", evoData = { { cost = 1, ball = YELLOW, gen = 7, guids = { "7021bf" }, model_GUID = "bd1445" } } },
-  { name = "Crabominable", level = 4, types = { "Fighting" }, moves = { "Dynamic Punch", "Ice Hammer" },       guids = { "1689aa", "7021bf" }, model_GUID = "bd1445" },
+  { name = "Crabominable", level = 4, types = { "Fighting", "Ice" }, moves = { "Dynamic Punch", "Ice Hammer" },guids = { "1689aa", "7021bf" }, model_GUID = "bd1445" },
   { name = "Baile Oricorio", level = 3, types = { "Fire" },   moves = { "Feather Dance", "Rev. Dance Fire" },  guids = { "bafd29" }, model_GUID = "f5fc3a", spawn_effect="Physical Attack" },
   { name = "Pa'u Oricorio",level = 3, types = { "Psychic" },  moves = { "Feather Dance", "Rev. Dance Psychic" }, guids = { "9f5d17" }, model_GUID = "19413b", spawn_effect="Physical Attack" },
   { name = "Pom-Pom Oricorio", level = 3, types = { "Electric" }, moves = { "Feather Dance", "Rev. Dance Electric" }, guids = { "f22afb" }, model_GUID = "e5b28a", spawn_effect="Physical Attack" },
@@ -1144,7 +1377,7 @@ gen7PokemonData =
   { name = "Morelull",     level = 1, types = { "Grass" },    moves = { "Astonish", "Absorb" },                guids = { "b8f494" }, model_GUID = "81ff79", evoData = { { cost = 2, ball = GREEN, gen = 7, guids = { "e803ee" }, model_GUID = "5430cf" } } },
   { name = "Shiinotic",    level = 3, types = { "Grass" },    moves = { "Sleep Powder", "Moonblast" },         guids = { "24d418", "e803ee" }, model_GUID = "5430cf" },
   { name = "Salandit",     level = 2, types = { "Poison" },   moves = { "Ember", "Smog" },                     guids = { "433a74" }, model_GUID = "b90790", evoData = { { cost = 2, ball = BLUE, gen = 7, guids = { "f517cd" }, model_GUID = "29570d" } } },
-  { name = "Salazzle",     level = 4, types = { "Poison" },   moves = { "Venom Drench", "Flame Burst" },       guids = { "73d1a4", "f517cd" }, model_GUID = "29570d" },
+  { name = "Salazzle",     level = 4, types = { "Poison", "Fire" },   moves = { "Venom Drench", "Flame Burst" },       guids = { "73d1a4", "f517cd" }, model_GUID = "29570d" },
   { name = "Stufful",      level = 2, types = { "Normal" },   moves = { "Baby-Doll Eyes", "Tackle" },          guids = { "6e26ce" }, model_GUID = "556b6f", spawn_effect="Physical Attack", evoData = { { cost = 1, ball = BLUE, gen = 7, guids = { "91caa3" }, model_GUID = "7d4606", spawn_effect="Status Attack" } } },
   { name = "Bewear",       level = 3, types = { "Normal" },   moves = { "Take Down", "Hammer Arm" },           guids = { "c3a8f1", "91caa3" }, model_GUID = "7d4606", spawn_effect="Status Attack", custom_scale=0.9 },
   { name = "Bounsweet",    level = 2, types = { "Grass" },    moves = { "Rapid Spin", "Play Nice" },           guids = { "a96b34" }, model_GUID = "631d93", evoData = { { cost = 1, ball = GREEN, gen = 7, guids = { "d564cd" }, model_GUID = "3d1e61" } } },
@@ -1181,10 +1414,10 @@ gen7PokemonData =
   { name = "Cosmog",       level = 2, types = { "Psychic" },  moves = { "Teleport", "Splash" },                guids = { "4067b4" }, model_GUID = "1ba3f7", spawn_effect="Physical Attack", evoData = { { cost = 3, ball = YELLOW, gen = 7, guids = { "dd8d38" }, model_GUID = "02834c" } } },
   { name = "Cosmoem",      level = 5, types = { "Psychic" },  moves = { "Cosmic Power", "Teleport" },          guids = { "2d4e82", "dd8d38" }, model_GUID = "02834c", evoData = { { cost = 2, ball = LEGENDARY, gen = 7, guids = { "2c0206" }, model_GUID = "20b6ae", spawn_effect="Status Attack", custom_scale=0.7 }, 
                                                                                                                                                                                   { cost = 2, ball = LEGENDARY, gen = 7, guids = { "5228d9" }, model_GUID = "aedf14", custom_scale=0.7 } } },
-  { name = "Solgaleo",     level = 7, types = { "Psychic" },  moves = { "Zen Headbutt", "Sunsteel Strike" },   guids = { "2337ba", "5228d9" }, model_GUID = "aedf14", custom_scale=0.4, offset={x=0, y=0, z=-0.05}, evoData = { { cost = "N-Solarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "c65377", "d63d82" }, model_GUID = "9aed20", custom_scale=0.7 } } },
-  { name = "Dusk Mane Necrozma",level = 7, types = { "Psychic" }, moves = { "Sunsteel Strike", "Prism. Laser" }, guids = { "c65377", "d63d82" }, model_GUID = "9aed20", custom_scale=0.3, offset={x=0, y=0, z=-0.02}, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "2337ba", "5228d9" }, model_GUID = "aedf14", custom_scale=0.7 } } }, -- Dusk Mane (for Solgaleo)
-  { name = "Lunala",       level = 7, types = { "Psychic" },  moves = { "Moongeist Beam", "Dream Eater" },     guids = { "d118b4", "2c0206" }, model_GUID = "20b6ae", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = "N-Lunarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "2f92e5", "b01111" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7 } } },
-  { name = "Dawn Wings Necrozma",level = 7, types = { "Psychic" },  moves = { "Moongeist Beam", "Prism. Laser" },guids = { "2f92e5", "b01111" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "d118b4", "2c0206" }, model_GUID = "20b6ae", spawn_effect="Status Attack", custom_scale=0.7 } } },  -- Dawn Wings (for Lunala)
+  { name = "Solgaleo",     level = 7, types = { "Psychic", "Steel" },  moves = { "Zen Headbutt", "Sunsteel Strike" },   guids = { "2337ba", "5228d9" }, model_GUID = "aedf14", custom_scale=0.4, offset={x=0, y=0, z=-0.05}, evoData = { { cost = "N-Solarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "c65377", "d63d82" }, model_GUID = "9aed20", custom_scale=0.7 } } },
+  { name = "Dusk Mane Necrozma",level = 7, types = { "Psychic", "Steel" }, moves = { "Sunsteel Strike", "Prism. Laser" }, guids = { "c65377", "d63d82" }, model_GUID = "9aed20", custom_scale=0.3, offset={x=0, y=0, z=-0.02}, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "2337ba", "5228d9" }, model_GUID = "aedf14", custom_scale=0.7 } } }, -- Dusk Mane (for Solgaleo)
+  { name = "Lunala",       level = 7, types = { "Psychic", "Ghost" },  moves = { "Moongeist Beam", "Dream Eater" },     guids = { "d118b4", "2c0206" }, model_GUID = "20b6ae", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = "N-Lunarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "2f92e5", "b01111" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7 } } },
+  { name = "Dawn Wings Necrozma",level = 7, types = { "Psychic", "Ghost" },  moves = { "Moongeist Beam", "Prism. Laser" },guids = { "2f92e5", "b01111" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "d118b4", "2c0206" }, model_GUID = "20b6ae", spawn_effect="Status Attack", custom_scale=0.7 } } },  -- Dawn Wings (for Lunala)
   { name = "Nihilego",     level = 7, types = { "Rock" },     moves = { "Head Smash", "Venoshock" },           guids = { "e53d16" }, model_GUID = "24211e" },
   { name = "Buzzwole",     level = 7, types = { "Bug" },      moves = { "Dynamic Punch", "Lunge" },            guids = { "b97547" }, model_GUID = "d4bad7" },
   { name = "Pheromosa",    level = 7, types = { "Bug" },      moves = { "High Jump Kick", "Silver Wind" },     guids = { "6b596f" }, model_GUID = "9c9628" },
@@ -1195,11 +1428,11 @@ gen7PokemonData =
   { name = "Necrozma",     level = 7, types = { "Psychic" },  moves = { "Photon Geyser", "Night Slash" },      guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack", evoData = { { cost = "N-Solarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "6366eb" }, model_GUID = "9aed20", custom_scale=0.7 },   -- Dusk Mane
                                                                                                                                                                      { cost = "N-Lunarizer", ball = LEGENDARY, gen = 7, cycle = true, guids = { "1bdda7" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7 },   -- Dawn Wings
                                                                                                                                                                      { cost = "Ultranecrozium Z", ball = LEGENDARY, gen = 7, cycle = true, guids = { "370a4c" }, model_GUID = "6becd1", custom_scale=0.5 } } },
-  { name = "Dusk Mane Necrozma",level = 7, types = { "Psychic" },  moves = { "Sunsteel Strike", "Prism. Laser" },guids = { "6366eb" }, model_GUID = "9aed20", custom_scale=0.3, offset={x=0, y=0, z=-0.02}, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },  -- Dusk Mane (for Necrozma)
-  { name = "Dawn Wings Necrozma",level = 7, types = { "Psychic" },  moves = { "Moongeist Beam", "Prism. Laser" },guids = { "1bdda7" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },  -- Dawn Wings (for Necrozma)
-  { name = "Ultra Necrozma",level = 7, types = { "Psychic" },  moves = { "Moongeist Beam", "Sunsteel Strike" },guids = { "370a4c" }, model_GUID = "6becd1", custom_scale=0.5, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },
-  { name = "Magearna",     level = 7, types = { "Steel" },    moves = { "Flash Cannon", "Fleur Cannon" },      guids = { "0ac3f1" }, model_GUID = "318474" },
-  { name = "Marshadow",    level = 7, types = { "Fighting" }, moves = { "Close Combat", "Spectral Thief" },    guids = { "8e8527" }, model_GUID = "bd5b48" },
+  { name = "Dusk Mane Necrozma",level = 7, types = { "Psychic", "Steel" },  moves = { "Sunsteel Strike", "Prism. Laser" },guids = { "6366eb" }, model_GUID = "9aed20", custom_scale=0.3, offset={x=0, y=0, z=-0.02}, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },  -- Dusk Mane (for Necrozma)
+  { name = "Dawn Wings Necrozma",level = 7, types = { "Psychic", "Ghost" },  moves = { "Moongeist Beam", "Prism. Laser" },guids = { "1bdda7" }, model_GUID = "94ea0e", spawn_effect="Status Attack", custom_scale=0.7, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },  -- Dawn Wings (for Necrozma)
+  { name = "Ultra Necrozma",level = 7, types = { "Psychic", "Dragon" },  moves = { "Moongeist Beam", "Sunsteel Strike" },guids = { "370a4c" }, model_GUID = "6becd1", custom_scale=0.5, evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "ec14da" }, model_GUID = "907d48", spawn_effect="Status Attack" } } },
+  { name = "Magearna",     level = 7, types = { "Steel", "Fairy" }, moves = { "Flash Cannon", "Fleur Cannon" },guids = { "0ac3f1" }, model_GUID = "318474" },
+  { name = "Marshadow",    level = 7, types = { "Fighting", "Ghost" }, moves = { "Close Combat", "Spectral Thief" }, guids = { "8e8527" }, model_GUID = "bd5b48" },
   { name = "Poipole",      level = 5, types = { "Poison" },   moves = { "Fury Attack", "Toxic" },              guids = { "6cadb0" }, model_GUID = "94b4e8", spawn_effect="Physical Attack", evoData = { { cost = 2, ball = LEGENDARY, gen = 7, guids = { "c42a20" }, model_GUID = "e435dd", spawn_effect="Physical Attack" } } },
   { name = "Naganadel",    level = 7, types = { "Poison" },   moves = { "Poison Jab", "Dragon Pulse" },        guids = { "4d5ae0", "c42a20" }, model_GUID = "e435dd", spawn_effect="Physical Attack" },
   { name = "Stakataka",    level = 7, types = { "Rock" },     moves = { "Rock Blast", "Iron Defense" },        guids = { "1446e4" }, model_GUID = "2e57e4", spawn_effect="Status Attack", custom_scale=0.3 },
@@ -1226,10 +1459,10 @@ gen7PokemonData =
   { name = "Alolan Grimer",       level = 4, types = { "Poison" },   moves = { "Disable", "Bite" },                   guids = { "c9ea3a" }, model_GUID = "9b4419", evoData = { { cost = 1, ball = RED, gen = 7, guids = { "d5d023" }, model_GUID = "7e8a7f" } } },
   { name = "Alolan Muk",          level = 5, types = { "Poison" },   moves = { "Poison Fang", "Crunch" },             guids = { "20e759", "d5d023" }, model_GUID = "7e8a7f", custom_scale=0.5 },
   { name = "Alolan Exeggutor",    level = 5, types = { "Grass" },    moves = { "Dragon Hammer", "Seed Bomb" },        guids = { "2b8a77" }, model_GUID = "e56668" },
-  { name = "Alolan Marowak",      level = 5, types = { "Fire" },     moves = { "Shadow Bone", "Bone Club" },          guids = { "04850a" }, model_GUID = "245f21" },
+  { name = "Alolan Marowak",      level = 5, types = { "Fire", "Ghost" },moves = { "Shadow Bone", "Bone Club" },      guids = { "04850a" }, model_GUID = "245f21" },
 
   -- Mega evolutions.
-  { name = "GMax Melmetal",       level = 7, types = { "Steel" },    moves = { "Meltdown", "Strike" },                guids = { "89bba5", "00eaca" },           evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "f35bd5", "aec8ec" } } } },
+  { name = "GMax Melmetal",       level = 7, types = { "Steel" },    moves = { "Meltdown", "Strike" },                guids = { "89bba5", "00eaca" },           evoData = { { cost = 0, ball = LEGENDARY, gen = 7, cycle = true, guids = { "f35bd5", "aec8ec" } } }, model_GUID = "b839e1", custom_scale=0.6 },
 }
 
 gen8PokemonData =
@@ -1248,7 +1481,7 @@ gen8PokemonData =
   { name = "Greedent",      level = 3, types = { "Normal" }, moves = { "Stuff Cheeks", "Covet" },  guids = { "7d0ad9", "0f5cf9" }, model_GUID = "a5ecec" },
   { name = "Rookidee",      level = 1, types = { "Flying" }, moves = { "Fury Attack", "Peck" }, guids = { "6d058d"}, evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "aac3a7" } } }, model_GUID = "581f48" },
   { name = "Corvisquire",   level = 3, types = { "Flying" }, moves = { "Hone Claws", "Drill Peck" },     guids = { "817152", "aac3a7" },     evoData = { { cost = 3, ball = RED, gen = 8, guids = { "29b1df", "39c41f"} } }, model_GUID = "b1809c" },
-  { name = "Corviknight",   level = 6, types = { "Flying" }, moves = { "Brave Bird", "Steel Wing" }, guids = { "d80b24", "29b1df", "39c41f" },                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "ea919f", "1c820c" }, model_GUID = "751679" } }, model_GUID = "1515e6" },
+  { name = "Corviknight",   level = 6, types = { "Flying", "Steel" }, moves = { "Brave Bird", "Steel Wing" }, guids = { "d80b24", "29b1df", "39c41f" },                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "ea919f", "1c820c" }, model_GUID = "751679" } }, model_GUID = "1515e6" },
   { name = "Blipbug",       level = 1, types = { "Bug" }, moves = { "Struggle Bug"}, guids = { "e534da" },              evoData = { { cost = 1, ball = PINK, gen = 8, guids = { "fa8ba4" } } }, model_GUID = "6446d0" },
   { name = "Dottler",       level = 2, types = { "Bug" }, moves = { "Confusion", "Reflect" },     guids = { "a228d5", "fa8ba4" },    evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "6e7247", "eb4403" } } }, model_GUID = "b0de96"},
   { name = "Orbeetle",      level = 4, types = { "Bug" }, moves = { "Bug Buzz", "Psychic" }, guids = { "4150f3", "6e7247", "eb4403" },                        evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "27ad44", "aee305" } } }, model_GUID = "a6d4d8" },
@@ -1259,7 +1492,7 @@ gen8PokemonData =
   { name = "Wooloo",        level = 1, types = { "Normal" }, moves = { "Double Kick", "Defense Curl" },     guids = { "f627d1" }, evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "17bfff" } } }, model_GUID = "d2c51c"  }, 
   { name = "Dubwool",       level = 3, types = { "Normal" }, moves = { "Cotton Guard", "Headbutt" },     guids = { "9bc17c", "17bfff" }, model_GUID = "d79f30"  },
   { name = "Chewtle",       level = 1, types = { "Water" }, moves = { "Water Gun", "Protect" },  guids = { "9ea87e" }, evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "bf22b0" } } }, model_GUID = "273314"},
-  { name = "Drednaw",       level = 3, types = { "Water" }, moves = { "Razor Shell", "Jaw Lock" },         guids = { "620b5e", "bf22b0" },                    evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "8054c2", "5cb470" }, model_GUID = "72b7ce" } }, model_GUID = "0ab337", custom_scale=0.8 },
+  { name = "Drednaw",       level = 3, types = { "Water", "Rock" }, moves = { "Razor Shell", "Jaw Lock" },         guids = { "620b5e", "bf22b0" },                    evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "8054c2", "5cb470" }, model_GUID = "72b7ce" } }, model_GUID = "0ab337", custom_scale=0.8 },
 
   -- Gen 8 835-858
   { name = "Yamper",        level = 1, types = { "Electric" }, moves = { "Nuzzle", "Roar" }, guids = { "71d863" }, evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "d10387" }, model_GUID = "daf531" } }, model_GUID = "4b1edc" },
@@ -1272,7 +1505,7 @@ gen8PokemonData =
   { name = "Appletun",      level = 4, types = { "Grass" }, moves = { "Apple Acid", "Dragon Pulse" },  guids = { "a26f34", "3a326b" },                   evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "945af3", "31aacc" }, model_GUID = "b87e45" } }, model_GUID = "8997a1" },
   { name = "Silicobra",     level = 3, types = { "Ground" }, moves = { "Sandstorm", "Wrap" }, guids = { "2f1d01" }, evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "3e0da6"} } }, model_GUID = "69f041" },
   { name = "Sandaconda",    level = 5, types = { "Ground" }, moves = { "Sand Tomb", "Coil" }, guids = { "c91baf", "3e0da6" },                            evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "2e2482", "3ab61a" }, model_GUID = "1e2e60" } }, model_GUID = "d15ad0" },
-  { name = "Cramorant",     level = 4, types = { "Flying" }, moves = { "Spit Up", "Dive" },  guids = { "55ee12"}, model_GUID = "2b1b24" }, 
+  { name = "Cramorant",     level = 4, types = { "Flying", "Water" }, moves = { "Spit Up", "Dive" },  guids = { "55ee12"}, model_GUID = "2b1b24" }, 
   { name = "Arrokuda",      level = 2, types = { "Water" }, moves = { "Fury Attack", "Aqua Jet" }, guids = { "642dca"}, evoData = { { cost = 1, ball = GREEN, gen = 8, guids = { "e1ccdd" }, model_GUID = "2d9e7c" } }, model_GUID = "95b4b0" },
   { name = "Barraskewda",   level = 3, types = { "Water" }, moves = { "Double-Edge", "Liquidation" },     guids = { "1e3235", "e1ccdd" }, model_GUID = "2d9e7c" },
   { name = "Toxel",         level = 2, types = { "Electric" }, moves = { "Tearful Look", "Nuzzle" },  guids = { "21446c" }, evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "bea82d" }, model_GUID = "42a6c3" }, { cost = 2, ball = YELLOW, gen = 8, guids = { "a7277f" }, model_GUID = "4d9bff" }  }, model_GUID = "37cb24" },
@@ -1291,7 +1524,7 @@ gen8PokemonData =
   -- Gen 8 859-884
   { name = "Impidimp",      level = 3, types = { "Dark" }, moves = { "Assurance", "Swagger"}, guids = { "955f8e" },            evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "09d5df" }, model_GUID = "9cc006" } }, model_GUID = "b49ec1" },
   { name = "Morgrem",       level = 5, types = { "Dark" }, moves = { "Sucker Punch", "Play Rough" },       guids = { "372fdf", "09d5df" }, evoData = { { cost = 1, ball = RED, gen = 8, guids = { "09fbc4", "1d1bc9" }, model_GUID = "3db539" } }, model_GUID = "9cc006" },
-  { name = "Grimmsnarl",    level = 6, types = { "Dark" }, moves = { "Spirit Break", "Foul Play" }, guids = { "9a62bf", "09fbc4", "1d1bc9" },                       evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "671823", "325e58" }, model_GUID = "e31f45" } }, model_GUID = "3db539" },
+  { name = "Grimmsnarl",    level = 6, types = { "Dark", "Fairy" }, moves = { "Spirit Break", "Foul Play" }, guids = { "9a62bf", "09fbc4", "1d1bc9" },                       evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "671823", "325e58" }, model_GUID = "e31f45" } }, model_GUID = "3db539" },
   { name = "Obstagoon",     level = 5, types = { "Dark" }, moves = { "Night Slash", "Counter" },   guids = { "355878", "f9576c", "18880a" }, model_GUID = "89cdcd" },
   { name = "Perrserker",    level = 4, types = { "Steel" }, moves = { "Iron Head", "Swagger" },      guids = { "352cd9", "33995d" }, model_GUID = "7ae05b" },
   { name = "Cursola",       level = 5, types = { "Ghost" }, moves = { "Night Shade", "Mirror Coat" },       guids = { "05fc5b", "ac68fa" }, model_GUID = "b8f109" },
@@ -1299,7 +1532,7 @@ gen8PokemonData =
   { name = "Mr. Rime",      level = 5, types = { "Ice" }, moves = { "Ice Punch", "Psybeam" }, guids = { "f05e97", "f5e748", "2de3e8"}, model_GUID = "908864" },
   { name = "Runerigus",     level = 5, types = { "Ground" }, moves = { "Earthquake", "Curse" }, guids = { "78c895", "b8d9ee"}, model_GUID = "999baf" },
   { name = "Milcery",       level = 2, types = { "Fairy" }, moves = { "Sweet Kiss", "Tackle" }, guids = { "d07981"},                                                 evoData = { { cost = 1, ball = BLUE, gen = 8, guids = { "f57bd3" } } }, model_GUID = "a82cac" },
-  { name = "Alcremie",      level = 3, types = { "Fairy" }, moves = { "Dazzling Gleam", "Decorate" }, guids = { "71833d", "f57bd3" },                                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "3c5cba", "0b4ee1" } } }, model_GUID = "a1c462" },
+  { name = "Alcremie",      level = 3, types = { "Fairy" }, moves = { "Dazzling Gleam", "Decorate" }, guids = { "71833d", "f57bd3" },                                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "3c5cba", "0b4ee1" } } }, model_GUID = "44047f" },
   { name = "Falinks",       level = 4, types = { "Fighting" }, moves = { "First Impression", "No Retreat" }, guids = { "8bb381" }, model_GUID = "913225", custom_scale=0.75 },
   { name = "Pincurchin",    level = 3, types = { "Electric" }, moves = { "Toxic Spikes", "Zing Zap" }, guids = { "4657b0" }, model_GUID = "4c0765" },
   { name = "Snom",          level = 2, types = { "Ice" }, moves = { "Powder Snow", "Struggle Bug" }, guids = { "b1d7df" }, evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "8b539d" }, model_GUID = "aa5643" } }, model_GUID = "b248ab" },
@@ -1326,35 +1559,35 @@ gen8PokemonData =
   { name = "Drakloak",      level = 5, types = { "Dragon" }, moves = { "Double Hit", "Dragon Pulse" }, guids = { "0dd987", "b9b3ac" }, evoData = { { cost = 2, ball = RED, gen = 8, guids = { "0fafd7", "89c1a8" } } }, model_GUID = "d04b70" }, 
   { name = "Dragapult",     level = 7, types = { "Dragon" }, moves = { "Dragon Darts", "Phantom Force" }, guids = { "ccc405", "0fafd7", "89c1a8" }, model_GUID = "1f4890" },
   { name = "Zacian",        level = 7, types = { "Fairy" }, moves = { "Sacred Sword", "Moonblast" }, guids = { "e97b5b" }, evoData = { { cost = "Rusted Sword", ball = LEGENDARY, gen = 8, cycle = true, guids = { "c3ff51"}, model_GUID = "6dccb4" } }, model_GUID = "659f7c", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },
-  { name = "Crowned Sword Zacian", level = 8, types = { "Fairy" }, moves = { "Behemoth Blade", "Play Rough" }, guids = { "c3ff51" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "e97b5b"}, model_GUID = "659f7c" } }, model_GUID = "6dccb4", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },                 -- C. Sword
+  { name = "Crowned Sword Zacian", level = 8, types = { "Fairy", "Steel" }, moves = { "Behemoth Blade", "Play Rough" }, guids = { "c3ff51" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "e97b5b"}, model_GUID = "659f7c" } }, model_GUID = "6dccb4", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },                 -- C. Sword
   { name = "Zamazenta",     level = 7, types = { "Fighting" }, moves = { "Iron Defense", "Revenge" }, guids = { "925e6b" }, evoData = { { cost = "Rusted Shield", ball = LEGENDARY, gen = 8, cycle = true, guids = { "51a0ef" }, model_GUID = "37f3aa" } }, model_GUID = "a27a5b", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },
-  { name = "Crowned Shield Zamazenta", level = 8, types = { "Fighting" }, moves = { "Behemoth Bash", "Close Combat" }, guids = { "51a0ef" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "925e6b"}, model_GUID = "a27a5b" } }, model_GUID = "37f3aa", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },         -- C. Shield
+  { name = "Crowned Shield Zamazenta", level = 8, types = { "Fighting", "Steel" }, moves = { "Behemoth Bash", "Close Combat" }, guids = { "51a0ef" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "925e6b"}, model_GUID = "a27a5b" } }, model_GUID = "37f3aa", custom_scale=0.6, offset={x=0, y=0, z=-0.2} },         -- C. Shield
   { name = "Eternatus",     level = 7, types = { "Poison" }, moves = { "Cross Poison", "D-max Cannon" }, guids = { "c0d41b" },                                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "e78955" } } }, model_GUID = "b03c9c", custom_scale=0.3 },
   { name = "Kubfu",         level = 5, types = { "Fighting" }, moves = { "Headbutt", "Counter" }, guids = { "312af1" }, evoData = { { cost = "Scroll of Waters", ball = LEGENDARY, gen = 8, guids = { "ab896e"} },       -- Rapid Strike
                                                                                                                                     { cost = "Scroll of Darkness", ball = LEGENDARY, gen = 8, guids = { "015ff0"} } },   -- Single Strike
                                                                                                                         model_GUID = "bed41b" },
-  { name = "RS Urshifu",    level = 7, types = { "Fighting" }, moves = { "Surging Strikes", "Brick Break" }, guids = { "ab896e" },   evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "bf033c" }, model_GUID = "6c1d60" } }, model_GUID = "6f4ae9", idle_effect="Rapid Idle", custom_scale=0.85 },   -- Rapid Strike
-  { name = "SS Urshifu",    level = 7, types = { "Fighting" }, moves = { "Wicked Blow", "Brick Break" }, guids = { "015ff0" },       evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "dd3373" }, model_GUID = "4491c0" } }, model_GUID = "bde30a", custom_scale=0.35, offset={x=0, y=0, z=-0.03} }, -- Single Strike
+  { name = "RS Urshifu",    level = 7, types = { "Fighting", "Water" }, moves = { "Surging Strikes", "Brick Break" }, guids = { "ab896e" },   evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "bf033c" }, model_GUID = "6c1d60" } }, model_GUID = "6f4ae9", idle_effect="Rapid Idle", custom_scale=0.85 },   -- Rapid Strike
+  { name = "SS Urshifu",    level = 7, types = { "Fighting", "Dark" }, moves = { "Wicked Blow", "Brick Break" }, guids = { "015ff0" },       evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "dd3373" }, model_GUID = "4491c0" } }, model_GUID = "bde30a", custom_scale=0.35, offset={x=0, y=0, z=-0.03} }, -- Single Strike
   { name = "Zarude",        level = 7, types = { "Dark" }, moves = { "Jungle Healing", "Brutal Swing" }, guids = { "651f81" }, model_GUID = "0ab53f", offset={x=0, y=0, z=-0.03} }, 
   { name = "Regieleki",     level = 7, types = { "Electric" }, moves = { "Thunder Cage", "Hyper Beam" }, guids = { "45a74f" }, model_GUID = "8f56ea" },
   { name = "Regidrago",     level = 7, types = { "Dragon" }, moves = { "Dragon Energy", "Thrash" }, guids = { "2ec2b8" }, model_GUID = "ca1c89" }, 
   { name = "Glastrier",     level = 7, types = { "Ice" }, moves = { "Icicle Crash", "Iron Defense" }, guids = { "05139e" }, evoData = { { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, guids = { "5e40a8" } } }, model_GUID = "3225b8", custom_scale=0.8 }, 
-  { name = "Ice Rider Calyrex", level = 8, types = { "Psychic" }, moves = { "Glacial Lance", "Psychic" }, guids = { "5e40a8" },  evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "05139e" } } }, model_GUID = "e85209", custom_scale=0.8 }, -- Ice Rider  (for Glastrier)
+  { name = "Ice Rider Calyrex", level = 8, types = { "Psychic", "Ice" }, moves = { "Glacial Lance", "Psychic" }, guids = { "5e40a8" },  evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "05139e" } } }, model_GUID = "e85209", custom_scale=0.8 }, -- Ice Rider  (for Glastrier)
   { name = "Spectrier",     level = 7, types = { "Ghost" }, moves = { "Shadow Ball", "Thrash" }, guids = { "3b4d86" }, evoData = { { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, guids = { "86748a" }, model_GUID = "58493a" } }, model_GUID = "3186ca", custom_scale=0.8 }, 
-  { name = "Shadow Rider Calyrex", level = 8, types = { "Psychic" }, moves = { "Astral Barrage", "Psychic" }, guids = { "86748a" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "3b4d86" } } }, model_GUID = "58493a", custom_scale=0.8 }, -- Shadow Rider (for Spectrier)
-  { name = "Calyrex",       level = 7, types = { "Psychic" }, moves = { "Energy Ball", "Psychic" }, guids = { "c91740"}, evoData = { { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, cycle = true, guids = { "3b7a04" }, model_GUID = "58493a", custom_scale=0.8 }, 
-                                                                                                                                     { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, cycle = true, guids = { "004eaf" }, model_GUID = "e85209" } }, model_GUID = "858f74", custom_scale=0.8 }, 
-  { name = "Shadow Rider Calyrex", level = 8, types = { "Psychic" }, moves = { "Astral Barrage", "Psychic" }, guids = { "3b7a04" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "c91740" }, model_GUID = "858f74" } }, model_GUID = "58493a", custom_scale=0.8 }, -- Shadow Rider (for Calyrex)
-  { name = "Ice Rider Calyrex", level = 8, types = { "Psychic" }, moves = { "Glacial Lance", "Psychic" }, guids = { "004eaf" },  evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "c91740" }, model_GUID = "858f74" } }, model_GUID = "e85209", custom_scale=0.8 }, -- Ice Rider  (for Calyrex)
+  { name = "Shadow Rider Calyrex", level = 8, types = { "Psychic", "Ghost" }, moves = { "Astral Barrage", "Psychic" }, guids = { "86748a" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "3b4d86" } } }, model_GUID = "58493a", custom_scale=0.8 }, -- Shadow Rider (for Spectrier)
+  { name = "Calyrex",       level = 7, types = { "Psychic", "Grass" }, moves = { "Energy Ball", "Psychic" }, guids = { "c91740"}, evoData = { { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, cycle = true, guids = { "3b7a04" }, model_GUID = "58493a", custom_scale=0.8 }, 
+                                                                                                                                              { cost = "Reigns of Unity", ball = LEGENDARY, gen = 8, cycle = true, guids = { "004eaf" }, model_GUID = "e85209" } }, model_GUID = "858f74", custom_scale=0.8 }, 
+  { name = "Shadow Rider Calyrex", level = 8, types = { "Psychic", "Ghost" }, moves = { "Astral Barrage", "Psychic" }, guids = { "3b7a04" }, evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "c91740" }, model_GUID = "858f74" } }, model_GUID = "58493a", custom_scale=0.8 }, -- Shadow Rider (for Calyrex)
+  { name = "Ice Rider Calyrex", level = 8, types = { "Psychic", "Ice" }, moves = { "Glacial Lance", "Psychic" }, guids = { "004eaf" },  evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "c91740" }, model_GUID = "858f74" } }, model_GUID = "e85209", custom_scale=0.8 }, -- Ice Rider  (for Calyrex)
   { name = "Wyrdeer",       level = 4, types = { "Normal" }, moves = { "Psyshield Bash", "Double-Edge" }, guids = { "dabd21", "163267" }, model_GUID = "2d9a6b", offset={x=0, y=0.05, z=0} },
-  { name = "Kleavor",       level = 5, types = { "Bug" }, moves = { "Stone Axe", "X-Scissor" }, guids = { "deef29", "18d390" }, model_GUID = "fd19c2", offset={x=0, y=0.05, z=0} },
-  { name = "Ursaluna",      level = 6, types = { "Ground" }, moves = { "Headlong Rush", "Play Rough" }, guids = { "b3110d", "7684c6", "2c6eaa" }, model_GUID = "9757b6", custom_scale=0.7, offset={x=0, y=0.8, z=0} },
+  { name = "Kleavor",       level = 5, types = { "Bug", "Rock" }, moves = { "Stone Axe", "X-Scissor" }, guids = { "deef29", "18d390" }, model_GUID = "fd19c2", offset={x=0, y=0.05, z=0} },
+  { name = "Ursaluna",      level = 6, types = { "Ground" }, moves = { "Headlong Rush", "Play Rough" }, guids = { "b3110d", "7684c6", "2c6eaa" }, model_GUID = "9757b6", custom_scale=0.7, offset={x=0, y=0.08, z=0} },
   { name = "Bloodmoon Ursaluna", level = 6, types = { "Ground" }, moves = { "Blood Moon", "Moonlight" }, guids = { "05e0a2", "0af179", "d9574b" }, model_GUID = "f871f9", custom_scale=0.85 },
-  { name = "Basculegion",   level = 4, types = { "Water" }, moves = { "Wave Crash", "Phantom Force" }, guids = { "e2e65c", "357bf0" }, model_GUID = "d9f9a1", custom_scale={x=0, y=0.6, z=0} },
+  { name = "Basculegion",   level = 4, types = { "Water", "Ghost" }, moves = { "Wave Crash", "Phantom Force" }, guids = { "e2e65c", "357bf0" }, model_GUID = "d9f9a1", custom_scale={x=0, y=0.6, z=0} },
   { name = "Sneasler",      level = 5, types = { "Fighting" }, moves = { "Close Combat", "Slash" }, guids = { "20e684", "8b5f40" }, model_GUID = "f0c7b4" },
   { name = "Overqwil",      level = 5, types = { "Dark" }, moves = { "Dark Pulse", "Poison Jab" }, guids = { "c891fc", "a4fb02" }, model_GUID = "631014" },
-  { name = "Incarnate Enamorus", level = 7, types = { "Fairy" }, moves = { "Spring. Storm", "Superpower" }, guids = { "3ba79b" } }, -- Non-Turtle Version
-  { name = "Therian Enamorus", level = 7, types = { "Fairy" }, moves = { "Spring. Storm", "Outrage" }, guids = { "52580d" } },      -- Turtle Version
+  { name = "Incarnate Enamorus", level = 7, types = { "Fairy" }, moves = { "Spring. Storm", "Superpower" }, guids = { "3ba79b" }, model_GUID = "22ac64", offset={x=0, y=1.0, z=0} }, -- Non-Turtle Version
+  { name = "Therian Enamorus", level = 7, types = { "Fairy" }, moves = { "Spring. Storm", "Outrage" }, guids = { "52580d" }, model_GUID = "9f3ee4", offset={x=0, y=1.0, z=0} },      -- Turtle Version
   
   -- GenVIII Hisuian, Galarian
   { name = "Galarian Zigzagoon",level = 1, types = { "Dark" },  moves = { "Pin Missile", "Leer" },         guids = { "2eae89"},            evoData = { { cost = 2, ball = BLUE, gen = 8, guids = { "513b01"}, model_GUID = "af2407" } }, model_GUID = "4e078d" },
@@ -1365,59 +1598,59 @@ gen8PokemonData =
   { name = "Galarian Mr. Mime",level = 3, types = { "Ice" },    moves = { "Ice Shard", "Encore" },         guids = { "ad9b7a", "8cfe98" }, evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "f5e748", "2de3e8"}, model_GUID = "908864" } }, model_GUID = "8e52ef" },
   { name = "Galarian Yamask",  level = 3, types = { "Ground" }, moves = { "Brutal Swing", "Astonish" },    guids = { "fb6107" },           evoData = { { cost = 2, ball = RED, gen = 8, guids = { "b8d9ee"}, model_GUID = "999baf" } }, model_GUID = "a15bc0" }, 
   { name = "Hisuian Basculin", level = 2, types = { "Water" },  moves = { "Aqua Jet", "Crunch" },          guids = { "039880" },           evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "357bf0"} } } },
-  { name = "Hisuian Sneasel",  level = 3, types = { "Fighting" },moves = { "Swords Dance", "Poison Jab" }, guids = { "fd17a9" },           evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "8b5f40"} } } },
-  { name = "Hisuian Qwilfish", level = 4, types = { "Dark" },   moves = { "Pin Missile", "Spikes" },       guids = { "d2929c" },           evoData = { { cost = 1, ball = YELLOW, gen = 8, guids = { "a4fb02"} } } },
-  { name = "Hisuian Growlithe",level = 2, types = { "Fire" },   moves = { "Rock Slide", "Swift" },         guids = { "0c6d18" },           evoData = { { cost = 3, ball = YELLOW, gen = 8, guids = { "2ab034"} } } }, 
-  { name = "Hisuian Arcanine", level = 5, types = { "Fire" },   moves = { "Flare Blitz", "Crunch" },       guids = { "943d83", "2ab034" } },
+  { name = "Hisuian Sneasel",  level = 3, types = { "Fighting" },moves = { "Swords Dance", "Poison Jab" }, guids = { "fd17a9" },           evoData = { { cost = 2, ball = YELLOW, gen = 8, guids = { "8b5f40"} } }, model_GUID = "18d833", offset={x=0, y=0.21, z=-0.13}, custom_scale=0.6 },
+  { name = "Hisuian Qwilfish", level = 4, types = { "Dark" },   moves = { "Pin Missile", "Spikes" },       guids = { "d2929c" },           evoData = { { cost = 1, ball = YELLOW, gen = 8, guids = { "a4fb02"} } }, model_GUID = "8d1ab5", offset={x=0, y=0.21, z=-0.07}, custom_scale=0.6 },
+  { name = "Hisuian Growlithe",level = 2, types = { "Fire" },   moves = { "Rock Slide", "Swift" },         guids = { "0c6d18" },           evoData = { { cost = 3, ball = YELLOW, gen = 8, guids = { "2ab034"} } }, model_GUID = "b0e54c", offset={x=0, y=0.21, z=-0.16}, custom_scale=0.55 }, 
+  { name = "Hisuian Arcanine", level = 5, types = { "Fire" },   moves = { "Flare Blitz", "Crunch" },       guids = { "943d83", "2ab034" }, model_GUID = "dd5f25", offset={x=0, y=0.21, z=-0.10}, custom_scale=0.4 },
   { name = "Galarian Ponyta",  level = 4, types = { "Psychic" },moves = { "Take Down", "Confusion" },      guids = { "918a64" },           evoData = { { cost = 2, ball = RED , gen = 8, guids = { "de6ae0"}, model_GUID = "725893", custom_scale=0.7 } }, model_GUID = "c8e066" }, 
   { name = "Galarian Rapidash",level = 6, types = { "Psychic" },moves = { "Dazzling Gleam", "Psybeam" },   guids = { "33cf1f", "de6ae0" }, model_GUID = "725893", custom_scale=0.7, offset={x=0, y=0, z=0.1} },
   { name = "Galarian Slowpoke",level = 2, types = { "Psychic" },moves = { "Confusion", "Acid" },           guids = { "c5b427" },           evoData = { { cost = 3, ball = RED , gen = 8, guids = { "a3217c"}, model_GUID = "0db618" }, { cost = 3, ball = RED , gen = 8, guids = { "e01e53"}, model_GUID = "eab949" } }, model_GUID = "7080db", custom_scale=0.75 }, 
   { name = "Galarian Slowbro", level = 5, types = { "Poison" }, moves = { "Shell Side Arm", "Water Pulse" }, guids = { "8bb5c6", "a3217c" }, model_GUID = "0db618" },
   { name = "Galarian Slowking",level = 5, types = { "Poison" }, moves = { "Power Gem", "Eerie Spell" },    guids = { "d817c2", "e01e53" }, model_GUID = "eab949" },
-  { name = "Hisuian Voltorb",  level = 2, types = { "Electric" }, moves = { "Thunder Wave", "Energy Ball" }, guids = { "1de2a1" },         evoData = { { cost = 2, ball = BLUE , gen = 8, guids = { "31ab95"} } } }, 
-  { name = "Hisuian Electrode",level = 4, types = { "Electric" }, moves = { "Thunder Shock", "Chloroblast" }, guids = { "af44ee", "31ab95" } },
+  { name = "Hisuian Voltorb",  level = 2, types = { "Electric", "Grass" }, moves = { "Thunder Wave", "Energy Ball" }, guids = { "1de2a1" },         evoData = { { cost = 2, ball = BLUE , gen = 8, guids = { "31ab95"} } }, model_GUID = "17404b", offset={x=0, y=0.21, z=-0.07}, custom_scale=0.6 }, 
+  { name = "Hisuian Electrode",level = 4, types = { "Electric", "Grass" }, moves = { "Thunder Shock", "Chloroblast" }, guids = { "af44ee", "31ab95" }, model_GUID = "b551e2", offset={x=0, y=0.30, z=-0.09}, custom_scale=0.6 },
   { name = "Galarian Weezing", level = 5, types = { "Poison" }, moves = { "Strange Steam", "Sludge" },     guids = { "8864bd", "dccfa4" }, model_GUID = "e96342" },
   { name = "Galarian Articuno",level = 7, types = { "Psychic" },moves = { "Freezing Glare", "Hurricane" }, guids = { "df62df" }, model_GUID = "c2b05c" },
   { name = "Galarian Zapdos",  level = 7, types = { "Fighting" },moves = { "Close Combat", "Drill Peck" }, guids = { "43f2c8" }, model_GUID = "8b0171"  },
   { name = "Galarian Moltres", level = 7, types = { "Dark" },   moves = { "Sky Attack", "Fiery Wrath" },   guids = { "f194d1" }, model_GUID = "fa0b19" },
-  { name = "Hisuian Typhlosion", level = 5, types = { "Fire" }, moves = { "Flamethrower", "Shadow Ball" }, guids = { "4ece6d", "e8349c", "c86580" } },
-  { name = "Hisuian Samurott", level = 5, types = { "Water" },  moves = { "Ceaseless Edge", "Razor Shell" }, guids = { "1e7846", "769c18", "c7dc10" } },
-  { name = "Hisuian Lilligant",level = 5, types = { "Grass" },  moves = { "Rock Smash", "Leaf Blade" },   guids = { "a1d8b8", "13e980" } },
+  { name = "Hisuian Typhlosion", level = 5, types = { "Fire" }, moves = { "Flamethrower", "Shadow Ball" }, guids = { "4ece6d", "e8349c", "c86580" }, model_GUID = "bf4883", offset={x=0, y=0.25, z=-0.2}, custom_scale=0.45 },
+  { name = "Hisuian Samurott", level = 5, types = { "Water" },  moves = { "Ceaseless Edge", "Razor Shell" }, guids = { "1e7846", "769c18", "c7dc10" }, model_GUID = "06c978", offset={x=0, y=0.3, z=-0.07}, custom_scale=0.6 },
+  { name = "Hisuian Lilligant",level = 5, types = { "Grass" },  moves = { "Rock Smash", "Leaf Blade" },   guids = { "a1d8b8", "13e980" }, model_GUID = "f3f647", offset={x=0, y=0.21, z=-0.09}, custom_scale=0.6 },
   { name = "Galarian Darumaka",level = 3, types = { "Ice" },    moves = { "Ice Fang", "Rollout" },        guids = { "d2942a" },            evoData = { { cost = 2, ball = YELLOW , gen = 8, guids = { "382428" }, model_GUID = "433977" }, 
                                                                                                                                                        { cost = 2, ball = YELLOW , gen = 8, guids = { "d37822" }, model_GUID = "d9be07" } }, model_GUID = "7fd1c8" }, 
   { name = "Galarian Darmanitan",level = 5, types = { "Ice" },  moves = { "Ice Punch", "Superpower" },    guids = { "c14bd8", "d37822" }, model_GUID = "d9be07" }, -- Ice/Fighting
   { name = "Galarian Zen Darmanitan",level = 5, types = { "Ice" },  moves = { "Ice Punch", "Fire Punch" },guids = { "f87608", "382428" }, model_GUID = "433977" }, -- Ice/Fire
-  { name = "Hisuian Zorua",    level = 3, types = { "Normal" }, moves = { "Shadow Sneak", "Nasty Plot" }, guids = { "b25340" },            evoData = { { cost = 2, ball = YELLOW , gen = 8, guids = { "f46ea3"} } }  }, 
-  { name = "Hisuian Zoroark",   level = 5, types = { "Normal" }, moves = { "Bitter Malice", "Foul Play" }, guids = { "b02e47", "f46ea3" } },
+  { name = "Hisuian Zorua",    level = 3, types = { "Normal" }, moves = { "Shadow Sneak", "Nasty Plot" }, guids = { "b25340" },            evoData = { { cost = 2, ball = YELLOW , gen = 8, guids = { "f46ea3"} } }, model_GUID = "da8dd7", offset={x=0, y=0.21, z=-0.14}, custom_scale=0.6 }, 
+  { name = "Hisuian Zoroark",  level = 5, types = { "Normal", "Ghost" }, moves = { "Bitter Malice", "Foul Play" }, guids = { "b02e47", "f46ea3" }, model_GUID = "ddf643", offset={x=0, y=0.21, z=-0.09}, custom_scale=0.6 },
   { name = "Galarian Stunfisk",level = 3, types = { "Ground" }, moves = { "Metal Claw", "Mud Shot" },     guids = { "d1fcec" }, model_GUID = "c91cc9" },
-  { name = "Hisuian Braviary", level = 6, types = { "Psychic" },moves = { "Esper Wing", "Brave Bird" },   guids = { "29010a", "aaa239" } },
-  { name = "Hisuian Sliggoo",  level = 4, types = { "Steel" },  moves = { "Dragon Pulse", "Acid Armor" }, guids = { "105e3c", "3ed28a" },  evoData = { { cost = 3, ball = RED , gen = 8, guids = { "3d0228", "c49cfb"} } } },
-  { name = "Hisuian Goodra",   level = 7, types = { "Steel" },  moves = { "Iron Head", "Hydro Pump" },    guids = { "81bf31", "3d0228", "c49cfb" } }, 
-  { name = "Hisuian Avalugg",  level = 5, types = { "Ice" },    moves = { "Rock Slide", "Ice Shard" },    guids = { "06528c", "2edcdb" } },
-  { name = "Hisuian Decidueye",level = 5, types = { "Grass" },  moves = { "Triple Arrows", "Leaf Storm" },guids = { "655289", "cf7b80", "5ada77" } },
+  { name = "Hisuian Braviary", level = 6, types = { "Psychic" },moves = { "Esper Wing", "Brave Bird" },   guids = { "29010a", "aaa239" }, model_GUID = "7a1e79", offset={x=0, y=0.21, z=-0.07}, custom_scale=0.6 },
+  { name = "Hisuian Sliggoo",  level = 4, types = { "Steel" },  moves = { "Dragon Pulse", "Acid Armor" }, guids = { "105e3c", "3ed28a" },  evoData = { { cost = 3, ball = RED , gen = 8, guids = { "3d0228", "c49cfb"} } }, model_GUID = "d73f52", offset={x=0, y=0.21, z=-0.1}, custom_scale=0.5 },
+  { name = "Hisuian Goodra",   level = 7, types = { "Steel" },  moves = { "Iron Head", "Hydro Pump" },    guids = { "81bf31", "3d0228", "c49cfb" }, model_GUID = "837255", offset={x=0, y=0.21, z=-0.07}, custom_scale=0.6 }, 
+  { name = "Hisuian Avalugg",  level = 5, types = { "Ice" },    moves = { "Rock Slide", "Ice Shard" },    guids = { "06528c", "2edcdb" }, model_GUID = "9c5c23", custom_scale=0.28, offset={x=0, y=0.21, z=-0.15} },
+  { name = "Hisuian Decidueye",level = 5, types = { "Grass", "Fighting" },  moves = { "Triple Arrows", "Leaf Storm" }, guids = { "655289", "cf7b80", "5ada77" }, model_GUID = "195008", offset={x=0, y=0.3, z=-0.07}, custom_scale=0.6 },
 
   -- Mega evolutions.
   { name = "GMax Rillaboom",       level = 5, types = { "Grass" },    moves = { "Drum Solo", "Strike" },                guids = { "d98c1f", "712942" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "d4a518", "2eba49", "f9d565" }, model_GUID = "2a352f" } }, model_GUID = "6e7118", custom_scale=0.3 },
   { name = "GMax Cinderace",       level = 5, types = { "Fire" },     moves = { "Fireball", "Airstream" },              guids = { "0ae3eb", "35db21" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "68e885", "e52d3f", "77f114" }, model_GUID = "edbb96" } }, model_GUID = "5fd307", custom_scale=0.65 },
   { name = "GMax Inteleon",        level = 5, types = { "Water" },    moves = { "Hydro Snipe", "Flutterby" },           guids = { "834995", "e4f6e7" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "a87b0f", "caa8d1", "70e2dd" }, model_GUID = "289431" } }, model_GUID = "1e011b", offset={x=-0.03, y=0, z=0.04} },
-  { name = "GMax Corviknight",     level = 6, types = { "Flying" },   moves = { "Wind Rage", "Steelspike" },            guids = { "ea919f", "1c820c" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "d80b24", "29b1df", "39c41f" }, model_GUID = "1515e6" } }, model_GUID = "751679" },
+  { name = "GMax Corviknight",     level = 6, types = { "Flying", "Steel" }, moves = { "Wind Rage", "Steelspike" },   guids = { "ea919f", "1c820c" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "d80b24", "29b1df", "39c41f" }, model_GUID = "1515e6" } }, model_GUID = "751679" },
   { name = "GMax Orbeetle",        level = 4, types = { "Bug" },      moves = { "Gravitas", "Flutterby" },              guids = { "27ad44", "aee305" },       evoData = { { cost = 0, ball = BLUE, gen = 8, cycle = true, guids = { "4150f3", "6e7247", "eb4403" } } }, model_GUID = "100a08" },
-  { name = "GMax Drednaw",         level = 3, types = { "Water" },    moves = { "Stonesurge", "Darkness" },             guids = { "8054c2", "5cb470" },       evoData = { { cost = 0, ball = BLUE, gen = 8, cycle = true, guids = { "620b5e", "bf22b0" }, model_GUID = "0ab337" } }, model_GUID = "72b7ce", custom_scale=0.7 },
+  { name = "GMax Drednaw",         level = 3, types = { "Water", "Rock" }, moves = { "Stonesurge", "Darkness" },             guids = { "8054c2", "5cb470" },       evoData = { { cost = 0, ball = BLUE, gen = 8, cycle = true, guids = { "620b5e", "bf22b0" }, model_GUID = "0ab337" } }, model_GUID = "72b7ce", custom_scale=0.7 },
   { name = "GMax Coalossal",       level = 5, types = { "Rock" },     moves = { "Volcalith", "Flare" },                 guids = { "423aca", "6407e4" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "6ac20e", "678720", "5eecb1" }, model_GUID = "e7e32a" } }, model_GUID = "dfe276", custom_scale=0.6 },
   { name = "GMax Flapple",         level = 4, types = { "Grass" },    moves = { "Tartness", "Wyrmwind" },               guids = { "c4ec8a", "975b3c" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "beb575", "508cc7" }, model_GUID = "c9aba6" } }, model_GUID = "62fbcf", custom_scale=0.5, offset={x=0, y=1.0, z=0} },
   { name = "GMax Appletun",        level = 4, types = { "Grass" },    moves = { "Sweetness", "Wyrmwind" },              guids = { "945af3", "31aacc" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "a26f34", "3a326b" }, model_GUID = "8997a1" } }, model_GUID = "b87e45", custom_scale=0.5, offset={x=0, y=1.0, z=0} },
-  { name = "GMax Sandaconda",      level = 5, types = { "Rock" },     moves = { "Sandblast", "Guard" },                 guids = { "2e2482", "3ab61a" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "c91baf", "3e0da6" }, model_GUID = "d15ad0" } }, model_GUID = "1e2e60" },
+  { name = "GMax Sandaconda",      level = 5, types = { "Ground" },   moves = { "Sandblast", "Guard" },                 guids = { "2e2482", "3ab61a" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "c91baf", "3e0da6" }, model_GUID = "d15ad0" } }, model_GUID = "1e2e60" },
   { name = "GMax Toxtricity",      level = 4, types = { "Electric" }, moves = { "Stun Shock", "Ooze" },                 guids = { "1644af", "f8615c" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "0c6876", "bea82d" }, model_GUID = "42a6c3" } }, model_GUID = "7c090f", custom_scale=0.5 },
   { name = "GMax Toxtricity",      level = 4, types = { "Electric" }, moves = { "Stun Shock", "Ooze" },                 guids = { "8c4dd2", "e01e0a" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "67ec92", "a7277f" }, model_GUID = "4d9bff" } }, model_GUID = "7c090f", custom_scale=0.5 },
   { name = "GMax Centiskorch",     level = 4, types = { "Fire" },     moves = { "Centiferno", "Flutterby" },            guids = { "457776", "f8726f" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "5b2923", "bf95c2" }, model_GUID = "a1917b" } }, model_GUID = "6bd6e4", custom_scale=0.65 },
   { name = "GMax Hatterene",       level = 6, types = { "Psychic" },  moves = { "Mindstorm", "Smite" },                 guids = { "0fab1b", "73ef1b" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "e711fc", "9cfe10", "42db1f" }, model_GUID = "9ac795" } }, model_GUID = "9219a8" },
-  { name = "GMax Grimmsnarl",      level = 6, types = { "Dark" },     moves = { "Snooze", "Starfall" },                 guids = { "671823", "325e58" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "9a62bf", "09fbc4", "1d1bc9" }, model_GUID = "3db539" } }, model_GUID = "e31f45", custom_scale=0.7 },
+  { name = "GMax Grimmsnarl",      level = 6, types = { "Dark", "Fairy" }, moves = { "Snooze", "Starfall" },            guids = { "671823", "325e58" },       evoData = { { cost = 0, ball = RED, gen = 8, cycle = true, guids = { "9a62bf", "09fbc4", "1d1bc9" }, model_GUID = "3db539" } }, model_GUID = "e31f45", custom_scale=0.7 },
   { name = "GMax Alcremie",        level = 3, types = { "Fairy" },    moves = { "Finale", "Guard" },                    guids = { "3c5cba", "0b4ee1" },       evoData = { { cost = 0, ball = BLUE, gen = 8, cycle = true, guids = { "71833d", "f57bd3" } } }, model_GUID = "c54873", custom_scale=0.4, offset={x=0, y=1.0, z=0} },
   { name = "GMax Copperajah",      level = 5, types = { "Steel" },    moves = { "Steelsurge", "Quake" },                guids = { "ad2c75", "1e68f7" },       evoData = { { cost = 0, ball = BLUE, gen = 8, cycle = true, guids = { "772688", "bb0dab" } } }, model_GUID = "be6c58", custom_scale=0.6 },
   { name = "GMax Duraludon",       level = 5, types = { "Steel" },    moves = { "Wyrmwind", "Depletion" },              guids = { "e17508", "ff891b" },       evoData = { { cost = 0, ball = YELLOW, gen = 8, cycle = true, guids = { "19c226" }, model_GUID = "397452" } }, model_GUID = "a14b0f", custom_scale=0.5 },
   { name = "GMax Eternatus",       level = 7, types = { "Poison" },   moves = { "Eternabeam", "Ooze" },                 guids = { "e78955" },                 evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "c0d41b" } } }, model_GUID = "865247", offset={x=0, y=0, z=1.5} },
-  { name = "GMax R.S. Urshifu",    level = 7, types = { "Fighting" }, moves = { "Rapid Flow", "Knuckle" },              guids = { "bf033c" },                 evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "ab896e" } } }, model_GUID = "6c1d60", custom_scale=0.7 },
-  { name = "GMax S.S. Urshifu",    level = 7, types = { "Fighting" }, moves = { "One Blow", "Knuckle" },                guids = { "dd3373" },                 evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "015ff0" } } }, model_GUID = "4491c0", custom_scale=0.7 },
+  { name = "GMax R.S. Urshifu",    level = 7, types = { "Fighting", "Water" }, moves = { "Rapid Flow", "Knuckle" },     guids = { "bf033c" },                 evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "ab896e" } } }, model_GUID = "6c1d60", custom_scale=0.7 },
+  { name = "GMax S.S. Urshifu",    level = 7, types = { "Fighting", "Dark" }, moves = { "One Blow", "Knuckle" },        guids = { "dd3373" },                 evoData = { { cost = 0, ball = LEGENDARY, gen = 8, cycle = true, guids = { "015ff0" } } }, model_GUID = "4491c0", custom_scale=0.7 },
 }
 
 gen9PokemonData =
@@ -1425,13 +1658,13 @@ gen9PokemonData =
   -- Gen 9 906-925
   { name = "Sprigatito",    level = 1, types = { "Grass" }, moves = { "Tail Whip", "Leafage" },    guids = { "49980a" },               evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "d04b95" } } }, model_GUID = "1c7af7", offset={x=0, y=0.025, z=0} },
   { name = "Floragato",     level = 3, types = { "Grass" }, moves = { "Hone Claws", "Seed Bomb" },   guids = { "195a4d", "d04b95" },     evoData = { { cost = 2, ball = RED, gen = 9, guids = { "2b0cec", "603216" } } }, model_GUID = "3a73b3", offset={x=0, y=0.035, z=0} },
-  { name = "Meowscarada",   level = 5, types = { "Grass" }, moves = { "Flower Trick", "Knock Off" },     guids = { "7b87eb", "2b0cec", "603216" }, model_GUID = "e94a72", offset={x=0, y=0.08, z=0} },
+  { name = "Meowscarada",   level = 5, types = { "Grass", "Dark" }, moves = { "Flower Trick", "Knock Off" },     guids = { "7b87eb", "2b0cec", "603216" }, model_GUID = "e94a72", offset={x=0, y=0.22, z=0} },
   { name = "Fuecoco",       level = 1, types = { "Fire" }, moves = { "Ember", "Leer" },         guids = { "53ad3b" },               evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "2a93fc" } } }, model_GUID = "371d1a", offset={x=0, y=0.025, z=0} },
   { name = "Crocalor",      level = 3, types = { "Fire" }, moves = { "Incinerate", "Bite" }, guids = { "f49cc4", "2a93fc" },   evoData = { { cost = 2, ball = RED, gen = 9, guids = { "0528b7", "91d3a3" } } }, model_GUID = "87b40e", offset={x=0, y=0.1, z=0} },
-  { name = "Skeledirge",    level = 5, types = { "Fire" }, moves = { "Shadow Ball", "Torch Song" }, guids = { "6b9ddf", "0528b7", "91d3a3" }, model_GUID = "cb589e", offset={x=0, y=0.08, z=0} },
+  { name = "Skeledirge",    level = 5, types = { "Fire", "Ghost" }, moves = { "Shadow Ball", "Torch Song" }, guids = { "6b9ddf", "0528b7", "91d3a3" }, model_GUID = "cb589e", offset={x=0, y=0.1, z=0} },
   { name = "Quaxly",        level = 1, types = { "Water" }, moves = { "Water Gun", "Growl" },    guids = { "4a2233" },               evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "76b74f" } } }, model_GUID = "c4ea16" },
   { name = "Quaxwell",      level = 3, types = { "Water" }, moves = { "Feather Dance", "Aqua Jet" }, guids = { "dc2818", "76b74f" },    evoData = { { cost = 2, ball = RED, gen = 9, guids = { "517d88", "7bf3d4" } } }, model_GUID = "9a74b3", offset={x=0, y=0.02, z=0} },
-  { name = "Quaquaval",     level = 5, types = { "Water" }, moves = { "Aqua Step", "Counter" }, guids = { "07d04b", "517d88", "7bf3d4" }, model_GUID = "bfd3d8", offset={x=0, y=0.015, z=0} },
+  { name = "Quaquaval",     level = 5, types = { "Water", "Fighting" }, moves = { "Aqua Step", "Counter" }, guids = { "07d04b", "517d88", "7bf3d4" }, model_GUID = "bfd3d8", offset={x=0, y=0.015, z=0} },
   { name = "Lechonk",       level = 1, types = { "Normal" }, moves = { "Tackle", "Tail Whip" }, guids = { "fa7a0e" }, evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "731928" } }, { cost = 2, ball = BLUE, gen = 9, guids = { "9bc692" } } }, model_GUID = "5d6a38", offset={x=0, y=0.055, z=0} },
   { name = "Oinkologne (F)",level = 3, types = { "Normal" }, moves = { "Headbutt", "Yawn" },  guids = { "286c12", "731928" }, model_GUID = "85944f", offset={x=0, y=0.05, z=0} },
   { name = "Oinkologne (M)",level = 3, types = { "Normal" }, moves = { "Take Down", "Work Up" }, guids = { "4a7427", "9bc692" }, model_GUID = "d3f0e3", offset={x=0, y=0.05, z=0} },
@@ -1450,7 +1683,7 @@ gen9PokemonData =
   { name = "Dachsbun",      level = 3, types = { "Fairy" }, moves = { "Play Rough", "Crunch" },   guids = { "90d0bb", "acaf9b" }, model_GUID = "01312a", offset={x=0, y=0.035, z=0} }, 
   { name = "Smoliv",        level = 2, types = { "Grass" }, moves = { "Growth", "Absorb" },   guids = { "478ad3" }, evoData = { { cost = 1, ball = GREEN, gen = 9, guids = { "70af04" } } }, model_GUID = "afedc8" }, 
   { name = "Dolliv",        level = 3, types = { "Grass" }, moves = { "Seed Bomb", "Tackle" },   guids = { "c00c7c", "70af04" }, evoData = { { cost = 2, ball = YELLOW, gen = 9, guids = { "46e56c", "8bf8dd" } } }, model_GUID = "1b5761", offset={x=0, y=0.06, z=0} },
-  { name = "Arboliva",      level = 5, types = { "Grass" }, moves = { "Grassy Terrain", "Terrain Pulse" }, guids = { "31acf0", "46e56c", "8bf8dd" }, model_GUID = "17e695" },
+  { name = "Arboliva",      level = 5, types = { "Grass", "Normal" }, moves = { "Grassy Terrain", "Terrain Pulse" }, guids = { "31acf0", "46e56c", "8bf8dd" }, model_GUID = "17e695" },
   { name = "Squawkabilly",  level = 3, types = { "Flying" }, moves = { "Mimic", "Fly" },  guids = { "1968bc" }, model_GUID = "97ec14" },
   { name = "Nacli",         level = 2, types = { "Rock" }, moves = { "Rock Throw", "Harden" }, guids = { "3b9f04" }, evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "0d54a8" } } }, model_GUID = "ac19c0"  },
   { name = "Naclstack",     level = 4, types = { "Rock" }, moves = { "Salt Cure", "Mud Shot" },  guids = { "69cf19", "0d54a8" }, evoData = { { cost = 2, ball = RED, gen = 9, guids = { "1c0e4e", "7c6d2b" } } }, model_GUID = "e5d7a5", offset={x=0, y=0.05, z=0} },
@@ -1467,7 +1700,7 @@ gen9PokemonData =
   { name = "Shroodle",      level = 2, types = { "Poison" }, moves = { "Fury Swipes", "Acid Spray" }, guids = { "bd638c" }, evoData = { { cost = 1, ball = BLUE, gen = 9, guids = { "74dde9" } } }, model_GUID = "b1dbf0", offset={x=0, y=0.05, z=0} },
   { name = "Grafaiai",      level = 3, types = { "Poison" }, moves = { "Poison Jab", "Slash" }, guids = { "32bf28", "74dde9" }, model_GUID = "653a79", offset={x=0, y=0.08, z=0} },
   { name = "Bramblin",      level = 3, types = { "Grass" }, moves = { "Bullet Seed", "Rollout" }, guids = { "845718" }, evoData = { { cost = 1, ball = BLUE, gen = 9, guids = { "6160d0" } } }, model_GUID = "68693e" }, 
-  { name = "Brambleghast",  level = 4, types = { "Grass" }, moves = { "Phantom Force", "Mega Drain" },  guids = { "651132", "6160d0" }, model_GUID = "dba34b" }, 
+  { name = "Brambleghast",  level = 4, types = { "Grass" }, moves = { "Phantom Force", "Mega Drain" },  guids = { "651132", "6160d0" }, model_GUID = "dba34b", offset={x=0, y=0.08, z=0} }, 
   { name = "Toedscool",     level = 2, types = { "Ground" }, moves = { "Absorb", "Wrap" },    guids = { "81b348" }, evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "fdc646" } } }, model_GUID = "52e9cb", offset={x=0, y=0.05, z=0} },
   { name = "Toedscruel",    level = 4, types = { "Ground" }, moves = { "Power Whip", "Mud Shot" },  guids = { "73fe95", "fdc646" }, model_GUID = "972b0a", offset={x=0, y=0.08, z=0} },
 
@@ -1489,7 +1722,7 @@ gen9PokemonData =
   { name = "Hero Palafin",  level = 6, types = { "Water" }, moves = { "Close Combat", "Jet Punch" }, guids = { "b40995", "e40792" }, model_GUID = "dcc25a" },
   { name = "Zero Palafin",  level = 6, types = { "Water" }, moves = { "Zen Headbutt", "Flip Turn" }, guids = { "fd6f39", "ffb871" }, model_GUID = "a7f3e4" },
   { name = "Varoom",        level = 3, types = { "Steel" }, moves = { "Screech", "Smog" }, guids = { "039292" }, evoData = { { cost = 2, ball = RED, gen = 9, guids = { "f620af" } } }, model_GUID = "6c77fd", offset={x=0, y=0.05, z=0} }, 
-  { name = "Revavroom",     level = 5, types = { "Steel" }, moves = { "Spin Out", "Sludge" }, guids = { "fd6f39", "f620af" }, model_GUID = "27995d" }, 
+  { name = "Revavroom",     level = 5, types = { "Steel", "Poison" }, moves = { "Spin Out", "Sludge" }, guids = { "fd6f39", "f620af" }, model_GUID = "27995d" }, 
   { name = "Cyclizar",      level = 4, types = { "Dragon" }, moves = { "Dragon Rush", "Quick Attack" }, guids = { "7282b5"  }, model_GUID = "c1cc69", offset={x=0, y=0.08, z=0} },
   { name = "Orthworm",      level = 3, types = { "Steel" }, moves = { "Earthquake", "Iron Tail" }, guids = { "9b54aa" }, model_GUID = "c830bd", custom_scale=0.5, offset={x=0, y=0.05, z=-0.05} }, 
   { name = "Glimmet",       level = 2, types = { "Rock" }, moves = { "Toxic Spikes", "Rock Throw" }, guids = { "731ab7" }, evoData = { { cost = 2, ball = YELLOW, gen = 9, guids = { "58f282" } } }, model_GUID = "8fec3a", offset={x=0, y=0.05, z=0} },
@@ -1506,7 +1739,7 @@ gen9PokemonData =
   { name = "Curly Tatsugiri", level = 3, types = { "Dragon" }, moves = { "Water Pulse", "Dragon Pulse" }, guids = { "799368" }, model_GUID = "a8fc0e", offset={x=0, y=0.05, z=0} },    -- Water
   { name = "Droopy Tatsugiri", level = 3, types = { "Dragon" }, moves = { "Mirror Coat", "Dragon Pulse" }, guids = { "6e1311" }, model_GUID = "e440a9" },    -- Psychic
   { name = "Stretchy Tatsugiri", level = 3, types = { "Dragon" }, moves = { "Nasty Plot", "Dragon Pulse" }, guids = { "a3ec4b" }, model_GUID = "4f2264" },     -- Dark
-  { name = "Annihilape",    level = 5, types = { "Fighting" }, moves = { "Cross Chop", "Rage Fist" }, guids = { "87727d", "b68eb7", "6b4dfa" }, model_GUID = "d78227" },
+  { name = "Annihilape",    level = 5, types = { "Fighting", "Ghost" }, moves = { "Cross Chop", "Rage Fist" }, guids = { "87727d", "b68eb7", "6b4dfa" }, model_GUID = "d78227" },
   { name = "Clodsire",      level = 3, types = { "Poison" }, moves = { "Poison Tail", "Mud Shot" }, guids = { "11f231", "9299e4" }, model_GUID = "2263bf", offset={x=0, y=0.65, z=0} },
   { name = "Farigiraf",     level = 3, types = { "Normal" }, moves = { "Twin Beam", "Stomp" }, guids = { "ec3c21", "f18198" }, model_GUID = "4132b6" }, 
   { name = "Dudunsparce",   level = 3, types = { "Normal" }, moves = { "Drill Run", "Hyper Drill" }, guids = { "f840fc", "9c40ab" }, model_GUID = "97a941", offset={x=0, y=0.08, z=0} },
@@ -1515,13 +1748,13 @@ gen9PokemonData =
   { name = "Scream Tail",   level = 3, types = { "Fairy" }, moves = { "Play Rough", "Psychic Fangs" }, guids = { "d2d1fc" }, model_GUID = "f15d87", offset={x=0, y=0.08, z=0} }, 
   { name = "Brute Bonnet",  level = 4, types = { "Grass" }, moves = { "Sucker Punch", "Mega Drain" }, guids = { "d97f22" }, model_GUID = "27b743", offset={x=0, y=0.08, z=0} }, 
   { name = "Flutter Mane",  level = 4, types = { "Ghost" }, moves = { "Phantom Force", "Moonblast" }, guids = { "60305f" }, model_GUID = "b8eaa0" },
-  { name = "Slither Wing",  level = 6, types = { "Bug" }, moves = { "Superpower", "Bug Bite" }, guids = { "163a86" }, model_GUID = "e6ac2e", offset={x=0, y=0.12, z=0} }, 
-  { name = "Sandy Shocks",  level = 4, types = { "Electric" }, moves = { "Earth Power", "Discharge" }, guids = { "c61a67" }, model_GUID = "67d1e0", offset={x=0, y=0.05, z=0} }, 
-  { name = "Iron Treads",   level = 5, types = { "Ground" }, moves = { "Iron Head", "Earthquake" }, guids = { "2bba66" }, model_GUID = "e79ff2", offset={x=0, y=0.08, z=0} }, 
+  { name = "Slither Wing",  level = 6, types = { "Bug" }, moves = { "Superpower", "Bug Bite" }, guids = { "163a86" }, model_GUID = "e6ac2e", offset={x=0, y=0.4, z=0} }, 
+  { name = "Sandy Shocks",  level = 4, types = { "Electric", "Ground" }, moves = { "Earth Power", "Discharge" }, guids = { "c61a67" }, model_GUID = "67d1e0", offset={x=0, y=0.05, z=0} }, 
+  { name = "Iron Treads",   level = 5, types = { "Ground", "Steel" }, moves = { "Iron Head", "Earthquake" }, guids = { "2bba66" }, model_GUID = "e79ff2", offset={x=0, y=0.08, z=0} }, 
   { name = "Iron Bundle",   level = 3, types = { "Ice" }, moves = { "Freeze-Dry", "Flip Turn" }, guids = { "90d798" }, model_GUID = "5159a6" },
   { name = "Iron Hands",    level = 4, types = { "Fighting" }, moves = { "Thunder Punch", "Arm Thrust" }, guids = { "7b45a3" }, model_GUID = "0e538d" }, 
   { name = "Iron Jugulis",  level = 7, types = { "Dark" }, moves = { "Dark Pulse", "Air Slash" }, guids = { "ff30bd" }, model_GUID = "a70d90" },
-  { name = "Iron Moth",     level = 6, types = { "Fire" }, moves = { "Sludge Wave", "Overheat" }, guids = { "68bff5" }, model_GUID = "d3917a" }, 
+  { name = "Iron Moth",     level = 6, types = { "Fire", "Poison" }, moves = { "Sludge Wave", "Overheat" }, guids = { "68bff5" }, model_GUID = "d3917a" }, 
   { name = "Iron Thorns",   level = 7, types = { "Rock" }, moves = { "Thunder Fang", "Stone Edge" }, guids = { "38c0c7" }, model_GUID = "cdacbd"  }, 
   { name = "Frigibax",      level = 2, types = { "Dragon" }, moves = { "Icy Wind", "Leer" }, guids = { "3f40d1" }, evoData = { { cost = 2, ball = YELLOW, gen = 9, guids = { "907d41" } } }, model_GUID = "0bcfd4", offset={x=0, y=0.05, z=0} }, 
   { name = "Arctibax",      level = 4, types = { "Dragon" }, moves = { "Dragon Claw", "Bite" }, guids = { "33a8b3", "907d41" }, evoData = { { cost = 3, ball = RED, gen = 9, guids = { "1dad71", "805f61" } } }, model_GUID = "4f8823", offset={x=0, y=0.08, z=0} }, 
@@ -1553,7 +1786,7 @@ gen9PokemonData =
   { name = "Wellspring Ogerpon", level = 7, types = { "Water" }, moves = { "Ivy Cudgel Water", "Counter" }, guids = { "ce1aac" }, model_GUID = "c064f9", offset={x=0, y=0.06, z=0} },    -- Water
   { name = "Archaludon",    level = 6, types = { "Steel" }, moves = { "Electro Shot", "Breaking Swipe" }, guids = { "3d2744", "3a6873" }, model_GUID = "94d396" },
   { name = "Gouging Fire",  level = 7, types = { "Fire" }, moves = { "Raging Fury", "Dragon Claw" }, guids = { "ae5249" }, model_GUID = "678599", custom_scale=0.35, offset={x=0,y=0,z=-0.1} },
-  { name = "Raging Bolt",   level = 7, types = { "Electric" }, moves = { "Dragon Hammer", "Thunderclap" }, guids = { "d32bf4" }, model_GUID = "0b3f11", custom_scale=0.45, offset={x=0, y=0, z=-0.06} }, 
+  { name = "Raging Bolt",   level = 7, types = { "Electric" }, moves = { "Dragon Hammer", "Thunderclap" }, guids = { "d32bf4" }, model_GUID = "0b3f11", custom_scale=0.45, offset={x=0, y=0.04, z=-0.06} }, 
   { name = "Iron Boulder",  level = 7, types = { "Rock" }, moves = { "Mighty Cleave", "Psycho Cut" }, guids = { "fa15fd" }, model_GUID = "a05502", custom_scale=0.8, offset={x=0, y=0, z=-0.03} }, 
   { name = "Iron Crown",    level = 7, types = { "Steel" }, moves = { "Tachyon Cutter", "Future Sight" }, guids = { "fae0a8" }, model_GUID = "22b433" },
   { name = "Terapagos",     level = 7, types = { "Normal" }, moves = { "Tera Starstorm", "Protect" }, guids = { "686877" }, model_GUID = "d4c95f", offset={x=0, y=0.08, z=0} }, 
@@ -1589,21 +1822,21 @@ moveData =
     {name="Steamroller",    power=2,      type="Bug",       dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="String Shot",    power=0,      type="Bug",       dice=6, STAB=false  },
     {name="Struggle Bug",   power=2,      type="Bug",       dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}}},
-    {name="Tail Glow",      power=0,      type="Bug",       dice=4, STAB=true,  effects={{name="AttackUp2", target="Self"}} },
+    {name="Tail Glow",      power=0,      type="Bug",       dice=4, STAB=false, effects={{name="AttackUp2", target="Self"}} },
     {name="Twineedle",      power=1,      type="Bug",       dice=4, STAB=true,  effects={{name="Poison", target="Enemy", chance=5},{name="ExtraDice", target="Self"}} },
     {name="U-Turn",         power=2,      type="Bug",       dice=6, STAB=true,  effects={{name="Switch", target="Self"}} },
     {name="X-Scissor",      power=2,      type="Bug",       dice=6, STAB=true   },
-    {name="Befuddle",       power=3,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
-    {name="Flutterby",      power=2,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
-    {name="Savage Spin-Out",power=4,      type="Bug",       dice=6, STAB=true,  effects={{name="Recharge", target="Self"}} },
+    {name="Befuddle",       power=2,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
+    {name="Flutterby",      power=3,      type="Bug",       dice=6, STAB=true,  effects={{"Custom"}} },
+    {name="Savage Spin-Out",power=4,      type="Bug",       dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     
     -- Dark
-    {name="Assurance",      power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
+    {name="Assurance",      power=1,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
     {name="Aura Wheel Dark",power=4,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}}},
     {name="Beat Up",        power="Enemy",type="Dark",      dice=6, STAB=false },
     {name="Bite",           power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Brutal Swing",   power=2,      type="Dark",      dice=6, STAB=false },
-    {name="Ceaseless Edge", power=3,      type="Dark",      dice=8, STAB=false },
+    {name="Brutal Swing",   power=2,      type="Dark",      dice=6, STAB=true },
+    {name="Ceaseless Edge", power=3,      type="Dark",      dice=8, STAB=true },
     {name="Crunch",         power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Darkest Lariat", power=3,      type="Dark",      dice=6, STAB=true  },
     {name="Dark Pulse",     power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
@@ -1628,78 +1861,78 @@ moveData =
     {name="Taunt",          power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"}} },
     {name="Thief",          power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Torment",        power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"}} },
-    {name="Wicked Blow",    power=3,      type="Dark",      dice=8, STAB=true   },
-    {name="Wicked Torque",  power=3,      type="Dark",      dice=8, STAB=true,  effects={{name="Sleep", target="Enemy", chance=6}} },
-    {name="Throat Chop",    power=3,      type="Dark",      dice=6, STAB=true },
-    {name="Darkness",       power=3,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
-    {name="Snooze",         power=3,      type="Dark",      dice=8, STAB=false, effects={{name="Sleep", target="Enemy", chance=4}} },
-    {name="One Blow",       power=4,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
-    {name="Night Daze",     power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}}},
+    {name="Wicked Blow",    power=3,      type="Dark",      dice=8, STAB=true },
+    {name="Wicked Torque",  power=2,      type="Dark",      dice=8, STAB=true,  effects={{name="Sleep", target="Enemy", chance=6}} },
+    {name="Throat Chop",    power=2,      type="Dark",      dice=6, STAB=true },
+    {name="Darkness",       power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"} } },
+    {name="Snooze",         power=2,      type="Dark",      dice=8, STAB=true,  effects={{name="Sleep", target="Enemy", chance=4}} },
+    {name="One Blow",       power=4,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"} } },
+    {name="Night Daze",     power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}}},
     {name="Snatch",         power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"} } },
     {name="Black Hole Eclipse",power=4,   type="Dark",      dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     {name="Malicious Moonsault",power=5,  type="Dark",      dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
 
     -- Dragon
     {name="D-max Cannon",   power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
-    {name="Dragon Claw",    power=3,      type="Dragon",    dice=6, STAB=true   },
-    {name="Dragon Dance",   power=0,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackUp2", target="Self"}} },
-    {name="Dragon Darts",   power=2,      type="Dragon",    dice=4, STAB=true,  effects={{name="ExtraDice", target="Self"}} },
+    {name="Dragon Claw",    power=2,      type="Dragon",    dice=6, STAB=true   },
+    {name="Dragon Dance",   power=0,      type="Dragon",    dice=6, STAB=false, effects={{name="AttackUp2", target="Self"}} },
+    {name="Dragon Darts",   power=1,      type="Dragon",    dice=4, STAB=true,  effects={{name="ExtraDice", target="Self"}} },
     {name="Dragon Breath",  power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
-    {name="Dragon Energy",  power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
+    {name="Dragon Energy",  power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
     {name="Dragon Hammer",  power=3,      type="Dragon",    dice=6, STAB=true   },
     {name="Dragon Pulse",   power=2,      type="Dragon",    dice=6, STAB=true   },
     {name="Dragon Rage",    power=4,      type="Dragon",    dice=4, STAB=true,  effects={{name="Neutral", target="Self"}} },
     {name="Dragon Rush",    power=2,      type="Dragon",    dice=4, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Dragon Tail",    power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="Switch", target="Enemy"}} },
     {name="Dual Chop",      power=1,      type="Dragon",    dice=4, STAB=true,  effects={{name="ExtraDice", target="Self"}} },
-    {name="Clanging Scales",power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
-    {name="Fickle Beam",    power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
-    {name="Glaive Rush",    power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
+    {name="Clanging Scales",power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
+    {name="Fickle Beam",    power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
+    {name="Glaive Rush",    power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
     {name="Order Up",       power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}} },
-    {name="Outrage",        power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="Confuse", target="Self", chance=5}} },
-    {name="Roar of Time",   power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="Recharge", target="Self"}} },
-    {name="Spacial Rend",   power=3,      type="Dragon",    dice=8, STAB=true   },
+    {name="Outrage",        power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Confuse", target="Self", chance=5}} },
+    {name="Roar of Time",   power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Recharge", target="Self"}} },
+    {name="Spacial Rend",   power=2,      type="Dragon",    dice=8, STAB=true   },
     {name="Twister",        power=1,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Breaking Swipe", power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}} },
-    {name="Dragon Ascent",  power=4,      type="Dragon",    dice=6, STAB=false, effects={{name="AttackDown", target="Self"}} },
-    {name="Wyrmwind",       power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
-    {name="Eternabeam",     power=5,      type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Breaking Swipe", power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}} },
+    {name="Dragon Ascent",  power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}} },
+    {name="Wyrmwind",       power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="Custom"}}},
+    {name="Eternabeam",     power=4,      type="Dragon",    dice=6, STAB=true,  effects={{name="Recharge", target="Self"}} },
     {name="Devastating Drake",power=4,    type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     {name="Clangorous Soulblaze",power=5, type="Dragon",    dice=6, STAB=false, effects={{name="Recharge", target="Self"}, {name="AttackUp", target="Self"}} },
 
     -- Electric
-    {name="Aura Wheel Electric",power=4,  type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
+    {name="Aura Wheel Electric",power=3,  type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
     {name="Bolt Strike",    power=5,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=6}} },
     {name="Charge",         power=0,      type="Electric",  dice=6, STAB=false, effects={{name="AttackUp", target="Self", chance=3}} },
-    {name="Charge Beam",    power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"} } },
-    {name="Discharge",      power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
+    {name="Charge Beam",    power=1,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"} } },
+    {name="Discharge",      power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
     {name="Electroweb",     power=2,      type="Electric",  dice=6, STAB=true},
     {name="Electro Ball",   power="Self", type="Electric",  dice=6, STAB=false},
-    {name="Electro Drift",  power=3,      type="Electric",  dice=6, STAB=false},
-    {name="Electro Shot",   power=3,      type="Electric",  dice=6, STAB=false, effects={{name="AttackUp", target="Self"},{name="Recharge", target="Self"}}},
-    {name="Fusion Bolt",    power=2,      type="Electric",  dice=6, STAB=false, effects={{name="ExtraDice", target="Self", chance=4}}},
+    {name="Electro Drift",  power=2,      type="Electric",  dice=6, STAB=true},
+    {name="Electro Shot",   power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"},{name="Recharge", target="Self"}}},
+    {name="Fusion Bolt",    power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="ExtraDice", target="Self", chance=4}}},
     {name="Nuzzle",         power=1,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy"}}},
-    {name="Overdrive",      power=3,      type="Electric",  dice=6, STAB=true},
-    {name="Plasma Fists",   power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
-    {name="Rev. Dance Electric",power=3,  type="Electric",  dice=6, STAB=true},
+    {name="Overdrive",      power=2,      type="Electric",  dice=6, STAB=true},
+    {name="Plasma Fists",   power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
+    {name="Rev. Dance Electric",power=2,  type="Electric",  dice=6, STAB=true},
     {name="Shock Wave",     power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
     {name="Spark",          power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
     {name="Thunderbolt",    power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=6}} },
-    {name="Thunderclap",    power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Priority", target="Self"} }},
+    {name="Thunderclap",    power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Priority", target="Self"} }},
     {name="Thunder",        power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
-    {name="Thunder Cage",   power=3,      type="Electric",  dice=4, STAB=false, effects={{name="ExtraDice", target="Self", chance=4}}},
+    {name="Thunder Cage",   power=2,      type="Electric",  dice=4, STAB=true,  effects={{name="ExtraDice", target="Self", chance=4}}},
     {name="Thunder Fang",   power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=6},{name="AttackDown", target="Enemy", chance=6}} },
     {name="Thunder Shock",  power=1,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=6}} },
     {name="Thunder Punch",  power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=6}} },
     {name="Thunder Wave",   power=0,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy"}} },
     {name="Volt Swtich",    power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Switch", target="Self"}} },
-    {name="Wild Charge",    power=3,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy", chance=5}} },
-    {name="Wildbolt Storm", power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
-    {name="Zap Cannon",     power=3,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy", chance=4}} },
-    {name="Zing Zap",       power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Volt Tackle",    power=4,      type="Electric",  dice=6, STAB=false, effects={{name="KO", target="Self", chance=5}} },
-    {name="Volt Crash",     power=3,      type="Electric",  dice=6, STAB=false, effects={{name="Paralyse", target="Enemy"}} },
-    {name="Stun Shock",     power=4,      type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
+    {name="Wild Charge",    power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
+    {name="Wildbolt Storm", power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
+    {name="Zap Cannon",     power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=4}} },
+    {name="Zing Zap",       power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Volt Tackle",    power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=5}} },
+    {name="Volt Crash",     power=2,      type="Electric",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy"}} },
+    {name="Stun Shock",     power=3,      type="Electric",  dice=6, STAB=true,  effects={{name="Custom"}}},
     {name="Gigavolt Havoc", power=4,      type="Electric",  dice=6, STAB=false, effects={{name="Recharge", target="Self"}} }, -- , , 
     {name="Catastropika",   power=5,      type="Electric",  dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     {name="10MV Thunderbolt",power=5,     type="Electric",  dice=8, STAB=false, effects={{name="Recharge", target="Self"}} },
@@ -1709,26 +1942,26 @@ moveData =
     -- Fairy
     {name="Baby-Doll Eyes", power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown", target="Enemy"}} },
     {name="Dazzling Gleam", power=2,      type="Fairy",     dice=6, STAB=true },
-    {name="Decorate",       power=0,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackUp2", target="Self"}} },
-    {name="Disarming Voice",power=1,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
     {name="Charm",          power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown2", target="Enemy"}} },
-    {name="Fairy Wind",     power=2,      type="Fairy",     dice=6, STAB=true},
-    {name="Fleur Cannon",   power=4,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}}},
+    {name="Fairy Wind",     power=1,      type="Fairy",     dice=6, STAB=true},
+    {name="Play Rough",     power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=6}} },
+    {name="Sweet Kiss",     power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy", chance=2}} },
+    {name="Decorate",       power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackUp2", target="Self"}} },
+    {name="Disarming Voice",power=1,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
+    {name="Fleur Cannon",   power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Self"}}},
     {name="Misty Terrain",  power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Custom"}} },
     {name="Nature's Madness",power="Enemy",type="Fairy",    dice=6, STAB=false },
-    {name="Magical Torque", power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy", chance=5}} },
-    {name="Moonblast",      power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Magical Torque", power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy", chance=5}} },
+    {name="Moonblast",      power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Moonlight",      power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Protect", target="Self"},{name="Custom"}} },
-    {name="Play Rough",     power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Spirit Break",   power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown", target="Enemy"}} },
-    {name="Spring. Storm",  power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="AttackDown", target="Enemy", chance=6},{name="AttackUp", target="Self", chance=6}} },
-    {name="Strange Steam",  power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy", chanc=6}} },
-    {name="Sweet Kiss",     power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy", chance=2}} },
-    {name="Draining Kiss",  power=2,      type="Fairy",     dice=6, STAB=false},
+    {name="Spirit Break",   power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy"}} },
+    {name="Spring. Storm",  power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=6},{name="AttackUp", target="Self", chance=6}} },
+    {name="Strange Steam",  power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy", chanc=6}} },
+    {name="Draining Kiss",  power=2,      type="Fairy",     dice=6, STAB=true},
     {name="Heal Pulse",     power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Custom"}, {name="Recharge", target="Self"}} },
-    {name="Smite",          power=3,      type="Fairy",     dice=6, STAB=false, effects={{name="Confuse", target="Enemy"}} },
-    {name="Starfall",       power=4,      type="Fairy",     dice=6, STAB=false, effects={{name="Custom"}} },
-    {name="Finale",         power=4,      type="Fairy",     dice=6, STAB=false},
+    {name="Smite",          power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy"}} },
+    {name="Starfall",       power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Finale",         power=3,      type="Fairy",     dice=6, STAB=true},
     {name="Twinkle Tackle", power=4,      type="Fairy",     dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     {name="Let's Snuggle Forever", power=5, type="Fairy",   dice=6, STAB=false, effects={{name="Recharge", target="Self"}} },
     {name="Guardian of Alola", power="Enemy", type="Fairy", dice=8, STAB=false, effects={{name="Recharge", target="Self"}} },
@@ -1752,126 +1985,126 @@ moveData =
     {name="Flying Press",   power=3,      type="Flying",    dice=6, STAB=true,  effects={{name="Custom"}}},
     {name="Focus Blast",    power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Focus Punch",    power=3,      type="Fighting",  dice=6, STAB=true},
-    {name="Force Palm",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
+    {name="Force Palm",     power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="Paralyse", target="Enemy", chance=5}} },
     {name="Hammer Arm",     power=3,      type="Fighting",  dice=6, STAB=true},
     {name="High Jump Kick", power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
     {name="Jump Kick",      power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
     {name="Karate Chop",    power=1,      type="Fighting",  dice=8, STAB=true},
     {name="Low Kick",       power=1,      type="Fighting",  dice=4, STAB=true},
     {name="Mach Punch",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Priority", target="Self"}} },
-    {name="No Retreat",     power=0,      type="Fighting",  dice=6, STAB=true,  effects={{name="Priority", target="Self"}, {name="AttackUp2", target="Self"}} },
-    {name="Octolock",       power=0,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"},{name="AttackUp2", target="Self"}} },
-    {name="Power-Up Punch", power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
-    {name="Raging Bull Fighting",power=3, type="Fighting",  dice=6, STAB=false},
+    {name="No Retreat",     power=0,      type="Fighting",  dice=6, STAB=false, effects={{name="Priority", target="Self"}, {name="AttackUp2", target="Self"}} },
+    {name="Octolock",       power=0,      type="Fighting",  dice=6, STAB=false, effects={{name="Custom"},{name="AttackUp2", target="Self"}} },
+    {name="Power-Up Punch", power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
+    {name="Raging Bull Fighting",power=2, type="Fighting",  dice=6, STAB=true},
     {name="Revenge",        power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
-    {name="Rock Smash",     power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=5}} },
-    {name="Sacred Sword",   power=3,      type="Fighting",  dice=6, STAB=false, effects={{name="Custom"}} },
-    {name="Secret Sword",   power=3,      type="Fighting",  dice=6, STAB=false},
+    {name="Rock Smash",     power=1,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=5}} },
+    {name="Sacred Sword",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Secret Sword",   power=3,      type="Fighting",  dice=6, STAB=true},
     {name="Seismic Toss",   power="Self", type="Fighting",  dice=6, STAB=false},
     {name="Sky Uppercut",   power=3,      type="Fighting",  dice=6, STAB=true},
     {name="Storm Throw",    power=3,      type="Fighting",  dice=8, STAB=true},
     {name="Submission",     power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
     {name="Superpower",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
-    {name="Triple Arrows",  power=2,      type="Fighting",  dice=8, STAB=false, effects={{name="AttackUp", target="Self"}} },
-    {name="Triple Kick",    power=1,      type="Fighting",  dice=4, STAB=false, effects={{name="ExtraDice", target="Self", chance=2},{name="ExtraDice", target="Self", chance=2}} },
+    {name="Triple Arrows",  power=1,      type="Fighting",  dice=8, STAB=true, effects={{name="AttackUp", target="Self"}} },
+    {name="Triple Kick",    power=-1,     type="Fighting",  dice=4, STAB=false, effects={{name="ExtraDice2", target="Self"}} },
     {name="Vital Throw",    power=2,      type="Fighting",  dice=6, STAB=true},
     {name="Wake-up Slap",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
-    {name="Rolling Kick",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Rolling Kick",   power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Wind Rage",      power=4,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Knuckle",        power=4,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
-    {name="All-Out Pummeling", power=4,   type="Fighting",  dice=6, STAB=true,  effects={{name="Recharge", target="Self"} } },
-    
+    {name="All-Out Pummeling", power=4,   type="Fighting",  dice=6, STAB=false, effects={{name="Recharge", target="Self"} } },
+
     -- Fire
     {name="Blaze Kick",     power=3,      type="Fire",    dice=8, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Blazing Torque", power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Blazing Torque", power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Blue Flare",     power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Ember",          power=1,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
     {name="Eruption",       power=4,      type="Fire",    dice=6, STAB=true},
     {name="Fiery Dance",    power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=4}} },
-    {name="Fire Fang",      power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6},{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Fire Blast",     power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Fire Lash",      power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Fire Punch",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
+    {name="Fire Fang",      power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}, {name="AttackDown", target="Enemy", chance=6}} },
+    {name="Fire Blast",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
+    {name="Fire Lash",      power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Fire Punch",     power=1,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
     {name="Fire Spin",      power=1,      type="Fire",    dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Flame Wheel",    power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Flame Burst",    power=3,      type="Fire",    dice=6, STAB=true},
-    {name="Flame Charge",   power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}}},
+    {name="Flame Burst",    power=2,      type="Fire",    dice=6, STAB=true},
+    {name="Flame Charge",   power=1,      type="Fire",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}}},
     {name="Flamethrower",   power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Flare Blitz",    power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6},{name="Burn", target="Enemy", chance=6}} },
+    {name="Flare Blitz",    power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6},{name="Burn", target="Enemy", chance=6}} },
     {name="Fusion Flare",   power=2,      type="Fire",    dice=6, STAB=false,   effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Heat Crash",     power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Custom", chance=4}} },
     {name="Incinerate",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Inferno",        power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=4}} },
-    {name="Ivy Cudgel Fire",power=4,      type="Fire",    dice=8, STAB=true},
-    {name="Lava Plume",     power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
-    {name="Magma Storm",    power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Mind Blown",     power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
-    {name="Mystical Fire",  power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackDown"}} },
-    {name="Overheat",       power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Pyro Ball",      power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Raging Bull Fire",power=3,     type="Fire",    dice=6, STAB=false},
-    {name="Raging Fury",    power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="Confuse", target="Self", chance=5}} },
-    {name="Rev. Dance Fire",power=3,      type="Fire",    dice=6, STAB=true},
+    {name="Ivy Cudgel Fire",power=3,      type="Fire",    dice=8, STAB=true},
+    {name="Lava Plume",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Magma Storm",    power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
+    {name="Mind Blown",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
+    {name="Mystical Fire",  power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackDown"}} },
+    {name="Overheat",       power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Pyro Ball",      power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
+    {name="Raging Bull Fire",power=2,     type="Fire",    dice=6, STAB=false},
+    {name="Raging Fury",    power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Confuse", target="Self", chance=5}} },
+    {name="Rev. Dance Fire",power=2,      type="Fire",    dice=6, STAB=true},
     {name="Sacred Fire",    power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=4}} },
     {name="Searing Shot",   power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
-    {name="Torch Song",     power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Weather Ball Fire",power=3,    type="Fire",    dice=6, STAB=true},
+    {name="Torch Song",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Weather Ball Fire",power=2,    type="Fire",    dice=6, STAB=true},
     {name="Will-O-Wisp",    power=0,      type="Fire",    dice=6, STAB=false,   effects={{name="Burn", target="Enemy", chance=2}} },
-    {name="Wildfire",       power=3,      type="Fire",    dice=6, STAB=false,   effects={{name="ExtraDice", target="self"}} },
-    {name="Fireball",       power=5,      type="Fire",    dice=6, STAB=false},
+    {name="Wildfire",       power=2,      type="Fire",    dice=6, STAB=false,   effects={{name="ExtraDice", target="self"}} },
+    {name="Fireball",       power=4,      type="Fire",    dice=6, STAB=true},
     {name="Flare",          power=4,      type="Fire",    dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Centiferno",     power=3,      type="Fire",    dice=4, STAB=false,   effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Inferno Overdrive", power=4,   type="Fire",    dice=6, STAB=true,    effects={{name="Recharge", target="Self"} } },
+    {name="Centiferno",     power=2,      type="Fire",    dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
+    {name="Inferno Overdrive", power=4,   type="Fire",    dice=6, STAB=false,   effects={{name="Recharge", target="Self"} } },
 
     -- Flying
     {name="Aerial Ace",     power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Air Cutter",     power=2,      type="Flying",  dice=8, STAB=true},
     {name="Air Slash",      power=3,      type="Flying",  dice=8, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Aeroblast",      power=3,      type="Flying",  dice=8, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Beak Blast",     power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=4}} },
-    {name="Bleakwind Storm",power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=5}} },
+    {name="Beak Blast",     power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=4}} },
+    {name="Bleakwind Storm",power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=5}} },
     {name="Bounce",         power=2,      type="Flying",  dice=6, STAB=true,    effects={{name="Paralyse", target="Enemy", chance=5}}},
     {name="Brave Bird",     power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="KO", target="Self"}} },
     {name="Chatter",        power=2,      type="Flying",  dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=6}} },
-    {name="Drill Peck",     power=3,      type="Flying",  dice=6, STAB=true},
+    {name="Drill Peck",     power=2,      type="Flying",  dice=6, STAB=true},
     {name="Dual Wingbeat",  power=3,      type="Flying",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
     {name="Gust",           power=1,      type="Flying",  dice=6, STAB=true},
     {name="Fly",            power=3,      type="Flying",  dice=6, STAB=true},
     {name="Feather Dance",  power=0,      type="Flying",  dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Hurricane",      power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=5}} },
     {name="Mirror Move",    power=0,      type="Flying",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Oblivion Wing",  power=3,      type="Flying",  dice=6, STAB=false},
+    {name="Oblivion Wing",  power=3,      type="Flying",  dice=6, STAB=true},
     {name="Peck",           power=1,      type="Flying",  dice=6, STAB=true},
     {name="Sky Attack",     power=1,      type="Flying",  dice=8, STAB=true,    effects={{name="Recharge", target="Self"},{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Sunny Day",      power=0,      type="Flying",  dice=8, STAB=true,    effects={{name="Custom"}} },
+    {name="Sunny Day",      power=0,      type="Flying",  dice=8, STAB=false,   effects={{name="Custom"}} },
     {name="Wing Attack",    power=2,      type="Flying",  dice=6, STAB=true},
-    {name="Airstream",      power=4,      type="Flying",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Airstream",      power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Supersonic Skystrike",power=4, type="Flying",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"} } },
 
     -- Ghost
-    {name="Astral Barrage", power=4,      type="Ghost",   dice=6, STAB=false},
+    {name="Astral Barrage", power=3,      type="Ghost",   dice=6, STAB=true},
     {name="Astonish",       power=1,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Bitter Malice",  power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=5}} },
+    {name="Bitter Malice",  power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=5}} },
     {name="Confuse Ray",    power=0,      type="Ghost",   dice=6, STAB=false,   effects={{name="Confuse", target="Enemy"}} },
     {name="Curse",          power=0,      type="Ghost",   dice=6, STAB=false,   effects={{name="KO", target="Self", chance=4},{name="Curse", target="Enemy"}} },
     {name="Hex",            power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Last Respects",  power=0,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Last Respects",  power=0,      type="Ghost",   dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Lick",           power=1,      type="Ghost",   dice=6, STAB=true,    effects={{name="Paralyse", target="Enemy", chance=5}} },
-    {name="Moongeist Beam", power=3,      type="Ghost",   dice=6, STAB=false},
+    {name="Moongeist Beam", power=2,      type="Ghost",   dice=6, STAB=true},
     {name="Night Shade",    power="Self", type="Ghost",   dice=6, STAB=false},
     {name="Ominous Wind",   power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6},{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Phantom Force",  power=3,      type="Ghost",   dice=6, STAB=true},
-    {name="Rage Fist",      power=2,      type="Ghost",   dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
-    {name="Rev. Dance Ghost",power=3,     type="Ghost",   dice=6, STAB=true},
-    {name="Shadow Ball",    power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}}},
+    {name="Phantom Force",  power=2,      type="Ghost",   dice=6, STAB=true},
+    {name="Rage Fist",      power=1,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", condition="Power"}} },
+    {name="Rev. Dance Ghost",power=2,     type="Ghost",   dice=6, STAB=true},
+    {name="Shadow Ball",    power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}}},
     {name="Shadow Bone",    power=2,      type="Ghost",   dice=6, STAB=true},
     {name="Shadow Claw",    power=2,      type="Ghost",   dice=8, STAB=true},
     {name="Shadow Force",   power=4,      type="Ghost",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Shadow Punch",   power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=5}} },
-    {name="Shadow Sneak",   power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
-    {name="Spectral Thief", power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
-    {name="Spirit Shackle", power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
-    {name="Terror",         power=4,      type="Ghost",   dice=6, STAB=false,   effects={{name="Custom"}}},
+    {name="Shadow Punch",   power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Shadow Sneak",   power=1,      type="Ghost",   dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
+    {name="Spectral Thief", power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
+    {name="Spirit Shackle", power=2,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
+    {name="Terror",         power=3,      type="Ghost",   dice=6, STAB=true,    effects={{name="Custom"}}},
     {name="Never-Ending Nightmare", power=4,type="Ghost", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
     {name="Sinister Arrow Raid", power=5, type="Ghost",   dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
     {name="Soul-Stealing 7* Strike",power=5, type="Ghost", dice=6, STAB=false,  effects={{name="Recharge", target="Self"}} },
@@ -1879,33 +2112,33 @@ moveData =
 
     -- Grass
     {name="Absorb",         power=1,      type="Grass",   dice=6, STAB=true},
-    {name="Apple Acid",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Apple Acid",     power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Aromatherapy",   power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Branch Poke",    power=2,      type="Grass",   dice=6, STAB=true},
+    {name="Branch Poke",    power=1,      type="Grass",   dice=6, STAB=true},
     {name="Bullet Seed",    power=1,      type="Grass",   dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Chloroblast",    power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
+    {name="Chloroblast",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
     {name="Cotton Guard",   power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Cotton Spore",   power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
-    {name="Drum Beating",   power=3,      type="Grass",   dice=6, STAB=true},
-    {name="Energy Ball",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
-    {name="Flower Trick",   power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Drum Beating",   power=2,      type="Grass",   dice=6, STAB=true},
+    {name="Energy Ball",    power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
+    {name="Flower Trick",   power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Giga Drain",     power=3,      type="Grass",   dice=6, STAB=true},
-    {name="Grass Knot",     power=2,      type="Grass",   dice=6, STAB=true},
+    {name="Grass Knot",     power=1,      type="Grass",   dice=6, STAB=true},
     {name="Grass Whistle",  power=2,      type="Grass",   dice=6, STAB=true},
-    {name="Grassy Terrain", power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Custom"}}},
-    {name="Grav Apple",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Horn Leech",     power=4,      type="Grass",   dice=6, STAB=true},
-    {name="Ivy Cudgel Grass",power=4,     type="Grass",   dice=8, STAB=true},
+    {name="Grassy Terrain", power=0,      type="Grass",   dice=6, STAB=false,    effects={{name="Custom"}}},
+    {name="Grav Apple",     power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Horn Leech",     power=2,      type="Grass",   dice=6, STAB=true},
+    {name="Ivy Cudgel Grass",power=3,     type="Grass",   dice=8, STAB=true},
     {name="Jungle Healing", power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Custom"},{name="Protect", target="Self"}}},
-    {name="Leafage",        power=2,      type="Grass",   dice=8, STAB=true},
-    {name="Leaf Blade",     power=3,      type="Grass",   dice=8, STAB=true},
-    {name="Leaf Storm",     power=4,      type="Grass",   dice=4, STAB=true,    effects={{name="AttackDown", target="Self"}} },
-    {name="Leaf Tornado",   power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}}},
+    {name="Leafage",        power=1,      type="Grass",   dice=8, STAB=true},
+    {name="Leaf Blade",     power=2,      type="Grass",   dice=8, STAB=true},
+    {name="Leaf Storm",     power=3,      type="Grass",   dice=4, STAB=true,    effects={{name="AttackDown", target="Self"}} },
+    {name="Leaf Tornado",   power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}}},
     {name="Magical Leaf",   power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=5}} },
-    {name="Matcha Gotcha",  power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Matcha Gotcha",  power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Mega Drain",     power=2,      type="Grass",   dice=6, STAB=true},
-    {name="Needle Arm",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Petal Blizzard", power=3,      type="Grass",   dice=6, STAB=true},
+    {name="Needle Arm",     power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Petal Blizzard", power=2,      type="Grass",   dice=6, STAB=true},
     {name="Petal Dance",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Confuse", target="Self", chance=5}} },
     {name="Power Whip",     power=3,      type="Grass",   dice=6, STAB=true},
     {name="Razor Leaf",     power=2,      type="Grass",   dice=8, STAB=true},
@@ -1913,26 +2146,26 @@ moveData =
     {name="Seed Flare",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp2", target="Self", chance=4}} },
     {name="Sleep Powder",   power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=3}} },
     {name="Solar Beam",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Solar Blade",    power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Spicy Extract",  power=0,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp2", target="Self"}} },
+    {name="Solar Blade",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Spicy Extract",  power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="AttackUp2", target="Self"}} },
     {name="Spiky Shield",   power=1,      type="Grass",   dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Spore",          power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Sleep", target="Enemy"}} },
     {name="Stun Spore",     power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Paralyse", target="Enemy", chance=3}} },
-    {name="Syrup Bomb",     power=3,      type="Grass",   dice=6, STAB=true},
-    {name="Trailblaze",     power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Priority", target="Self"}}},
-    {name="Trop Kick",      power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}},
+    {name="Syrup Bomb",     power=2,      type="Grass",   dice=6, STAB=true},
+    {name="Trailblaze",     power=1,      type="Grass",   dice=6, STAB=true,    effects={{name="Priority", target="Self"}}},
+    {name="Trop Kick",      power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}},
     {name="Vine Whip",      power=1,      type="Grass",   dice=6, STAB=true},
-    {name="Wood Hammer",    power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
-    {name="Vine Lash",      power=3,      type="Grass",   dice=6, STAB=false,   effects={{name="ExtraDice", target="Self"}} },
-    {name="Drum Solo",      power=5,      type="Grass",   dice=6, STAB=true},
-    {name="Tartness",       power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Sweetness",      power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Bloom Doom",     power=4,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Wood Hammer",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
+    {name="Vine Lash",      power=2,      type="Grass",   dice=6, STAB=false,   effects={{name="ExtraDice", target="Self"}} },
+    {name="Drum Solo",      power=4,      type="Grass",   dice=6, STAB=true},
+    {name="Tartness",       power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Sweetness",      power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Bloom Doom",     power=4,      type="Grass",   dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
 
     -- Ground
     {name="Bone Club",      power=2,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6}} },
     {name="Bone Rush",      power=1,      type="Ground",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Bonemerang",     power=2,      type="Ground",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
+    {name="Bonemerang",     power=1,      type="Ground",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
     {name="Bulldoze",       power=3,      type="Ground",  dice=6, STAB=true},
     {name="Dig",            power=2,      type="Ground",  dice=6, STAB=true},
     {name="Drill Run",      power=3,      type="Ground",  dice=8, STAB=true},
@@ -1940,34 +2173,34 @@ moveData =
     {name="Earthquake",     power=2,      type="Ground",  dice=6, STAB=true},
     {name="Fissure",        power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="KO", chance=5, target="Enemy"}} },
     {name="H. Horsepower",  power=3,      type="Ground",  dice=6, STAB=true},
-    {name="Headlong Rush",  power=3,      type="Ground",  dice=6, STAB=false,   effects={{name="AttackDown", target="Self"}} },
-    {name="Land's Wrath",   power=3,      type="Ground",  dice=6, STAB=false},
-    {name="Magnitude",      power=2,      type="Ground",  dice=6, STAB=false,   effects={{name="D4Dice", target="Self", chance=3},{name="ExtraDice", target="Self", chance="6"}}},
-    {name="Mud Bomb",       power=3,      type="Ground",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Mud Shot",       power=2,      type="Ground",  dice=6, STAB=false},
-    {name="Mud-Slap",       power=1,      type="Ground",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
+    {name="Headlong Rush",  power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackDown", target="Self"}} },
+    {name="Land's Wrath",   power=3,      type="Ground",  dice=6, STAB=true},
+    {name="Magnitude",      power=2,      type="Ground",  dice=6, STAB=true,    effects={{name="D4Dice", target="Self", chance=3},{name="ExtraDice", target="Self", chance="6"}}},
+    {name="Mud Bomb",       power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Mud Shot",       power=2,      type="Ground",  dice=6, STAB=true},
+    {name="Mud-Slap",       power=1,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}} },
     {name="Sand Attack",    power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
-    {name="Sand Tomb",      power=1,      type="Ground",  dice=6, STAB=false,   effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Sandsear Storm", power=3,      type="Ground",  dice=6, STAB=false,   effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Sand Tomb",      power=1,      type="Ground",  dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
+    {name="Sandsear Storm", power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Spikes",         power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Precipise Blades",power=4,     type="Ground",  dice=6, STAB=false},
-    {name="Quake",          power=3,      type="Ground",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Tectonic Rage",  power=4,      type="Ground",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Precipise Blades",power=4,     type="Ground",  dice=6, STAB=true},
+    {name="Quake",          power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Tectonic Rage",  power=4,      type="Ground",  dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
 
     -- Ice
     {name="Aurora Beam",    power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Avalanche",      power=3,      type="Ice",     dice=6, STAB=true},
+    {name="Avalanche",      power=2,      type="Ice",     dice=6, STAB=true},
     {name="Blizzard",       power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=6}} },
     {name="Freeze-Dry",     power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Glacial Lance",  power=4,      type="Ice",     dice=6, STAB=true},
-    {name="Glaciate",       power=3,      type="Ice",     dice=6, STAB=true},
+    {name="Glacial Lance",  power=3,      type="Ice",     dice=6, STAB=true},
+    {name="Glaciate",       power=2,      type="Ice",     dice=6, STAB=true},
     {name="Hail",           power=0,      type="Ice",     dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Ice Beam",       power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=6}} },
     {name="Ice Fang",       power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=6},{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Ice Hammer",     power=3,      type="Ice",     dice=6, STAB=true},
+    {name="Ice Hammer",     power=2,      type="Ice",     dice=6, STAB=true},
     {name="Ice Punch",      power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=6}} },
-    {name="Ice Shard",      power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
-    {name="Ice Spinner",    power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Ice Shard",      power=1,      type="Ice",     dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
+    {name="Ice Spinner",    power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Icicle Crash",   power=3,      type="Ice",     dice=4, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Icicle Spear",   power=1,      type="Ice",     dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Icy Wind",       power=2,      type="Ice",     dice=6, STAB=true},
@@ -1975,24 +2208,24 @@ moveData =
     {name="Powder Snow",    power=1,      type="Ice",     dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=6}} },
     {name="Sheer Cold",     power=0,      type="Ice",     dice=6, STAB=true,    effects={{name="KO", target="Enemy", chance=5}} },
     {name="Weather Ball Ice",power=3,     type="Ice",     dice=6, STAB=true},
-    {name="Resonance",      power=3,      type="Ice",     dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
-    {name="Subzero Slammer", power=4,     type="Ice",     dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Resonance",      power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Subzero Slammer",power=4,      type="Ice",     dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
 
     -- Normal
     {name="Attract",        power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
     {name="Barrage",        power=1,      type="Normal",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Body Slam",      power=2,      type="Normal",  dice=6, STAB=false,   effects={{name="Paralyse", target="Enemy", chance=5}} },
+    {name="Body Slam",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Paralyse", target="Enemy", chance=5}} },
     {name="Bind",           power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Blood Moon",     power=4,      type="Normal",  dice=6, STAB=false},
-    {name="Boomburst",      power=4,      type="Normal",  dice=6, STAB=false},
+    {name="Blood Moon",     power=2,      type="Normal",  dice=6, STAB=true},
+    {name="Boomburst",      power=4,      type="Normal",  dice=6, STAB=true},
     {name="Camouflage",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Chip Away",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
     {name="Comet Punch",    power=1,      type="Normal",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Constrict",      power=1,      type="Normal",  dice=6, STAB=false},
+    {name="Constrict",      power=1,      type="Normal",  dice=6, STAB=true},
     {name="Conversion",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Conversion2",    power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Covet",          power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Crush Claw",     power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackUp", target="Self", chance=4}} },
+    {name="Covet",          power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Crush Claw",     power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=4}} },
     {name="Defense Curl",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
     {name="Disable",        power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Dizzy Punch",    power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=5}} },
@@ -2008,7 +2241,7 @@ moveData =
     {name="Facade",         power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Fake Out",       power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}} },
     {name="False Swipe",    power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Fillet Away",    power="Enemy",type="Normal",  dice=6, STAB=true },
+    {name="Fillet Away",    power="Enemy",type="Normal",  dice=6, STAB=false },
     {name="Focus Energy",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Fury Attack",    power=1,      type="Normal",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Fury Swipes",    power=1,      type="Normal",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
@@ -2021,7 +2254,7 @@ moveData =
     {name="Head Charge",    power=4,      type="Normal",  dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
     {name="Headbutt",       power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Heal Bell",      power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Hidden Power",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
+    {name="Hidden Power",   power=2,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Horn Attack",    power=2,      type="Normal",  dice=6, STAB=true},
     {name="Horn Drill",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="KO", target="Enemy", chance=5}} },
     {name="Howl",           power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackUp", target="Self"}} },
@@ -2122,29 +2355,29 @@ moveData =
     {name="Acid Spray",     power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="AttackDown2", target="Enemy"}} },
     {name="Bane. Bunker",   power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"},{name="Poison", target="Enemy", chance=4}} },
     {name="Clear Smog",     power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Cross Poison",   power=3,      type="Poison",  dice=6, STAB=true},
+    {name="Cross Poison",   power=2,      type="Poison",  dice=6, STAB=true},
     {name="Coil",           power=0,      type="Poison",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self"},{name="AttackDown", target="Enemy"}} },
-    {name="Malignant Chain",power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
-    {name="Mortal Spin",    power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Custom"},{name="Poison", target="Enemy"}} },
-    {name="Noxious Torque", power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
-    {name="Poison Fang",    power=2,      type="Poison",  dice=8, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
+    {name="Malignant Chain",power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
+    {name="Mortal Spin",    power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Custom"},{name="Poison", target="Enemy"}} },
+    {name="Noxious Torque", power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
+    {name="Poison Fang",    power=1,      type="Poison",  dice=8, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
     {name="Poison Gas",     power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Poison", target="Enemy", chance=2}} },
-    {name="Poison Jab",     power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
+    {name="Poison Jab",     power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
     {name="Poison Powder",  power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Poison", target="Enemy", chance=3}} },
     {name="Poison Sting",   power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
     {name="Poison Tail",    power=2,      type="Poison",  dice=8, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
-    {name="Shell Side Arm", power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
+    {name="Shell Side Arm", power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
     {name="Smog",           power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
     {name="Sludge",         power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
-    {name="Sludge Bomb",    power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
-    {name="Sludge Wave",    power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
+    {name="Sludge Bomb",    power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
+    {name="Sludge Wave",    power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
     {name="Toxic",          power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Poison", target="Enemy", chance=2}} },
     {name="Toxic Spikes",   power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Venom Drench",   power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
-    {name="Venoshock",      power=3,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Ooze",           power=4,      type="Poison",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Acid Downpour",  power=4,      type="Poison",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Malador",        power=4,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy"}} },
+    {name="Venoshock",      power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Ooze",           power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Acid Downpour",  power=4,      type="Poison",  dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Malador",        power=3,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy"}} },
 
     -- Psychic
     {name="Agility",        power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp2", target="Self"}} },
@@ -2152,16 +2385,16 @@ moveData =
     {name="Barrier",        power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Calm Mind",      power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp2", target="Self"}} },
     {name="Confusion",      power=1,      type="Psychic", dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=6}} },
-    {name="Cosmic Power",   power=0,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown2", target="Enemy"}} },
+    {name="Cosmic Power",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Dream Eater",    power="Sleep",type="Psychic", dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=4}} },
-    {name="Eerie Spell",    power=3,      type="Psychic", dice=6, STAB=false    },
+    {name="Eerie Spell",    power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Esper Wing",     power=3,      type="Psychic", dice=8, STAB=true     },
-    {name="Extrasensory",   power=2,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy", chance=6}} },
+    {name="Extrasensory",   power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6}} },
     {name="Freezing Glare", power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Frozen", target="Enemy", chance=6}} },
     {name="Future Sight",   power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
     {name="Healing Wish",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"},{name="KO", target="Self"}} },
-    {name="Heart Stamp",    power=3,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Hyperspace Hole",power=3,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp", target="Self"}} },
+    {name="Heart Stamp",    power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Hyperspace Hole",power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Hypnosis",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=4}} },
     {name="Imprison",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Light Screen",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
@@ -2171,10 +2404,10 @@ moveData =
     {name="Meditate",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp", target="Self"}} },
     {name="Mirror Coat",    power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Mist Ball",      power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}} },
-    {name="Photon Geyser",  power=3,      type="Psychic", dice=6, STAB=false    },
-    {name="Prism. Laser",   power=3,      type="Psychic", dice=6, STAB=false    },
+    {name="Photon Geyser",  power=3,      type="Psychic", dice=6, STAB=true     },
+    {name="Prism. Laser",   power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Psybeam",        power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=4}} },
-    {name="Psyblade",       power=3,      type="Psychic", dice=6, STAB=false    },
+    {name="Psyblade",       power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Psywave",        power="Self", type="Psychic", dice=6, STAB=false    },
     {name="Psychic",        power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Psychic Fangs",  power=3,      type="Psychic", dice=6, STAB=true },
@@ -2183,29 +2416,29 @@ moveData =
     {name="Psyshield Bash", power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}     },
     {name="Psyshock",       power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Reflect",        power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
-    {name="Rev. Dance Psychic",power=3,   type="Psychic", dice=6, STAB=true},
+    {name="Rev. Dance Psychic",power=2,   type="Psychic", dice=6, STAB=true},
     {name="Telekinesis",    power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Teleport",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Switch", target="Self"}} },
-    {name="Twin Beam",      power=2,      type="Psychic", dice=4, STAB=false,   effects={{name="ExtraDice", target="Self"}} },
+    {name="Twin Beam",      power=2,      type="Psychic", dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
     {name="Zen Headbutt",   power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Psystrike",      power=3,      type="Psychic", dice=6, STAB=true},
-    {name="Gravitas",       power=4,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Mindstorm",      power=4,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Shattered Psyche", power=4,    type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Genesis Supernova", power=4,   type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Light That Burns The Sky", power=4, type="Psychic", dice=8, STAB=true, effects={{name="Recharge", target="Self"}} },
-    {name="Dreameater",     power=0,   type="Psychic", dice=6, STAB=true,       effects={{name="Sleep", target="Enemy", chance=4}} },
+    {name="Psystrike",      power=2,      type="Psychic", dice=6, STAB=true},
+    {name="Gravitas",       power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Mindstorm",      power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Shattered Psyche", power=4,    type="Psychic", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Genesis Supernova", power=4,   type="Psychic", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Light That Burns The Sky", power=4, type="Psychic", dice=8, STAB=false, effects={{name="Recharge", target="Self"}} },
+    {name="Dreameater",     power=0,      type="Psychic", dice=6, STAB=true,    effects={{name="Sleep", target="Enemy", chance=4}} },
 
     -- Rock
-    {name="Accelerock",     power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
+    {name="Accelerock",     power=1,      type="Rock",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
     {name="Ancient Power",  power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=6},{name="AttackUp", target="Self", chance=6}} },
-    {name="Diamond Storm",  power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}} },
+    {name="Diamond Storm",  power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}} },
     {name="Head Smash",     power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
-    {name="Ivy Cudgel Rock",power=4,      type="Rock",    dice=8, STAB=true},
+    {name="Ivy Cudgel Rock",power=3,      type="Rock",    dice=8, STAB=true},
     {name="Mighty Cleave",  power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Power Gem",      power=2,      type="Rock",    dice=6, STAB=true},
-    {name="Rock Polish",    power=0,      type="Rock",    dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
-    {name="Rock Slide",     power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Power Gem",      power=1,      type="Rock",    dice=6, STAB=true},
+    {name="Rock Polish",    power=0,      type="Rock",    dice=6, STAB=false,   effects={{name="Priority", target="Self"}} },
+    {name="Rock Slide",     power=2,      type="Rock",    dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Rock Throw",     power=1,      type="Rock",    dice=6, STAB=true},
     {name="Rollout",        power=1,      type="Rock",    dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Rock Blast",     power=1,      type="Rock",    dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}}},
@@ -2214,96 +2447,96 @@ moveData =
     {name="Salt Cure",      power=0,      type="Rock",    dice=8, STAB=false,   effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Sandstorm",      power=0,      type="Rock",    dice=8, STAB=false,   effects={{name="Custom"}} },
     {name="Stealth Rock",   power=0,      type="Rock",    dice=6, STAB=false,   effects={{name="Custom"}}},
-    {name="Stone Axe",      power=3,      type="Rock",    dice=8, STAB=true},
-    {name="Stone Edge",     power=3,      type="Rock",    dice=8, STAB=true},
-    {name="Tera Blast",     power=3,      type="Rock",    dice=6, STAB=true},
-    {name="Wide Guard",     power=0,      type="Rock",    dice=8, STAB=true,    effects={{"Protect", target="Self" }} },
-    {name="Volcalith",      power=4,      type="Rock",    dice=6, STAB=false,   effects={{name="Custom"}}},
+    {name="Stone Axe",      power=2,      type="Rock",    dice=8, STAB=true},
+    {name="Stone Edge",     power=1,      type="Rock",    dice=8, STAB=true},
+    {name="Tera Blast",     power=2,      type="Rock",    dice=6, STAB=true},
+    {name="Wide Guard",     power=0,      type="Rock",    dice=8, STAB=false,   effects={{"Protect", target="Self" }} },
+    {name="Volcalith",      power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="Custom"}}},
     {name="Sandblast",      power=3,      type="Rock",    dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}}},
-    {name="Continental Crush", power=4,   type="Rock",    dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Splintered Stormshards", power=4, type="Rock", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
+    {name="Continental Crush", power=4,   type="Rock",    dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
+    {name="Splintered Stormshards", power=4, type="Rock", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
     
     -- Steel
-    {name="Anchor Shot",    power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Anchor Shot",    power=1,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
     {name="Autotomize",     power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="AttackUp2", target="Self"}} },
-    {name="Behemoth Bash",  power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
-    {name="Behemoth Blade", power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Behemoth Bash",  power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Behemoth Blade", power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
     {name="Doom Desire",    power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
-    {name="Dbl. Iron Bash", power=2,      type="Steel",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self", chance=5}} },
+    {name="Dbl. Iron Bash", power=1,      type="Steel",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self", chance=5}} },
     {name="Flash Cannon",   power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Gear Grind",     power=2,      type="Steel",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
-    {name="Gigaton Hammer", power=2,      type="Steel",  dice=4, STAB=true},
+    {name="Gigaton Hammer", power=4,      type="Steel",  dice=4, STAB=true},
     {name="Gyro Ball",      power="Self", type="Steel",  dice=6, STAB=false},
     {name="Heavy Slam",     power=3,      type="Steel",  dice=6, STAB=true },
-    {name="Iron Defense",   power=0,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown2", target="Enemy"}} },
+    {name="Iron Defense",   power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="AttackDown2", target="Enemy"}} },
     {name="Iron Head",      power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Iron Tail",      power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=5}} },
-    {name="King's Shield",  power=0,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="King's Shield",  power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="Custom"}} },
     {name="Magnet Bomb",    power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self"}} },
     {name="Make It Rain",   power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown", target="Self"}, {name="Custom"}} },
-    {name="Metal Burst",    power=0,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Metal Burst",    power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="Custom"}} },
     {name="Metal Claw",     power=1,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Metal Mash",     power=1,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Metal Sound",    power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="AttackUp2", target="Self"}} },
-    {name="Meteor Mash",    power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=5}} },
-    {name="Mirror Shot",    power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Meteor Mash",    power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self", chance=5}} },
+    {name="Mirror Shot",    power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Shift Gear",     power=0,      type="Steel",  dice=6, STAB=false,    effects={{name="AttackUp2", target="Self", chance=6}} },
-    {name="Spin Out",       power=3,      type="Steel",  dice=6, STAB=true },
+    {name="Spin Out",       power=2,      type="Steel",  dice=6, STAB=true },
     {name="Steel Wing",     power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=6}} },
-    {name="Sunsteel Strike",power=3,      type="Steel",  dice=6, STAB=true },
+    {name="Sunsteel Strike",power=2,      type="Steel",  dice=6, STAB=true },
     {name="Smart Strike",   power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="AttackUp", target="Self"}} },
-    {name="Tachyon Cutter", power=2,      type="Steel",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
-    {name="Steelspike",     power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
-    {name="Steelsurge",     power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
-    {name="Depletion",      power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
-    {name="Corkscrew Crash", power=4,     type="Steel",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
-    {name="Searing Sunraze Smash", power=4, type="Steel", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}, {name="Priority", target="Self"}} },
+    {name="Tachyon Cutter", power=1,      type="Steel",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
+    {name="Steelspike",     power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Steelsurge",     power=3,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Depletion",      power=2,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Corkscrew Crash", power=4,     type="Steel",  dice=6, STAB=false,    effects={{name="Recharge", target="Self"}} },
+    {name="Searing Sunraze Smash", power=4, type="Steel", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}, {name="Priority", target="Self"}} },
     {name="Meltdown",       power=4,      type="Steel",  dice=6, STAB=true,     effects={{name="Custom"}} },
 
     -- Water
-    {name="Aqua Jet",       power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
-    {name="Aqua Step",      power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
+    {name="Aqua Jet",       power=1,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
+    {name="Aqua Step",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
     {name="Aqua Tail",      power=2,      type="Water",  dice=6, STAB=true},
     {name="Brine",          power=3,      type="Water",  dice=6, STAB=true},
     {name="Bubble",         power=1,      type="Water",  dice=6, STAB=true},
     {name="Bubble Beam",    power=2,      type="Water",  dice=6, STAB=true},
     {name="Clamp",          power=1,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self", chance=4}} },
-    {name="Crabhammer",     power=3,      type="Water",  dice=8, STAB=true},
-    {name="Dive",           power=3,      type="Water",  dice=6, STAB=true},
-    {name="Flip Turn",      power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Switch", target="Self"}}},
-    {name="Hydro Pump",     power=3,      type="Water",  dice=6, STAB=true},
-    {name="Ivy Cudgel Water",power=3,     type="Water",  dice=8, STAB=true},
-    {name="Jet Punch",      power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Priority"}}},
-    {name="Liquidation",    power=3,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
-    {name="Muddy Water",    power=3,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Crabhammer",     power=2,      type="Water",  dice=8, STAB=true},
+    {name="Dive",           power=2,      type="Water",  dice=6, STAB=true},
+    {name="Flip Turn",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Switch", target="Self"}}},
+    {name="Hydro Pump",     power=2,      type="Water",  dice=6, STAB=true},
+    {name="Ivy Cudgel Water",power=2,     type="Water",  dice=8, STAB=true},
+    {name="Jet Punch",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Priority"}}},
+    {name="Liquidation",    power=2,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Muddy Water",    power=2,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Octazooka",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="AttackUp", target="Enemy", chance=4}} },
-    {name="Raging Bull Water",power=3,    type="Water",  dice=6, STAB=false},
-    {name="Rain Dance",     power=3,      type="Water",  dice=6, STAB=false,    effects={{name="Custom"}} },
-    {name="Razor Shell",    power=3,      type="Water",  dice=8, STAB=true},
-    {name="Scald",          power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Burn", target="Enemy", chance=5}} },
-    {name="Snipe Shot",     power=3,      type="Water",  dice=8, STAB=true},
-    {name="Sparkling Aria", power=3,      type="Water",  dice=6, STAB=true},
-    {name='Steam Eruption', power=4,      type="Water",  dice=6, STAB=true,     effects={{name="Burn", target="Enemy", chance=5}} },
-    {name="Surf",           power=2,      type="Water",  dice=6, STAB=true},
-    {name="Surging Strikes",power=3,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}}},
-    {name="Triple Dive",    power=2,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}}},
+    {name="Raging Bull Water",power=2,    type="Water",  dice=6, STAB=true},
+    {name="Rain Dance",     power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Razor Shell",    power=2,      type="Water",  dice=8, STAB=true},
+    {name="Scald",          power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Snipe Shot",     power=2,      type="Water",  dice=8, STAB=true},
+    {name="Sparkling Aria", power=2,      type="Water",  dice=6, STAB=true},
+    {name='Steam Eruption', power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Burn", target="Enemy", chance=5}} },
+    {name="Surf",           power=1,      type="Water",  dice=6, STAB=true},
+    {name="Surging Strikes",power=2,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}}},
+    {name="Triple Dive",    power=1,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self"}}},
     {name="Water Gun",      power=1,      type="Water",  dice=6, STAB=true},
     {name="Water Pulse",    power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Confuse", target="Enemy", chance=6}} },
-    {name="Water Shuriken", power=2,      type="Water",  dice=4, STAB=true,     effects={{name="Priority", target="Self"},{name="AttackUp", target="Self", chance=4}}},
-    {name="Water Spout",    power=4,      type="Water",  dice=6, STAB=true},
-    {name="Wave Crash",     power=4,      type="Water",  dice=6, STAB=true,     effects={{name="KO", target="Self", chance=6}} },
-    {name="Waterfall",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Water Shuriken", power=1,      type="Water",  dice=4, STAB=true,     effects={{name="Priority", target="Self"},{name="AttackUp", target="Self", chance=4}}},
+    {name="Water Spout",    power=3,      type="Water",  dice=6, STAB=true},
+    {name="Wave Crash",     power=3,      type="Water",  dice=6, STAB=true,     effects={{name="KO", target="Self", chance=6}} },
+    {name="Waterfall",      power=1,      type="Water",  dice=6, STAB=true,     effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Whirlpool",      power=1,      type="Water",  dice=6, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
     {name="Withdraw",       power=0,      type="Water",  dice=6, STAB=false,    effects={{name="AttackDown", target="Enemy"}} },
-    {name="Weather Ball Water",power=3,   type="Water",  dice=6, STAB=true},
-    {name="Origin Pulse",   power=4,      type="Water",  dice=6, STAB=true},
-    {name="Cannonade",      power=3,      type="Water",  dice=6, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
-    {name="Foam Burst",     power=4,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
-    {name="Hydro Snipe",    power=5,      type="Water",  dice=6, STAB=true},
-    {name="Stonesurge",     power=4,      type="Water",  dice=6, STAB=false,    effects={{name="Custom"}} },
-    {name="Rapid Flow",     power=4,      type="Water",  dice=6, STAB=false,    effects={{name="Custom"}} },
-    {name="Hydro Vortex",   power=4,      type="Water",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
-    {name="Oceanic Operetta", power=5,    type="Water",  dice=6, STAB=true,     effects={{name="Recharge", target="Self"}} },
+    {name="Weather Ball Water",power=2,   type="Water",  dice=6, STAB=true},
+    {name="Origin Pulse",   power=3,      type="Water",  dice=6, STAB=true},
+    {name="Cannonade",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="ExtraDice", target="Self"}} },
+    {name="Foam Burst",     power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
+    {name="Hydro Snipe",    power=4,      type="Water",  dice=6, STAB=true},
+    {name="Stonesurge",     power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Rapid Flow",     power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Custom"}} },
+    {name="Hydro Vortex",   power=4,      type="Water",  dice=6, STAB=false,    effects={{name="Recharge", target="Self"}} },
+    {name="Oceanic Operetta", power=5,    type="Water",  dice=6, STAB=false,    effects={{name="Recharge", target="Self"}} },
 }
 
 rivalData =
@@ -2416,7 +2649,7 @@ rivalData =
         tier = BLUE,
         pokemon = {
           { name = "Wailmer", level = 3, types = { "Water" }, moves = { "Water Pulse", "Rollout" }, model_GUID = "b372d4", custom_scale=0.7 },
-          { name = "Combusken", level = 4, types = { "Fire" }, moves = { "Double Kick", "Flame Charge" }, model_GUID = "87fbb3", spawn_effect="Physical Attack" } }
+          { name = "Combusken", level = 4, types = { "Fire", "Fighting" }, moves = { "Double Kick", "Flame Charge" }, model_GUID = "87fbb3", spawn_effect="Physical Attack" } }
       },
       {
         guid = "7225fa",
@@ -2430,7 +2663,7 @@ rivalData =
         tier = RED,
         pokemon = {
           { name = "Venusaur", level = 5, types = { "Grass"}, moves = { "Razor Leaf", "Double-Edge" }, model_GUID = "452ac8", spawn_effect="Physical Attack", custom_scale=0.6, offset={x=0,y=0,z=-0.1} },
-          { name = "Blaziken", level = 6, types = { "Fire" }, moves = { "Blaze Kick", "Bulk Up" }, model_GUID = "868292", spawn_effect="Status Attack" } }
+          { name = "Blaziken", level = 6, types = { "Fire", "Fighting" }, moves = { "Blaze Kick", "Bulk Up" }, model_GUID = "868292", spawn_effect="Status Attack" } }
       }
     }
   },
@@ -2527,7 +2760,7 @@ rivalData =
         guid = "f109af",
         tier = PINK,
         pokemon = {
-          { name = "Fletchling", level = 1, types = { "Flying"}, moves = { "Peck", "Quick Attack" }, model_GUID = "1a27c7" },
+          { name = "Fletchling", level = 1, types = { "Flying", "Normal" }, moves = { "Peck", "Quick Attack" }, model_GUID = "1a27c7" },
           { name = "Fennekin", level = 2, types = { "Fire" }, moves = { "Ember", "Howl" }, model_GUID = "95501e", spawn_effect="Status Attack" } }
       },
       {
@@ -2556,7 +2789,7 @@ rivalData =
         tier = RED,
         pokemon = {
           { name = "Altaria", level = 5, types = { "Dragon"}, moves = { "Dragon Pulse", "Dazzling Gleam" }, model_GUID = "9a2210" },
-          { name = "Delphox", level = 6, types = { "Fire" }, moves = { "Mystical Fire", "Psychic" }, model_GUID = "8879bd", offset={x=0, y=0, z=0.08} } }
+          { name = "Delphox", level = 6, types = { "Fire", "Psychic" }, moves = { "Mystical Fire", "Psychic" }, model_GUID = "8879bd", offset={x=0, y=0, z=0.08} } }
       }
     }
   },  
@@ -2570,7 +2803,7 @@ rivalData =
         tier = PINK,
         pokemon = {
           { name = "Pichu", level = 1, types = { "Electric"}, moves = { "Nuzzle", "Tail Whip" }, model_GUID = "a3f444", spawn_effect="Physical Attack" },
-          { name = "Rowlet", level = 2, types = { "Grass" }, moves = { "Leafage", "Peck" }, model_GUID = "494cbe" } }
+          { name = "Rowlet", level = 2, types = { "Grass", "Flying" }, moves = { "Leafage", "Peck" }, model_GUID = "494cbe" } }
       },
       {
         guid = "d3ba66",
@@ -2584,7 +2817,7 @@ rivalData =
         tier = BLUE,
         pokemon = {
           { name = "Komala", level = 3, types = { "Normal"}, moves = { "Sucker Punch", "Earthquake" }, model_GUID = "c45c5f", spawn_effect="Physical Attack" },
-          { name = "Dartrix", level = 4, types = { "Grass" }, moves = { "Razor Leaf", "Feather Dance" }, model_GUID = "7a6739" } }
+          { name = "Dartrix", level = 4, types = { "Grass", "Flying" }, moves = { "Razor Leaf", "Feather Dance" }, model_GUID = "7a6739" } }
       },
       {
         guid = "da96aa",
@@ -2598,7 +2831,7 @@ rivalData =
         tier = RED,
         pokemon = {
           { name = "Noivern", level = 5, types = { "Dragon"}, moves = { "Dragon Pulse", "Air Slash" }, model_GUID = "212e94", spawn_effect="Status Attack" },
-          { name = "Decidueye", level = 6, types = { "Grass" }, moves = { "Leaf Blade", "Spirit Shackle" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.13, z=-0.125} } }
+          { name = "Decidueye", level = 6, types = { "Grass", "Ghost" }, moves = { "Leaf Blade", "Spirit Shackle" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.13, z=-0.125} } }
       }
     }
   },
@@ -2619,7 +2852,7 @@ rivalData =
         tier = GREEN,
         pokemon = {
           { name = "Wooloo", level = 2, types = { "Normal"}, moves = { "Tackle", "Defense Curl" }, model_GUID = "d2c51c", offset={x=0, y=0, z=0.075} },
-          { name = "Cramorant", level = 3, types = { "Flying" }, moves = { "Dive", "Fury Attack" }, model_GUID = "2b1b24" } }
+          { name = "Cramorant", level = 3, types = { "Flying", "Water" }, moves = { "Dive", "Fury Attack" }, model_GUID = "2b1b24" } }
       },
       {
         guid = "8226c6",
@@ -2639,7 +2872,7 @@ rivalData =
         guid = "a2d68d",
         tier = RED,
         pokemon = {
-          { name = "Corviknight", level = 5, types = { "Flying"}, moves = { "Brave Bird", "Steel Wing" }, model_GUID = "1515e6" },
+          { name = "Corviknight", level = 5, types = { "Flying", "Steel" }, moves = { "Brave Bird", "Steel Wing" }, model_GUID = "1515e6" },
           { name = "Cinderace", level = 6, types = { "Fire" }, moves = { "Pyro Ball", "Double-Edge" }, model_GUID = "edbb96" } }
       },
     }
@@ -2682,7 +2915,7 @@ rivalData =
         tier = RED,
         pokemon = {
           { name = "Pawmot", level = 5, types = { "Electric"}, moves = { "Discharge", "Close Combat" }, model_GUID = "d30509" },
-          { name = "Meowscarada", level = 6, types = { "Grass" }, moves = { "Flower Trick", "Slash" }, model_GUID = "e94a72" } }
+          { name = "Meowscarada", level = 6, types = { "Grass", "Dark" }, moves = { "Flower Trick", "Slash" }, model_GUID = "e94a72" } }
       }
     }
   }
@@ -2836,7 +3069,7 @@ gymData =
     guid = "5ad999",
     trainerName = "Brock",
     pokemon = {
-      { name = "Geodude", level = 1, types = { "Rock", "Ground" }, moves = { "Defense Curl", "Tackle", "Rock Throw" }, model_GUID = "df4771", spawn_effect="Physical Attack" },
+      { name = "Geodude", level = 2, types = { "Rock", "Ground" }, moves = { "Defense Curl", "Tackle", "Rock Throw" }, model_GUID = "df4771", spawn_effect="Physical Attack" },
       { name = "Onix",    level = 2, types = { "Rock", "Ground" }, moves = { "Screech", "Bind", "Rock Throw" }, model_GUID = "f5b6ad", custom_scale=0.7, offset={x=0,y=0,z=0.2} } }
   },
   {
@@ -3183,7 +3416,7 @@ gymData =
     guid = "5b3c49",
     trainerName = "Maylene",
     pokemon = {
-      { name = "Meditite", level = 3, types = { "Fighting" }, moves = { "Meditate", "Confusion", "Drain Punch" }, model_GUID = "da149f" },
+      { name = "Meditite", level = 3, types = { "Fighting", "Psychic" }, moves = { "Meditate", "Confusion", "Drain Punch" }, model_GUID = "da149f" },
       { name = "Lucario",  level = 4, types = { "Fighting" }, moves = { "Metal Claw", "Bone Rush", "Force Palm" }, model_GUID = "6f7542" } }
   },
   {
@@ -3301,14 +3534,14 @@ gymData =
     guid = "098cee",
     trainerName = "Elesa",
     pokemon = {
-      { name = "Emolga",    level = 4, types = { "Electric" }, moves = { "Thunder Wave", "Pursuit", "Spark" }, model_GUID = "dad8a0", spawn_effect="Physical Attack" },
+      { name = "Emolga",    level = 4, types = { "Electric", "Flying" }, moves = { "Thunder Wave", "Pursuit", "Spark" }, model_GUID = "dad8a0", spawn_effect="Physical Attack" },
       { name = "Zebstrika", level = 4, types = { "Electric" }, moves = { "Take Down", "Pursuit", "Shock Wave" }, model_GUID = "1f6bb5", spawn_effect="Physical Attack" } }
   },
   {
     guid = "de22b0",
     trainerName = "Clay",
     pokemon = {
-      { name = "Krokorok",  level = 5, types = { "Ground" }, moves = { "Swagger", "Sand Tomb", "Crunch" }, model_GUID = "4cf233" },
+      { name = "Krokorok",  level = 5, types = { "Ground", "Dark" }, moves = { "Swagger", "Sand Tomb", "Crunch" }, model_GUID = "4cf233" },
       { name = "Excadrill", level = 6, types = { "Ground" }, moves = { "Slash", "Bulldoze", "Metal Claw" }, model_GUID = "dccc9b", spawn_effect="Status Attack"  } }
   },
   {
@@ -3316,7 +3549,7 @@ gymData =
     trainerName = "Skyla",
     pokemon = {
       { name = "Swoobat", level = 5, types = { "Psychic" }, moves = { "Amnesia", "Assurance", "Heart Stamp" }, model_GUID = "97b4e6" },
-      { name = "Swanna",  level = 6, types = { "Water" },   moves = { "Feather Dance", "Bubble Beam", "Air Slash" }, model_GUID = "653e11" } }
+      { name = "Swanna",  level = 6, types = { "Water", "Flying" },   moves = { "Feather Dance", "Bubble Beam", "Air Slash" }, model_GUID = "653e11" } }
   },
   {
     guid = "9414b7",
@@ -3450,7 +3683,7 @@ gymData =
     trainerName = "Wikstrom",
     pokemon = {
       { name = "Klefki", level = 8, types = { "Steel" }, moves = { "Spikes", "Dazzling Gleam", "Flash Cannon" }, model_GUID = "4b6f52", spawn_effect="Physical Attack" },
-      { name = "Blade Aegislash", level = 9, types = { "Steel" }, moves = { "Shadow Claw", "Sacred Sword", "Iron Head" }, model_GUID = "a6b120", spawn_effect="Blade Stance" } }
+      { name = "Blade Aegislash", level = 9, types = { "Steel", "Ghost" }, moves = { "Shadow Claw", "Sacred Sword", "Iron Head" }, model_GUID = "a6b120", spawn_effect="Blade Stance" } }
   },
   {
     guid = "dfa5a5",
@@ -3471,7 +3704,7 @@ gymData =
     trainerName = "Malva",
     pokemon = {
       { name = "Pyroar", level = 8, types = { "Fire" }, moves = { "Noble Roar", "Wild Charge", "Flamethrower" }, model_GUID = "4b1422", custom_scale=0.85 },
-      { name = "Talonflame",  level = 9, types = { "Fire" }, moves = { "Steel Wing", "Brave Bird", "Flare Blitz" }, model_GUID = "efd523", spawn_effect="Physical Attack" } }
+      { name = "Talonflame",  level = 9, types = { "Fire", "Flying" }, moves = { "Steel Wing", "Brave Bird", "Flare Blitz" }, model_GUID = "efd523", spawn_effect="Physical Attack" } }
   },
   -- Champion
   {
@@ -3479,7 +3712,7 @@ gymData =
     trainerName = "Diantha",
     pokemon = {
       { name = "Goodra", level = 9, types = { "Dragon" }, moves = { "Muddy Water", "Fire Blast", "Dragon Pulse" }, model_GUID = "35c5e9", spawn_effect="Status Attack" },
-      { name = "Gardevoir", level = 10, types = { "Psychic" }, moves = { "Shadow Ball", "Psychic", "Moonblast" }, model_GUID = "8c5fec", offset={x=0, y=0, z=-0.2} } }
+      { name = "Gardevoir", level = 10, types = { "Psychic", "Fairy" }, moves = { "Shadow Ball", "Psychic", "Moonblast" }, model_GUID = "8c5fec", offset={x=0, y=0, z=-0.2} } }
   },
   {
     guid = "4e871f",
@@ -3531,7 +3764,7 @@ gymData =
     gen = 7,
     gymTier = 3,
     pokemon = {
-      { name = "Salazzle", level = 3, types = { "Poison" }, moves = { "Poison Fang", "Ember", "Nasty Plot" }, model_GUID = "29570d" },
+      { name = "Salazzle", level = 3, types = { "Poison", "Fire" }, moves = { "Poison Fang", "Ember", "Nasty Plot" }, model_GUID = "29570d" },
       { name = "Marowak", level = 4, types = { "Fire" }, moves = { "Bonemerang", "Flame Wheel", "Shadow Bone" }, model_GUID = "245f21" } }
   },
   {
@@ -3550,7 +3783,7 @@ gymData =
     gymTier = 3,
     pokemon = {
       { name = "Salandit", level = 3, types = { "Poison" }, moves = { "Smog", "Ember", "Dragon Pulse" }, model_GUID = "b90790" },
-      { name = "Salazzle", level = 4, types = { "Poison" }, moves = { "Smog", "Flamethrower", "Swagger" }, model_GUID = "29570d" } }
+      { name = "Salazzle", level = 4, types = { "Poison", "Fire" }, moves = { "Smog", "Flamethrower", "Swagger" }, model_GUID = "29570d" } }
   },
   {
     guid = "913644",
@@ -3612,7 +3845,7 @@ gymData =
     gen = 7,
     gymTier = 6,
     pokemon = {
-      { name = "Krokorok", level = 5, types = { "Ground" }, moves = { "Swagger", "Earthquake", "Crunch" }, model_GUID = "4cf233" },
+      { name = "Krokorok", level = 5, types = { "Ground", "Dark" }, moves = { "Swagger", "Earthquake", "Crunch" }, model_GUID = "4cf233" },
       { name = "Persian", level = 6, types = { "Dark" }, moves = { "Slash", "Power Gem", "Dark Pulse" }, model_GUID = "ae2934" } }
   },
   {
@@ -3692,7 +3925,7 @@ gymData =
     trainerName = "Hau",
     pokemon = {
       { name = "Raichu", level = 9, types = { "Electric" }, moves = { "Thunderbolt", "Psychic", "Focus Blast" }, model_GUID = "ac9e94", spawn_effect="Physical Attack" },
-      { name = "Decidueye", level = 10, types = { "Grass" }, moves = { "Nasty Plot", "Spirit Shackle", "Leaf Blade" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} } }
+      { name = "Decidueye", level = 10, types = { "Grass", "Ghost" }, moves = { "Nasty Plot", "Spirit Shackle", "Leaf Blade" }, model_GUID = "d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} } }
   },
 
   -- Gen VIII
@@ -3713,7 +3946,7 @@ gymData =
     gymTier = 2,
     pokemon = {
       { name = "Arrokuda", level = 3, types = { "Water" }, moves = { "Fury Attack", "Bite", "Aqua Jet" }, model_GUID = "95b4b0" },
-      { name = "Drednaw", level = 3, types = { "Water" }, moves = { "Headbutt", "Bite", "Razor Shell" }, model_GUID = "0ab337", custom_scale=0.8 } }
+      { name = "Drednaw", level = 3, types = { "Water", "Rock" }, moves = { "Headbutt", "Bite", "Razor Shell" }, model_GUID = "0ab337", custom_scale=0.8 } }
   },
   {
     guid = "08b1a8",
@@ -3749,7 +3982,7 @@ gymData =
     gymTier = 5,
     pokemon = {
       { name = "Weezing", level = 5, types = { "Poison" }, moves = { "Fairy Wind", "Sludge", "Strange Steam" }, model_GUID = "e96342" },
-      { name = "Alcremie", level = 5, types = { "Fairy" }, moves = { "Sweet Kiss", "Acid Armor", "Draining Kiss" }, model_GUID = "a1c462" } }
+      { name = "Alcremie", level = 5, types = { "Fairy" }, moves = { "Sweet Kiss", "Acid Armor", "Draining Kiss" }, model_GUID = "44047f" } }
   },
   {
     guid = "3ec0f8",
@@ -3775,7 +4008,7 @@ gymData =
     gen = 8,
     gymTier = 7,
     pokemon = {
-      { name = "Skuntank", level = 7, types = { "Poison" }, moves = { "Screech", "Sucker Punch", "Snarl" }, model_GUID = "142926" },
+      { name = "Skuntank", level = 7, types = { "Poison", "Dark" }, moves = { "Screech", "Sucker Punch", "Snarl" }, model_GUID = "142926" },
       { name = "Obstagoon", level = 7, types = { "Dark" }, moves = { "Counter", "Shadow Claw", "Throat Chop" }, model_GUID = "89cdcd" } }
   },
   {
@@ -3793,22 +4026,22 @@ gymData =
     guid = "5c28d7",
     trainerName = "Hop",
     pokemon = {
-      { name = "Corviknight", level = 8, types = { "Flying" }, moves = { "Light Screen", "Steel Wing", "Drill Peck" }, model_GUID = "1515e6"  },
-      { name = "Crowned Sword Zacian", level = 9, types = { "Fairy" }, moves = { "Swords Dance", "Behemoth Bash", "Play Rough" }, model_GUID = "6dccb4", custom_scale=0.6 } }
+      { name = "Corviknight", level = 8, types = { "Flying", "Steel" }, moves = { "Light Screen", "Steel Wing", "Drill Peck" }, model_GUID = "1515e6"  },
+      { name = "Crowned Sword Zacian", level = 9, types = { "Fairy", "Steel" }, moves = { "Swords Dance", "Behemoth Bash", "Play Rough" }, model_GUID = "6dccb4", custom_scale=0.6 } }
   },
   {
     guid = "cb76dc",
     trainerName = "Marnie",
     pokemon = {
       { name = "Morpeko",  level = 8, types = { "Electric" }, moves = { "Seed Bomb", "Bite", "Aura Wheel Electric" }, model_GUID = "6393df" },
-      { name = "Grimmsnarl", level = 9, types = { "Dark" }, moves = { "Spirit Break", "Darkest Lariat", "Play Rough" }, model_GUID = "3db539" } }
+      { name = "Grimmsnarl", level = 9, types = { "Dark", "Fairy" }, moves = { "Spirit Break", "Darkest Lariat", "Play Rough" }, model_GUID = "3db539" } }
   },
   {
     guid = "6af720",
     trainerName = "Hop",
     pokemon = {
       { name = "Dubwool", level = 8, types = { "Normal" }, moves = { "Zen Headbutt", "Headbutt", "Double-Edge" }, model_GUID = "d79f30" },
-      { name = "Crowned Shield Zamazenta", level = 9, types = { "Fighting" }, moves = { "Iron Defense", "Behemoth Bash", "Close Combat" }, model_GUID = "37f3aa", custom_scale=0.6 } }
+      { name = "Crowned Shield Zamazenta", level = 9, types = { "Fighting", "Steel" }, moves = { "Iron Defense", "Behemoth Bash", "Close Combat" }, model_GUID = "37f3aa", custom_scale=0.6 } }
   },
   {
     guid = "7ed3ee",
@@ -3823,7 +4056,7 @@ gymData =
     trainerName = "Leon",
     pokemon = {
       { name = "Cinderace", level = 9, types = { "Fire" }, moves = { "Bounce", "Flame Charge", "Pyro Ball" }, model_GUID = "edbb96" },
-      { name = "Blade Aegislash", level = 10, types = { "Steel" }, moves = { "Sacred Sword", "Shadow Ball", "Flash Cannon" }, model_GUID = "a6b120", spawn_effect="Blade Stance" } }
+      { name = "Blade Aegislash", level = 10, types = { "Steel", "Ghost" }, moves = { "Sacred Sword", "Shadow Ball", "Flash Cannon" }, model_GUID = "a6b120", spawn_effect="Blade Stance" } }
   },
   {
     guid = "cbea60",
@@ -3847,14 +4080,14 @@ gymData =
     trainerName = "Katy",
     pokemon = {
       { name = "Tarountula",level = 2, types = { "Bug"}, moves = { "Tackle", "Assurance", "Bug Bite" }, model_GUID = "5ca6b0" },
-      { name = "Teddiursa", level = 2, types = { "Bug" }, moves = { "Scratch", "Fury Swipes", "Fury Cutter" }, model_GUID = "729770" } }
+      { name = "Teddiursa", level = 2, types = { "Bug", "Normal" }, moves = { "Scratch", "Fury Swipes", "Fury Cutter" }, model_GUID = "729770" } }
   },
   {
     guid = "ad920b",
     trainerName = "Brassius",
     pokemon = {
-      { name = "Smoliv",  level = 3, types = { "Grass"},           moves = { "Tackle", "Growth", "Razor Leaf" }, model_GUID = "afedc8" },
-      { name = "Sudowoodo", level = 3, types = { "Grass" }, moves = { "Counter", "Rock Throw", "Trailblaze" }, model_GUID = "b0f59f", spawn_effect="Physical Attack" } }
+      { name = "Smoliv",  level = 3, types = { "Grass"},            moves = { "Tackle", "Growth", "Razor Leaf" }, model_GUID = "afedc8" },
+      { name = "Sudowoodo", level = 3, types = { "Grass", "Rock" }, moves = { "Counter", "Rock Throw", "Trailblaze" }, model_GUID = "b0f59f", spawn_effect="Physical Attack" } }
   },
   {
     guid = "7875a3",
@@ -3868,13 +4101,13 @@ gymData =
     trainerName = "Kofu",
     pokemon = {
       { name = "Wugtrio", level = 4, types = { "Water" }, moves = { "Headbutt", "Mud-Slap", "Water Pulse" }, model_GUID = "800ed9", offset={x=0, y=0.5, z=0} },
-      { name = "Crabominable",  level = 4, types = { "Water" }, moves = { "Slam", "Rock Smash", "Crabhammer" }, model_GUID = "bd1445", offset={x=0, y=0, z=0.5} } }
+      { name = "Crabominable",  level = 4, types = { "Water" }, moves = { "Slam", "Rock Smash", "Crabhammer" }, model_GUID = "bd1445" } }
   },
   {
     guid = "51d9fc",
     trainerName = "Larry",
     pokemon = {
-      { name = "Dudunsparce",  level = 5, types = { "Normal" },          moves = { "Glare", "Drill Run", "Hyper Drill" }, model_GUID = "97a941"  },
+      { name = "Dudunsparce",  level = 5, types = { "Normal" },          moves = { "Glare", "Drill Run", "Hyper Drill" }, model_GUID = "97a941", offset={x=0, y=0.08, z=0} },
       { name = "Staraptor", level = 6, types = { "Normal" }, moves = { "Close Combat", "Aerial Ace", "Facade" }, model_GUID = "88b32f" } }
   },
   {
@@ -3925,8 +4158,8 @@ gymData =
     guid = "49c164",
     trainerName = "Poppy",
     pokemon = {
-      { name = "Corviknight",  level = 8, types = { "Flying" },         moves = { "Body Press", "Iron Head", "Brave Bird" }, model_GUID = "1515e6"  },
-      { name = "Tinkaton", level = 9, types = { "Steel"}, moves = { "Play Rough", "Gigaton Hammer", "Stone Edge" }, model_GUID = "5cac55" } }
+      { name = "Corviknight",  level = 8, types = { "Flying", "Steel" },         moves = { "Body Press", "Iron Head", "Brave Bird" }, model_GUID = "1515e6"  },
+      { name = "Tinkaton", level = 9, types = { "Steel" }, moves = { "Play Rough", "Gigaton Hammer", "Stone Edge" }, model_GUID = "5cac55" } }
   },
   {
     guid = "d2e704",
@@ -3949,6 +4182,37 @@ gymData =
       { name = "Espathra",  level = 9,  types = { "Psychic" },  moves = { "Lumina Crash", "Dazzling Gleam", "Feather Dance" }, model_GUID = "b71051" },
       { name = "Glimmora", level = 10, types = { "Rock" }, moves = { "Tera Blast", "Sludge Wave", "Earth Power" }, model_GUID = "ceb3c1"  } }
   },
+}
+
+-----------------------------------------------------------------------------------------
+-- Custom Gym Data
+--
+-- gymTier field:
+--    gyms tiers: 1-8
+--    elite4    : 9
+--    champion  : 10
+--    TR        : 11
+-- MODEL NOTES:
+--    1- To use a custom model:
+--       * get the Model GUID and add it to the custom Gym data below
+--          - right-click the custom model > Scripting > Copy GUID to clipboard
+--       * prior to starting the game, put the model in the models Pokeball (tiny, black, top-left of the table)
+--    2- To use an existing model: look for the model_GUID field in the existing Pokemon data. I suggest you copy any effects and offsets as well.
+-- LEADER POKEMON NOTES:
+--    1- The first type is the only type that matters for opponent effectiveness. Dual-type effectiveness is not in this game (yet?).
+--    2- STAB calculations, though not perfect, are calulated using both types (dumb, I know). But it really only affects the inital counter values on the table.
+customGymData =
+{
+  -- Champion Example.
+  {
+    guid = "5aae38",          -- Card GUID. (Host: right-click the card > Scripting > Copy GUID to clipboard)
+    trainerName = "Kyruya",   -- Name of the trainer.
+    gen = "custom",           -- Gen field. Always use "custom".
+    gymTier = 10,             -- Gym Tier. See the comment above this table for valid values.
+    pokemon = {               -- The leader's Pokemon. NOTE: Unique moves also need to be added to customMoveData. CTRL+F to see if the move is already in the moveData table.
+      { name = "Noivern",   level = 9,  types = { "Dragon" },          moves = { "Flamethrower", "Hurricane", "Draco Meteor" }, model_GUID = "212e94", spawn_effect="Status Attack" },
+      { name = "Cramorant", level = 10, types = { "Electric", "Ice" }, moves = { "Gulping Missle", "Ice Beam", "Surf" },        model_GUID = "2b1b24"  } }
+  }
 }
 
 typeData =
@@ -3977,95 +4241,154 @@ tmData =
 {
   { guid = "359a56", move = "Aerial Ace" },  
   { guid = "5b8981", move = "Attract" },
-  { guid = "a04888", move = "Blizzard" },
-  { guid = "67cf83", move = "Body Slam" },
+  { guid = "3137ca", move = "Aurora Veil" },
+  { guid = "4ce536", move = "Avalanche" },
+  { guid = "b14290", move = "Blizzard" },
+  { guid = "2c5a57", move = "Body Slam" },
   { guid = "4cae29", move = "Brick Break" },
-  { guid = "1d4d83", move = "Bubble Beam" },
+  { guid = "007ba3", move = "Brine" },
+  { guid = "5efc53", move = "Brutal Swing" },
+  { guid = "8d42fb", move = "Bubble Beam" },
   { guid = "625682", move = "Bullet Seed" },
   { guid = "a1d00f", move = "Bulk Up" },
+  { guid = "e07f28", move = "Bulldoze" },
   { guid = "c0dd30", move = "Calm Mind" },
-  { guid = "29e2e7", move = "Counter" },
+  { guid = "213749", move = "Captivate" },
+  { guid = "22ddea", move = "Charge Beam" },
+  { guid = "74ec32", move = "Confide" },
+  { guid = "19d648", move = "Counter" },
+  { guid = "e8c19b", move = "Curse" },
+  { guid = "f3d9d3", move = "Dark Pulse" },
+  { guid = "e6484b", move = "Dazzling Gleam" },
+  { guid = "ab2880", move = "Defense Curl" },
   { guid = "6552cc", move = "Detect" },
-  { guid = "923a11", move = "Dig" },
-  { guid = "375a97", move = "Double-Edge" },
-  { guid = "b40de0", move = "Double Team" },
+  { guid = "dc1ec9", move = "Dig" },
+  { guid = "432c9f", move = "Double-Edge" },
+  { guid = "8e37c5", move = "Double Team" },
   { guid = "ebda3e", move = "Dragon Breath" },
   { guid = "c51f03", move = "Dragon Claw" },
-  { guid = "7fc16e", move = "Dragon Rage" },
-  { guid = "5884d5", move = "Dream Eater" },
-  { guid = "589820", move = "Earthquake" },
-  { guid = "979837", move = "Egg Bomb" },
-  { guid = "d367c3", move = "Explosion" },
+  { guid = "cd5bed", move = "Dragon Pulse" },
+  { guid = "beb448", move = "Dragon Rage" },
+  { guid = "4262e9", move = "Dragon Tail" },
+  { guid = "334b5d", move = "Dream Eater" },
+  { guid = "1c8a4f", move = "Dynamic Punch" },
+  { guid = "aef1c4", move = "Earthquake" },
+  { guid = "1eecf5", move = "Echoed Voice" },
+  { guid = "79d579", move = "Egg Bomb" },
+  { guid = "749063", move = "Embargo" },
+  { guid = "5548eb", move = "Energy Ball" },
+  { guid = "4b23da", move = "Explosion" },
   { guid = "a37980", move = "Facade" },
-  { guid = "b01bc8", move = "Fissure" },
-  { guid = "5f1dfa", move = "Fire Blast" },
+  { guid = "56d9ff", move = "False Swipe" },
+  { guid = "5675db", move = "Fissure" },
+  { guid = "db2e5f", move = "Fire Blast" },
   { guid = "799228", move = "Fire Punch" },
   { guid = "0f9ebe", move = "Flamethrower" },
-  { guid = "763873", move = "Focus Punch" },
+  { guid = "ae9bcf", move = "Flame Charge" },
+  { guid = "0ef51d", move = "Flash Cannon" },
+  { guid = "47e2a7", move = "Fly" },
+  { guid = "ca87d5", move = "Focus Blast" },
+  { guid = "6d819c", move = "Frost Breath" },
+  { guid = "9b4dac", move = "Fury Cutter" },
+  { guid = "763873", move = "Hail" }, 
   { guid = "e8b6dd", move = "Giga Drain" },
+  { guid = "ab0c34", move = "Giga Impact" },
   { guid = "8bf926", move = "Headbutt" },
   { guid = "a6457a", move = "Hidden Power" },
-  { guid = "f52e5b", move = "Horn Drill" },
-  { guid = "e6f314", move = "Hyper Beam" },
-  { guid = "632af0", move = "Ice Beam" },
+  { guid = "80318f", move = "Hone Claws" },
+  { guid = "6b27ce", move = "Horn Drill" },
+  { guid = "c5cc62", move = "Hyper Beam" },
+  { guid = "567f75", move = "Ice Beam" },
   { guid = "b80e18", move = "Ice Punch" },
   { guid = "2f1c01", move = "Icy Wind" },
+  { guid = "0ed62f", move = "Incinerate" },
+  { guid = "774e67", move = "Infestation" },
   { guid = "b54b26", move = "Iron Tail" },
+  { guid = "f3b232", move = "Leech Life" },
   { guid = "0c0649", move = "Light Screen" },
-  { guid = "171be0", move = "Mega Drain" },
-  { guid = "8cafd6", move = "Mega Kick" },
-  { guid = "6da38d", move = "Mega Punch" },
-  { guid = "034664", move = "Metronome" },
-  { guid = "28d66f", move = "Mimic" },
+  { guid = "a7d409", move = "Mega Drain" },
+  { guid = "050288", move = "Mega Kick" },
+  { guid = "af04d1", move = "Mega Punch" },
+  { guid = "9ac97b", move = "Metronome" },
+  { guid = "389d60", move = "Mimic" },
   { guid = "171693", move = "Mud-Slap" },
+  { guid = "a30baa", move = "Nature Power" },
   { guid = "2f1546", move = "Overheat" },
-  { guid = "cd5ec1", move = "Pay Day" },
+  { guid = "8cf6af", move = "Payback" },
+  { guid = "04de91", move = "Pay Day" },
+  { guid = "3c8504", move = "Poison Jab" },
+  { guid = "b8803b", move = "Power-Up Punch" },
   { guid = "5973af", move = "Protect" },
-  { guid = "ee0804", move = "Psychic" },
-  { guid = "daa9df", move = "Psywave" },
-  { guid = "a293ff", move = "Rage" },
-  { guid = "ddadad", move = "Razor Wind" },
-  { guid = "42d14b", move = "Reflect" },
+  { guid = "4f7429", move = "Psychic" },
+  { guid = "ab8c87", move = "Psyshock" },
+  { guid = "4c00f2", move = "Psywave" },
+  { guid = "3cc223", move = "Rage" },
+  { guid = "9b2eda", move = "Rain Dance" },
+  { guid = "be7b78", move = "Razor Wind" },
+  { guid = "ffbce4", move = "Reflect" },
+  { guid = "7e9799", move = "Retaliate" },
   { guid = "a1c9d5", move = "Roar" },
-  { guid = "79d996", move = "Rock Slide" },
+  { guid = "147ed3", move = "Rock Polish" },
+  { guid = "d50326", move = "Rock Slide" },
+  { guid = "0d7012", move = "Rock Smash" },
   { guid = "f8df98", move = "Rock Tomb" },
   { guid = "8ca146", move = "Safeguard" },
+  { guid = "b174ff", move = "Sandstorm" },
   { guid = "89e169", move = "Secret Power" },
-  { guid = "b80fe2", move = "Seismic Toss" },
-  { guid = "be622c", move = "Self-Destruct" },
+  { guid = "3803de", move = "Seismic Toss" },
+  { guid = "c294b2", move = "Self-Destruct" },
   { guid = "4e39c9", move = "Shock Wave" },
   { guid = "2f2fe7", move = "Shadow Ball" },
-  { guid = "c68f39", move = "Skull Bash" },
-  { guid = "2722b5", move = "Sky Attack" },
+  { guid = "49d86e", move = "Shadow Claw" },
+  { guid = "7b7ff4", move = "Silver Wind" },
+  { guid = "9e3ae7", move = "Skull Bash" },
+  { guid = "c9a50a", move = "Sky Attack" },
   { guid = "6452f8", move = "Sludge Bomb" },
+  { guid = "9ba85b", move = "Sludge Wave" },
+  { guid = "42459d", move = "Smart Strike" },
+  { guid = "07a4c9", move = "Snarl" },
   { guid = "435fa1", move = "Snatch" },
   { guid = "789ef1", move = "Snore" },
-  { guid = "3d1471", move = "Solar Beam" },
+  { guid = "239858", move = "Solar Beam" },
+  { guid = "1699b4", move = "Stealth Rock" },
   { guid = "fd548b", move = "Steel Wing" },
-  { guid = "957e05", move = "Submission" },
-  { guid = "1a1cf7", move = "Swift" },
-  { guid = "350919", move = "Swords Dance" },
-  { guid = "d6b5f1", move = "Take Down" },
+  { guid = "e64f8f", move = "Stone Edge" },
+  { guid = "106126", move = "Struggle Bug" },
+  { guid = "d62534", move = "Submission" },
+  { guid = "2f1ebc", move = "Sunny Day" },
+  { guid = "8dc919", move = "Surf" },
+  { guid = "eec7d0", move = "Swagger" },
+  { guid = "1761ff", move = "Swift" },
+  { guid = "ec0f9a", move = "Swords Dance" },
+  { guid = "628b23", move = "Take Down" },
   { guid = "e3d82f", move = "Taunt" },
-  { guid = "18e489", move = "Teleport" },
+  { guid = "1eed1b", move = "Teleport" },
   { guid = "999325", move = "Thief" },
-  { guid = "89a0fa", move = "Thunder" },
-  { guid = "dfb8f7", move = "Thunderbolt" },
+  { guid = "c11fbb", move = "Thunder" },
+  { guid = "ca860c", move = "Thunderbolt" },
   { guid = "e66c72", move = "Thunder Punch" },
-  { guid = "f50cf9", move = "Thunder Wave" },
+  { guid = "dc297a", move = "Thunder Wave" },
   { guid = "287692", move = "Torment" },
-  { guid = "5afe6d", move = "Toxic" },
-  { guid = "bf5f6e", move = "Tri Attack" },
-  { guid = "51d612", move = "Water Gun" },
+  { guid = "55cdb2", move = "Toxic" },
+  { guid = "626cd3", move = "Tri Attack" },
+  { guid = "691223", move = "U-Turn" },
+  { guid = "09e4f5", move = "Venoshock" },
+  { guid = "f08d89", move = "Volt Switch" },
+  { guid = "775387", move = "Waterfall" },
+  { guid = "f2eb34", move = "Water Gun" },
   { guid = "1d4fed", move = "Water Pulse" },
-  { guid = "a3034c", move = "Whirlwind" },
+  { guid = "910668", move = "Whirlwind" },
+  { guid = "1aeabe", move = "Wild Charge" },
+  { guid = "c721a5", move = "Will-O-Wisp" },
+  { guid = "370c4f", move = "Work Up" },
+  { guid = "60616e", move = "X-Scissor" },
   { guid = "0a6b86", move = "Zap Cannon" },
 }
 
 zCrystalData =
 {
   { guid = "2c591c", move = "Gigavolt Havoc",           overrides = {{ guids = { "a17986", "e5c82a" }, move = "Catastropika" }, 
-                                                                     { guids = { "77331c" }, move = "10MV Thunderbolt" },
+                                                                     { guids = { "77331c", "d7835d" }, move = "10MV Thunderbolt" },
                                                                      { guids = { "65a373", "1e53ce", "ef1a51" }, move = "Stoked Sparksurfer" }}
   },
   { guid = "337c73", move = "Supersonic Skystrike" },
@@ -4196,7 +4519,6 @@ function GetPokemonDataByName(params)
   local data
   for i = 1, #selectedGens do
     if selectedGens[i] then
-      --print("Searching Gen " .. i .. " data for GUID")
       data = getPokemonDataName(genData[i], params.name)
       if data != nil then
         return data
@@ -4204,7 +4526,6 @@ function GetPokemonDataByName(params)
     end
   end
   if customGen then
-    --print("Searching custom data for Name")
     data = getPokemonDataName(customPokemonData, params.guid)
     if data != nil then
       return data
@@ -4231,7 +4552,6 @@ function getPokemonData(pokemonList, guid)
     local guids = data.guids
     for j = 1, #guids do
       if guids[j] == guid then
-        --print("Found Pokémon Data")
         return data
       end
     end
@@ -4244,7 +4564,6 @@ function getPokemonDataName(pokemonList, name)
     local data = pokemonList[i]
     local names = data.name
     if names == name then
-      --print("Found Pokémon Data")
       return data
     end
   end
@@ -4276,11 +4595,21 @@ end
 function GetGymDataByGUID(params)
   for i = 1, #gymData do
     local data = gymData[i]
-    local guid = data.guid
-    if guid == params.guid then
+    if data.guid == params.guid then
       return data
     end
   end
+
+  -- If we get here, we didn't find the gym leader. Maybe is is custom? <.<
+  for i = 1, #customGymData do
+    local data = customGymData[i]
+    if data.guid == params.guid then
+      return data
+    end
+  end
+
+  print("Unable to find GymData for GUID: " .. tostring(params.guid))
+  return {}
 end
 
 function GetRivalDataByRegion(region)
@@ -4300,6 +4629,18 @@ function GetMoveDataByName(name)
       return data
     end
   end
+
+  -- If we get here, we didn't find the move data. Maybe is is custom? <.<
+  for i = 1, #customMoveData do
+    local data = customMoveData[i]
+    local moveName = data.name
+    if data.name == name then
+      return data
+    end
+  end
+
+  print("Unable to find move data for: " .. tostring(name))
+  return {}
 end
 
 function GetMoveDataByGUID(params)
@@ -4394,9 +4735,30 @@ function ShallowCopy(orig_table)
 end
 
 -- Function to filter gym data on the "gen" and "gymTier" attribute. If you call this on 
--- gym data without  the genn and gymTier attributes the return table will just be an empty {}.
-function FilterGymDataOnTier(gen, tier)
+-- gym data without the gen and gymTier attributes the return table will just be an empty {}.
+function FilterGymDataOnTier(gen, tier, use_backup)
   if gymData == nil then return {} end
+
+  -- First check if we are looking for a custom gym leader.
+  if gen == "custom" then
+    local new_index = 1
+    local temp_arr = ShallowCopy(customGymData)
+    local size_orig = #temp_arr
+    for old_index, v in ipairs(temp_arr) do
+        if v.gen == gen and v.gymTier == tier then
+            temp_arr[new_index] = v
+            new_index = new_index + 1
+        end
+    end
+    for i = new_index, size_orig do temp_arr[i] = nil end
+    if #temp_arr ~= 0 or not use_backup then
+      return temp_arr
+    end
+
+    -- We didn't find any custom gym leader matching the parameters. Use standard leaders.
+    -- This does not consider the selected gens lol.
+    gen = math.random(1, 9)
+  end
 
   local new_index = 1
   local temp_arr = ShallowCopy(gymData)
@@ -4412,17 +4774,38 @@ function FilterGymDataOnTier(gen, tier)
 end
 
 -- Retrieves a GUID randomly from the list of gym leaders for a gen and tier.
--- gen argument:
---    gyms  : 1-8
---    elite4: 9
---    rival : 10
---    TR    : 11
+-- tier argument:
+--    gyms     : 1-8
+--    elite4   : 9
+--    champion : 10
+--    TR       : 11
 function RandomGymGuidOfTier(params)
   if gymData == nil then return 0 end
 
-  local new_list = FilterGymDataOnTier(params.gen, params.tier)
+  local new_list = FilterGymDataOnTier(params.gen, params.tier, true)
   if #new_list > 0 then
-    return new_list[math.random(#new_list)].guid
+    local final_list = {}
+    if params.retrievedList ~= nil and #params.retrievedList > 0 then
+      for retrievedLeaderIndex=1, #params.retrievedList do
+        for gymIndex=1, #new_list do
+          if new_list[gymIndex].guid ~= params.retrievedList[retrievedLeaderIndex] then
+            table.insert(final_list, new_list[gymIndex])
+          end
+        end
+      end
+    else
+      return new_list[math.random(#new_list)].guid
+    end
+    if #final_list > 0 then
+      return final_list[math.random(#final_list)].guid
+    end
+
+    -- Failed to find the Gym Leader so find a random leader. This occurs when we try 
+    -- to grab more customs than are available.
+    new_list = FilterGymDataOnTier(math.random(1, 9), params.tier, true)
+    if #new_list > 0 then
+      return new_list[math.random(#new_list)].guid
+    end
   end
 
   local gymStringTable =
@@ -4445,11 +4828,34 @@ function RandomGymGuidOfTier(params)
   return 0
 end
 
+-- Gets the count of custom leaders available for a tier.
+-- tier argument:
+--    gyms     : 1-8
+--    elite4   : 9
+--    champion : 10
+--    TR       : 11
+function GetCustomLeaderCount(params)
+  if gymData == nil then return 0 end
+
+  local new_list = FilterGymDataOnTier(params.gen, params.tier, false)
+  local custom_count = #new_list
+  if params.retrievedList ~= nil and #params.retrievedList > 0 then
+    for retrievedLeaderIndex=1, #params.retrievedList do
+      for gymIndex=1, #new_list do
+        if new_list[gymIndex].guid == params.retrievedList[retrievedLeaderIndex] then
+          custom_count = custom_count - 1
+        end
+      end
+    end
+  end
+  return custom_count
+end
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --  SETUP
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function start(player, value, id)
-  MusicPlayer.setPlaylist(playlist)
+  MusicPlayer.setPlaylist(route_playlist)
 end
 
 function ShowSettingsPopup()
@@ -4465,12 +4871,12 @@ function onLoad(saved_data)
   battlemodels = getObjectFromGUID(battlemodels_GUID)
   if battlemodels == nil then
     printToAll("Unable to find models object :(")
+  else
+    -- Hide the models.
+    --battlemodels.interactable = false
+    --battlemodels.setLock(true)
+    battlemodels.setPosition({-51, 0.5, 76})
   end
-
-  -- Hide the models.
-  --battlemodels.interactable = false
-  --battlemodels.setLock(true)
-  battlemodels.setPosition({-51, 0.5, 76})
 
   local save_table
   if saved_data and saved_data ~= "" then
@@ -4483,11 +4889,14 @@ function onLoad(saved_data)
     spawn_delay = save_table.spawn_delay
     selectedGens = save_table.selectedGens
     customGen = save_table.customGen
+    customGymLeaderOption = save_table.customGymLeaderOption
+    original_music_enabled = save_table.original_music_enabled
+    remix_music_enabled = save_table.remix_music_enabled
   end
 
   -- Do some safety checks.
   if models_enabled == nil then
-    models_enabled = true
+    models_enabled = false
   end
   if global_scale == nil then
     global_scale = 2
@@ -4495,11 +4904,21 @@ function onLoad(saved_data)
   if spawn_delay == nil then
     spawn_delay = 0
   end
+  if original_music_enabled == nil then
+    original_music_enabled = true
+  end
+  if remix_music_enabled == nil then
+    remix_music_enabled = false
+  end
 
-  -- Combine the data to look at fossil Pokemon board Pokemon too.
+  -- Update the music playlists.
+  update_playlists()
+
+  -- Combine the data to look at fossil Pokemon, board Pokemon AND custom Pokemon too.
   local allData = genData
   table.insert(allData, boardPokemonData)
   table.insert(allData, fossilPokeballPokemonData)
+  table.insert(allData, customPokemonData)
 
   index = 1
   local key = 1
@@ -4586,6 +5005,9 @@ function onLoad(saved_data)
             model.interactable = false
             model.dynamic_friction = 1
             model.mass = 0
+            if not model.hasTag("Pokemon Model") then
+              model.addTag("Pokemon Model")
+            end
             model.setLock(true)
             try_activate_effect({model=pokemon.model, effectName=pokemon.state.idle_effect or pokemon.base.idle_effect})
           end
@@ -4596,6 +5018,7 @@ function onLoad(saved_data)
   end
   printToAll("Save Data loaded!")
 
+  -- GUI Toggles.
   UI.setAttribute("gen1ToggleBtn", "isOn", selectedGens[1])
   UI.setAttribute("gen2ToggleBtn", "isOn", selectedGens[2])
   UI.setAttribute("gen3ToggleBtn", "isOn", selectedGens[3])
@@ -4607,6 +5030,17 @@ function onLoad(saved_data)
   UI.setAttribute("gen9ToggleBtn", "isOn", selectedGens[9])
   UI.setAttribute("customToggleBtn", "isOn", customGen)
   checkBeginState()
+
+  -- Rebind the hotkeys.
+  addHotkey("Change Seat - Yellow", function(player_color, hovered_object, point, key_up) change_seat(player_color, "Yellow") end)
+  addHotkey("Change Seat - Green",  function(player_color, hovered_object, point, key_up) change_seat(player_color, "Green") end)
+  addHotkey("Change Seat - Blue",   function(player_color, hovered_object, point, key_up) change_seat(player_color, "Blue") end)
+  addHotkey("Change Seat - Red",    function(player_color, hovered_object, point, key_up) change_seat(player_color, "Red") end)
+  addHotkey("Change Seat - Purple", function(player_color, hovered_object, point, key_up) change_seat(player_color, "Purple") end)
+  addHotkey("Change Seat - Orange", function(player_color, hovered_object, point, key_up) change_seat(player_color, "Orange") end)
+  addHotkey("Pan Camera - Arena",   function(player_color, hovered_object, point, key_up) pan_camera(player_color, ARENA) end)
+  addHotkey("Pan Camera - Figure",  function(player_color, hovered_object, point, key_up) pan_camera(player_color, FIGURE) end)
+  addHotkey("Pan Camera - Rack",    function(player_color, hovered_object, point, key_up) pan_camera(player_color, RACK) end)
 end
 
 function onSave()
@@ -4645,16 +5079,100 @@ function onSave()
     end
   end
   local save_table = { 
-    selectedGens=selectedGens, 
-    customGen=customGen, 
-    version=version, 
-    base=base_table, 
-    active=active_table, 
-    enabled=models_enabled, 
-    model_scale=global_scale, 
-    spawn_delay=spawn_delay
+    selectedGens=selectedGens,
+    customGen=customGen,
+    customGymLeaderOption=customGymLeaderOption,
+    version=version,
+    base=base_table,
+    active=active_table,
+    enabled=models_enabled,
+    model_scale=global_scale,
+    spawn_delay=spawn_delay,
+    original_music_enabled=original_music_enabled,
+    remix_music_enabled=remix_music_enabled
   }
   return JSON.encode(save_table)
+end
+
+function change_seat(player_color, new_color)
+  Player[player_color].changeColor(new_color)
+end
+
+function pan_camera(player_color, camera_location)
+  -- Pan the camera to the specified location.
+  if camera_location == ARENA then
+    showArena(nil, player_color)
+  elseif camera_location == FIGURE then
+    panToPlayer(player_color)
+  elseif camera_location == RACK then
+    viewTeam(player_color)
+  else
+    print("Unsupported camera location specified in pan_camera: " .. tostring(camera_location))
+  end
+end
+
+-- NOTE: This was taken from the racks. Ideally, we make this call there directly but 
+--       I don't feel like updating the racks. Plus, the racks use their function leveraging
+--       the obj field. That function didn't play nicely.
+function panToPlayer(color)
+  -- Determine the figure's GUID.
+  local figureGUID = nil
+  if color == "Yellow" then
+    figureGUID = "f5f4be"
+  elseif color == "Green" then
+    figureGUID = "bdde77"
+  elseif color == "Blue" then
+    figureGUID = "f99b44"
+  elseif color == "Red" then
+    figureGUID = "c036ba"
+  elseif color == "Purple" then
+    figureGUID = "1d1174"
+  elseif color == "Orange" then
+    figureGUID = "f86514"
+  else
+    print("Unsupported color specified in panToPlayer: " .. tostring(color))
+  end
+  local pokeOnePosX = getObjectFromGUID(figureGUID).getPosition()[1]
+  local pokeOnePosZ = getObjectFromGUID(figureGUID).getPosition()[3]
+
+  Player[color].lookAt({
+      position = {x=pokeOnePosX, y=0.14, z=pokeOnePosZ},
+      pitch    = 60,
+      yaw      = 0,
+      distance = 25,
+  })
+end
+
+-- NOTE: This was taken from the Battle Manager. Ideally, we make this call 
+--       there directly but BM uses their function leveraging the obj field. 
+--       That function didn't play nicely.
+function viewTeam(team)
+  if team == "Blue" then
+      showPosition = {x=-65,y=0.96,z=21.5}
+      camYaw = 90
+  elseif team == "Green" then
+      showPosition = {x=-65,y=0.96,z=-21.5}
+      camYaw = 90
+  elseif team == "Orange" then
+      showPosition = {x=65,y=0.96,z=21.5}
+      camYaw = 270
+  elseif team == "Purple" then
+      showPosition = {x=65,y=0.96,z=-21.5}
+      camYaw = 270
+  elseif team == "Red" then
+      showPosition = {x=21.50,y=0.14,z=-48}
+      camYaw = 0
+  elseif team == "Yellow" then
+      showPosition = {x=-21.50,y=0.14,z=-48}
+      camYaw = 0
+  end
+
+  Player[team].lookAt({
+      position = showPosition,
+      pitch    = 60,
+      yaw      = camYaw,
+      distance = 25
+  })
 end
 
 -- Models function.
@@ -4673,7 +5191,8 @@ function beginSetup(player, value, id)
     selectedGens = selectedGens,
     customGen = customGen,
     leadersGen = leadersGen,
-    randomStarters = randomStarters
+    randomStarters = randomStarters,
+    customGymLeaderOption = customGymLeaderOption
   }
 
   --[[ Initialize the random seed. I know, why 3? Well, when I only did this once Gen VII Gym 5
@@ -4796,7 +5315,7 @@ function enoughPokemon()
 
   -- Check the final count.
   if numPokemon < 150 then
-    printToAll("WARNING: Less than 150 base pokemon have been selected. This type of setup has not been tested thoroughly.")
+    printToAll("WARNING: Less than 150 base Pokémon have been selected. This type of setup has not been tested thoroughly.")
   end
   --hasEnoughPokemon = numPokemon >= 150
   hasEnoughPokemon = true
@@ -4829,13 +5348,20 @@ function genLeadersSet(player, option, id)
     setLeaders(8, true)
   elseif option == GEN_9_SELECT then
     setLeaders(9, true)
-  elseif option == CUSTOM_SELECT then
-    setLeaders(0, true)
   elseif option == RANDOM_SELECT then
     setLeaders(-1, true)
   else
     printToAll("Unknown Leaders selected: " .. option, "Red")
   end
+end
+
+function customGymLeadersOptionsSet(player, option, id)
+  if tonumber(option) > ALWAYS_SELECT then
+    print("Unknown Custom Gym Leader option: " .. tostring(id))
+    return
+  end
+
+  customGymLeaderOption = tonumber(option)
 end
 
 function rivalRegionSet(player, option, id)
@@ -4897,10 +5423,17 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function PlayRouteMusic()
-  local song = playlist[currentTrack]
-  MusicPlayer.setCurrentAudioclip({ url = song.url, title = song.title })
+  -- battle_playlist[math.random(#battle_playlist)]
+  -- local song = playlist[currentTrack]
+  -- MusicPlayer.setCurrentAudioclip({ url = song.url, title = song.title })
+  -- MusicPlayer.repeat_track = false
+  -- MusicPlayer.playlist_index = currentTrack - 1
+  -- MusicPlayer.play()
+  
+  MusicPlayer.setPlaylist(route_playlist)
+  MusicPlayer.setCurrentAudioclip(route_playlist[math.random(#route_playlist)])
   MusicPlayer.repeat_track = false
-  MusicPlayer.playlist_index = currentTrack - 1
+  MusicPlayer.shuffle = true
   MusicPlayer.play()
 end
 
@@ -4929,19 +5462,14 @@ end
 
 function PlayGymBattleMusic()
   currentTrack = MusicPlayer.playlist_index + 1
-  parameters = battlePlaylist[math.random(#battlePlaylist)]
+  parameters = battle_playlist[math.random(#battle_playlist)]
   MusicPlayer.setCurrentAudioclip(parameters)
   MusicPlayer.repeat_track = true
 end
 
 function PlayFinalBattleMusic()
-  -- TODO: add a playlist for this (XY Elite 4 Music)
   currentTrack = MusicPlayer.playlist_index + 1
-  parameters =
-  {
-    url = "http://cloud-3.steamusercontent.com/ugc/1023948871898724461/766C5BF1EB28C474D2366F8223F98C5F083770D0/",
-    title = "Elite 4 Battle Music"
-  }
+  parameters = elite_4_playlist[math.random(#elite_4_playlist)]
   MusicPlayer.setCurrentAudioclip(parameters)
   MusicPlayer.repeat_track = true
 end
@@ -4955,20 +5483,16 @@ function PlayVictoryMusic()
   MusicPlayer.setCurrentAudioclip(parameters)
 end
 
-function PlayCynthiaRivalMusic()
+function PlayRivalMusic()
   currentTrack = MusicPlayer.playlist_index + 1
-  parameters =
-  {
-    url = "http://cloud-3.steamusercontent.com/ugc/2465233915448687664/638298CFD4041533322CB8E537B98923EAA776EE/",
-    title = "Cynthia Battle Music"
-  }
+  parameters = rival_playlist[math.random(#rival_playlist)]
   MusicPlayer.setCurrentAudioclip(parameters)
   MusicPlayer.repeat_track = true
 end
 
 function PlaySilphCoBattleMusic()
   currentTrack = MusicPlayer.playlist_index + 1
-  parameters = teamRocketPlaylist[math.random(#teamRocketPlaylist)]
+  parameters = team_rocket_playlist[math.random(#team_rocket_playlist)]
   MusicPlayer.setCurrentAudioclip(parameters)
   MusicPlayer.repeat_track = true
 end
@@ -5007,7 +5531,7 @@ function add_to_active_chips_by_GUID(params)
   -- Get the chip by its GUID.
   params.data.chip = getObjectFromGUID(params.data.chip_GUID)
 
-  -- Wait until the rival token is resting.
+  -- Wait until the <whatever> token is resting.
   Wait.condition(
     function()
       params.data.model = get_model_guid_on_top(params.data)
@@ -5290,7 +5814,6 @@ function spawn_model(pokemon)
   assert(pokemon.chip)
   assert(pokemon.model == nil)
   if not pokemon.state then
-    -- TODO: handle multiple states here, via code.
     if pokemon.base.states then
       local r = math.random(1,#pokemon.base.states)
       pokemon.state = pokemon.base.states[r]
@@ -5366,12 +5889,10 @@ function spawn_callback(obj, name)
   pokemon.model = obj
   assert(pokemon.model.getGUID() == pokemon.state.model_GUID)
   if not pokemon.state.created_before then
-    --pokemon.model.scale(global_scale)
     pokemon.model.setScale({global_scale, global_scale, global_scale})
     pokemon.state.created_before = true
     init_model(pokemon, true)
   else
-    --pokemon.model.scale(spawn_scale)
     local scaling_vector = {x=global_scale, y=global_scale, z=global_scale}
     if pokemon.base.custom_scale then
       scaling_vector.x = scaling_vector.x * pokemon.base.custom_scale
@@ -5387,6 +5908,9 @@ function init_model(pokemon, first_creation)
   pokemon.model.interactable = false
   pokemon.model.dynamic_friction = 1
   pokemon.model.mass = 0
+  if not pokemon.model.hasTag("Pokemon Model") then
+    pokemon.model.addTag("Pokemon Model")
+  end
   pokemon.model.setLock(true)
   pokemon.base.in_creation = false
   pokemon.in_creation = false
@@ -5413,6 +5937,9 @@ end
 function scale_model(pokemon_model, scale_factor)
   pokemon_model.scale(scale_factor)
   pokemon_model.mass = 0
+  if not pokemon_model.hasTag("Pokemon Model") then
+    pokemon_model.addTag("Pokemon Model")
+  end
 end
 
 function scale_model_next(pokemon)
@@ -5632,7 +6159,6 @@ function onObjectEnterContainer(container, enter_object)
 end
 
 function onObjectCollisionEnter(hit_object, collision_info)
-  --print("Collision " .. hit_object.getGUID())
   local pokemon = get_active_pokemon_by_GUID(hit_object.getGUID())
   if pokemon then
     wait_for_chip(pokemon)
@@ -5678,4 +6204,148 @@ function onObjectDestroy(dying_object)
       active_models[guid] = nil
     end
   end
+end
+
+-- This is a helper function to prevent models from stealing our token before going into the Battle Models pokeball. 
+-- The models are bags. You can't make this stuff up.
+function tryObjectEnterContainer(container, object)
+  if container.hasTag("Pokemon Model") then
+    -- Check if the model is still here.
+    local model = getObjectFromGUID(container.getGUID())
+    if model ~= nil then
+      model.setScale({global_scale, global_scale, global_scale})
+      battlemodels.putObject(model)
+    end
+    return false
+  end
+  return true -- Allows object to enter.
+end
+
+---------------------------------
+-- Funky music functionality.
+---------------------------------
+
+function toggle_original_music_enabled()
+  if original_music_enabled then
+    original_music_enabled = false
+  else
+    original_music_enabled = true
+  end
+
+  -- Update the playlist.
+  update_playlists()
+end
+
+function toggle_remix_music_enabled()
+  if remix_music_enabled then
+    remix_music_enabled = false
+  else
+    remix_music_enabled = true
+  end
+
+  -- Update the playlist.
+  update_playlists()
+end
+
+-- Updates the playlist based on the selected music choices.
+function update_playlists()
+  -- Check if the music player should be restarted.
+  local restart_player = false
+  if MusicPlayer.player_status == "Loading" or MusicPlayer.player_status == "Play" then
+    restart_player = true
+  end
+
+  -- Clear all of the playlists.
+  route_playlist = {}
+  team_rocket_playlist = {}
+  battle_playlist = {}
+  rival_playlist = {}
+  elite_4_playlist = {}
+
+  -- Check for the music conditionals.
+  if original_music_enabled then
+    add_music_to_playlist(route_playlist, original_route_tracks, remix_route_tracks)
+    add_music_to_playlist(team_rocket_playlist, original_team_rocket_tracks, remix_team_rocket_tracks)
+    add_music_to_playlist(battle_playlist, original_battle_tracks, remix_battle_tracks)
+    add_music_to_playlist(rival_playlist, original_rival_tracks, remix_rival_tracks)
+    add_music_to_playlist(elite_4_playlist, original_elite_4_tracks, remix_elite_4_tracks)
+  end
+  if remix_music_enabled then
+    add_music_to_playlist(route_playlist, remix_route_tracks, original_route_tracks)
+    add_music_to_playlist(team_rocket_playlist, remix_team_rocket_tracks, original_team_rocket_tracks)
+    add_music_to_playlist(battle_playlist, remix_battle_tracks, original_battle_tracks)
+    add_music_to_playlist(rival_playlist, remix_rival_tracks, original_rival_tracks)
+    add_music_to_playlist(elite_4_playlist, remix_elite_4_tracks, original_elite_4_tracks)
+  end
+
+  -- Restart the music if needed.
+  if restart_player then
+    -- Determine which playlist to load.
+    -- NOTE: BattleManager uses the following values for types (better not change it! <.<).
+    --[[
+          PLAYER = 0
+          GYM = 1
+          TRAINER = 2
+          WILD = 3
+          RIVAL = 4
+    ]]
+    local battleManager = getObjectFromGUID("de7152")
+    if getObjectFromGUID("ec1e4b") ~= nil then
+      -- The setup is not complete, don't update the current song.
+      return
+    elseif not battleManager.call("isBattleInProgress") then
+      PlayRouteMusic()
+    else
+      -- Check the defender type.
+      local defenderType = battleManager.call("getDefenderType")
+      if defenderType == 1 then
+        -- Attacker is gym.
+        PlayGymBattleMusic()
+        return
+      end
+
+      local attackerType = battleManager.call("getAttackerType")
+      if attackerType == 2 then
+        -- Attacker is trainer.
+        PlayTrainerBattleMusic()
+        return
+      elseif attackerType == 4 then
+        -- Attacker is rival.
+        PlayTrainerBattleMusic()
+        return
+      end
+
+      -- Otherwise just play battle music.
+      PlayTrainerBattleMusic()
+    end
+  end
+end
+
+-- Adds music to the prescribed playlist. Also includes a backup playlist variable in case the tracks is empty.
+function add_music_to_playlist(playlist, tracks, backup_tracks)
+  -- Protect ourselves from dumb people (me).
+  if tracks == nil then
+    tracks = {}
+  end
+  if backup_tracks == nil then
+    backup_tracks = {}
+  end
+
+  if #tracks ~= 0 then
+    for index, song in ipairs(tracks) do
+      table.insert(playlist, song)
+    end
+  elseif #playlist == 0 then
+    for index, song in ipairs(backup_tracks) do
+      table.insert(playlist, song)
+    end
+  end
+end
+
+function get_original_music_enabled()
+  return original_music_enabled
+end
+
+function get_remix_music_enabled()
+  return remix_music_enabled
 end
