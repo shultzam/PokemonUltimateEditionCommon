@@ -1090,7 +1090,7 @@ gen5PokemonData =
   { name = "Sawk",            level = 4, types = { "Fighting" }, moves = { "Bulk Up", "Counter" },             guids = { "15a56f" }, model_GUID = "1f8cae" },
   { name = "Sewaddle",        level = 1, types = { "Bug" },      moves = { "String Shot", "Tackle" },          guids = { "1e8149" },                     evoData = { { cost = 1, ball = GREEN, gen = 5, guids = { "013008" }, model_GUID = "0e2bb5" } }, model_GUID = "2a3547" },
   { name = "Swadloon",        level = 2, types = { "Bug" },      moves = { "Struggle Bug", "Protect" },        guids = { "434424", "013008" },           evoData = { { cost = 2, ball = YELLOW, gen = 5, guids = { "fe4a27", "7e7b85" }, model_GUID = "788aa1" } }, model_GUID = "0e2bb5" },
-  { name = "Leavanny",        level = 4, types = { "Bug" },      moves = { "Leaf Blade", "X-Scissor" },        guids = { "e12b22", "fe4a27", "7e7b85" }, model_GUID = "788aa1" },
+  { name = "Leavanny",        level = 4, types = { "Bug", "Grass" }, moves = { "Leaf Blade", "X-Scissor" },    guids = { "e12b22", "fe4a27", "7e7b85" }, model_GUID = "788aa1" },
   { name = "Venipede",        level = 2, types = { "Bug" },      moves = { "Poison Sting", "Defense Curl" },   guids = { "98f18f" },                     evoData = { { cost = 1, ball = BLUE, gen = 5, guids = { "703d36" }, model_GUID = "0f9af9", spawn_effect="Physical Attack" } }, model_GUID = "07a778" },
   { name = "Whirlipede",      level = 3, types = { "Bug" },      moves = { "Rollout", "Protect" },             guids = { "562f04", "703d36" },           evoData = { { cost = 1, ball = YELLOW, gen = 5, guids = { "c997bd", "ae213b" }, model_GUID = "6b8b44", spawn_effect="Physical Attack" } }, model_GUID = "0f9af9", spawn_effect="Physical Attack", custom_scale=0.8 }, -- Trash
   { name = "Scolipede",       level = 4, types = { "Bug" },      moves = { "Poison Tail", "Steamroller" },     guids = { "111f3c", "c997bd", "ae213b" }, model_GUID = "6b8b44", spawn_effect="Physical Attack", custom_scale=0.8, offset={x=0, y=0.08, z=0} },
@@ -2168,7 +2168,7 @@ moveData =
     {name="Bonemerang",     power=1,      type="Ground",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
     {name="Bulldoze",       power=3,      type="Ground",  dice=6, STAB=true},
     {name="Dig",            power=2,      type="Ground",  dice=6, STAB=true},
-    {name="Drill Run",      power=3,      type="Ground",  dice=8, STAB=true},
+    {name="Drill Run",      power=2,      type="Ground",  dice=8, STAB=true},
     {name="Earth Power",    power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
     {name="Earthquake",     power=2,      type="Ground",  dice=6, STAB=true},
     {name="Fissure",        power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="KO", chance=5, target="Enemy"}} },
@@ -2259,7 +2259,7 @@ moveData =
     {name="Horn Drill",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="KO", target="Enemy", chance=5}} },
     {name="Howl",           power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackUp", target="Self"}} },
     {name="Hyper Beam",     power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
-    {name="Hyper Drill",    power=3,      type="Normal",  dice=6, STAB=true },
+    {name="Hyper Drill",    power=2,      type="Normal",  dice=6, STAB=true },
     {name="Hyper Fang",     power=2,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy", chance=6}} },
     {name="Hyper Voice",    power=2,      type="Normal",  dice=6, STAB=false},
     {name="Judgement",      power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
@@ -2365,7 +2365,7 @@ moveData =
     {name="Poison Jab",     power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
     {name="Poison Powder",  power=0,      type="Poison",  dice=6, STAB=false,   effects={{name="Poison", target="Enemy", chance=3}} },
     {name="Poison Sting",   power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
-    {name="Poison Tail",    power=2,      type="Poison",  dice=8, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
+    {name="Poison Tail",    power=1,      type="Poison",  dice=8, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
     {name="Shell Side Arm", power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=6}} },
     {name="Smog",           power=1,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=4}} },
     {name="Sludge",         power=2,      type="Poison",  dice=6, STAB=true,    effects={{name="Poison", target="Enemy", chance=5}} },
@@ -2414,7 +2414,7 @@ moveData =
     {name="Psycho Boost",   power=4,      type="Psychic", dice=6, STAB=true     },
     {name="Psycho Cut",     power=3,      type="Psychic", dice=8, STAB=true     },
     {name="Psyshield Bash", power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}     },
-    {name="Psyshock",       power=3,      type="Psychic", dice=6, STAB=true     },
+    {name="Psyshock",       power=2,      type="Psychic", dice=6, STAB=true     },
     {name="Reflect",        power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
     {name="Rev. Dance Psychic",power=2,   type="Psychic", dice=6, STAB=true},
     {name="Telekinesis",    power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
@@ -2497,7 +2497,7 @@ moveData =
     {name="Aqua Jet",       power=1,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
     {name="Aqua Step",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Priority", target="Self"}} },
     {name="Aqua Tail",      power=2,      type="Water",  dice=6, STAB=true},
-    {name="Brine",          power=3,      type="Water",  dice=6, STAB=true},
+    {name="Brine",          power=2,      type="Water",  dice=6, STAB=true},
     {name="Bubble",         power=1,      type="Water",  dice=6, STAB=true},
     {name="Bubble Beam",    power=2,      type="Water",  dice=6, STAB=true},
     {name="Clamp",          power=1,      type="Water",  dice=4, STAB=true,     effects={{name="ExtraDice", target="Self", chance=4}} },
@@ -3528,7 +3528,7 @@ gymData =
     trainerName = "Burgh",
     pokemon = {
       { name = "Dwebble",  level = 3, types = { "Bug" }, moves = { "Sand Attack", "Struggle Bug", "Feint Attack" }, model_GUID = "553572" },
-      { name = "Leavanny", level = 4, types = { "Bug" }, moves = { "Grass Whistle", "Struggle Bug", "Razor Leaf" }, model_GUID = "788aa1" } }
+      { name = "Leavanny", level = 4, types = { "Bug", "Grass" }, moves = { "Grass Whistle", "Struggle Bug", "Razor Leaf" }, model_GUID = "788aa1" } }
   },
   {
     guid = "098cee",
@@ -4190,7 +4190,7 @@ gymData =
 -- gymTier field:
 --    gyms tiers: 1-8
 --    elite4    : 9
---    champion  : 10
+--    rival     : 10
 --    TR        : 11
 -- MODEL NOTES:
 --    1- To use a custom model:
@@ -4208,7 +4208,7 @@ customGymData =
     guid = "5aae38",          -- Card GUID. (Host: right-click the card > Scripting > Copy GUID to clipboard)
     trainerName = "Kyruya",   -- Name of the trainer.
     gen = "custom",           -- Gen field. Always use "custom".
-    gymTier = 10,             -- Gym Tier. See the comment above this table for valid values.
+    gymTier = 10,             -- Gym Tier. See the comment above this table for valid values. This card, as configured, would go into the Custom Rival pokeball.
     pokemon = {               -- The leader's Pokemon. NOTE: Unique moves also need to be added to customMoveData. CTRL+F to see if the move is already in the moveData table.
       { name = "Noivern",   level = 9,  types = { "Dragon" },          moves = { "Flamethrower", "Hurricane", "Draco Meteor" }, model_GUID = "212e94", spawn_effect="Status Attack" },
       { name = "Cramorant", level = 10, types = { "Electric", "Ice" }, moves = { "Gulping Missle", "Ice Beam", "Surf" },        model_GUID = "2b1b24"  } }

@@ -434,13 +434,14 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
         -- gen_index will be either the generation that was selected or the custom gen.
         local gen_index = math.random(1, #pokeballs)
         local gymsPokeball = getObjectFromGUID(pokeballs[gen_index])
+        local gen_to_use = gen
         if (#pokeballs == 1 and pokeballs[1] == customLeadersArr[1]) or gen_index == 2 then
-            gen_index = "custom"
+            gen_to_use = "custom"
         end
 
         -- If this gym has multiple gym leader options per gym, we need to get creative about retrieving the correct gym.
         if gymsPokeball.hasTag("MultipleGymLeaders") then
-            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_index, tier=i})
+            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=i})
             leader = gymsPokeball.takeObject({ guid = leaderGuid })
         else
             leader = gymsPokeball.takeObject({})
@@ -469,13 +470,14 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
         -- gen_index will be either the generation that was selected or the custom gen.
         local gen_index = math.random(1, #pokeballs)
         local elite4Pokeball = getObjectFromGUID(pokeballs[gen_index])
+        local gen_to_use = gen
         if (#pokeballs == 1 and pokeballs[1] == customLeadersArr[2]) or gen_index == 2 then
-            gen_index = "custom"
+            gen_to_use = "custom"
         end
 
         -- If this gym has multiple gym leader options per gym, we need to get creative about retrieving the correct gym.
         if elite4Pokeball.hasTag("MultipleGymLeaders") then
-            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_index, tier=9})
+            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=9})
             leader = elite4Pokeball.takeObject({ guid = leaderGuid })
         else
             leader = elite4Pokeball.takeObject({})
@@ -503,13 +505,14 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
         -- gen_index will be either the generation that was selected or the custom gen.
         local gen_index = math.random(1, #pokeballs)
         local rivalPokeball = getObjectFromGUID(pokeballs[gen_index])
+        local gen_to_use = gen
         if (#pokeballs == 1 and pokeballs[1] == customLeadersArr[3]) or gen_index == 2 then
-            gen_index = "custom"
+            gen_to_use = "custom"
         end
 
         -- If this gym has multiple gym leader options per gym, we need to get creative about retrieving the correct gym.
         if rivalPokeball.hasTag("MultipleGymLeaders") then
-            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_index, tier=10})
+            local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=10})
             leader = rivalPokeball.takeObject({ guid = leaderGuid })
         else
             leader = rivalPokeball.takeObject({})
@@ -538,13 +541,14 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
     -- gen_index will be either the generation that was selected or the custom gen.
     local gen_index = math.random(1, #pokeballs)
     local silphCoPokeball = getObjectFromGUID(pokeballs[gen_index])
+    local gen_to_use = gen
     if (#pokeballs == 1 and pokeballs[1] == customLeadersArr[4]) or gen_index == 2 then
-        gen_index = "custom"
+        gen_to_use = "custom"
     end
 
     local teamRocketLeader
     if silphCoPokeball.hasTag("MultipleGymLeaders") then
-        local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_index, tier=11})       -- 11 signifes Team Rocket.
+        local leaderGuid = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=11})       -- 11 signifes Team Rocket.
         teamRocketLeader = silphCoPokeball.takeObject({ guid = leaderGuid })
     else
         teamRocketLeader = silphCoPokeball.takeObject({})
