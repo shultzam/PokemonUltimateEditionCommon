@@ -347,12 +347,12 @@ function beginSetup2(params)
         table.insert(leadersRetrieved, teamRocketLeader.guid)
     end
 
-    -- Remove the settings button.
-    self.removeButton(0)
-
     if params.randomStarters then
+        self.editButton({index=0, position={0, 1000, 0}})
         Wait.condition(onSetupFinished, function() return not self.spawning and not self.loading_custom end)
     else
+        -- Remove the settings button and change it to a Start Game button.
+        self.removeButton(0)
         self.createButton({ --Apply settings button
             label = "Start Game",
             click_function = "start",
@@ -367,7 +367,7 @@ function beginSetup2(params)
 
         -- Since we moved the Starter Pokeball, let's broadcast a message and ping it.
         -- TODO: Remove this after a few updates.
-        broadcastToAll("The Starter Pokéball has been moved to be more consistent across maps. Please check ping.", "Red")
+        broadcastToAll("The Starter Pokéball has been moved to be more consistent across maps. Please check ping.", "Yellow")
         local seatedPlayers = getSeatedPlayers()
         if #seatedPlayers ~= 0 then
             local pingSelf = function() Player[seatedPlayers[1]].pingTable(getObjectFromGUID("ec1e4b").getPosition()) end
