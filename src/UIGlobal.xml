@@ -41,7 +41,7 @@
             </VerticalLayout>
             <VerticalLayout>
                 <Text fontSize="18" text="Select Rival Region" alignment="MiddleLeft" fontStyle="Bold"/>
-                <Dropdown id="rivalRegionDropdown" nValueChanged="rivalRegionSet">
+                <Dropdown id="rivalRegionDropdown" onValueChanged="rivalRegionSet">
                     <Option selected="true">Kanto</Option>
                     <Option>Johto</Option>
                     <Option>Hoenn</Option>
