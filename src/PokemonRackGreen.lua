@@ -495,3 +495,15 @@ function evolveTwoArena(attDefParams)
         rackEvolve(arenaIndex, 2)
     end
 end
+
+function getAvailablePokemonXPos()
+    local temp_x_pos = copyTable(pokemonXPos)
+    local count_removed = 0
+    for index=1, #temp_x_pos do
+        if next(rackData[index]) ~= nil then
+            table.remove(temp_x_pos, index - count_removed)
+            count_removed = count_removed + 1
+        end
+    end
+    return temp_x_pos
+end

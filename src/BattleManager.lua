@@ -19,6 +19,9 @@ DEFAULT = 0
 EFFECTIVE = 1
 WEAK = 2
 DISABLED = 3
+SUPER_WEAK = 4
+SUPER_EFFECTIVE = 5
+
 
 -- Trainer type
 PLAYER = 0
@@ -36,6 +39,8 @@ local attackerConfirmed = false
 local debug = false
 
 -- GUIDS
+local gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd30", "c9dd73", "a0f650", "c970ca", "19db0d" }
+local deploy_pokeballs = { "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f90" }
 local wildPokeZone = "f10ab0"
 
 local blueRack = "b366ea"
@@ -128,19 +133,77 @@ local defendRollState = PLACING
 local aiDifficulty = 0
 local scriptingEnabled = false
 local noMoveData = {name="NoMove", power=0, dice=6, status=DEFAULT}
-local wildPokemonGUID
+local wildPokemonGUID = nil
+local wildPokemonKanto = nil
+local wildPokemonColorIndex = nil
+local gymLeaderGuid = nil
+local isSecondTrainer = false
 
 local multiEvolving = false
 local multiEvoData={}
 -- Used for models during multi-evo.
 local multiEvoGuids={}
 
+-- States.
 inBattle = false
 battleState = NO_BATTLE
 
 --Arena Positions
 local defenderPos = {pokemon={-36.01, 4.19}, dice={-36.03, 6.26}, status={-31.25, 4.44}, statusCounters={-31.25, 6.72}, item={-40.87, 4.26}, moveDice={-36.11, 8.66}}
 local attackerPos = {pokemon={-36.06,-4.23}, dice={-36.03,-6.15}, status={-31.25,-4.31}, statusCounters={-31.25,-6.74}, item={-40.87,-4.13}, moveDice={-36.11,-8.53}}
+
+-- Boost card lookup tables.
+local vitaminLookupTable = {
+    ["d71716"] = true,
+    ["b961ed"] = true,
+    ["56346f"] = true,
+    ["c94dfb"] = true,
+    ["a9deab"] = true,
+    ["25c20e"] = true,
+    ["a62ebf"] = true
+  }
+-- This one will likely never be used sadly. There is no way to add a zone to each mod with the same GUID.
+-- We can't save the zone as an object. :/
+local xAttackLookupTable = { 
+    ["91bbed"] = true,
+    ["979ce4"] = true,
+    ["017e6a"] = true,
+    ["f062ef"] = true,
+    ["cc20b4"] = true,
+    ["f9ae34"] = true,
+    ["65c113"] = true,
+    ["bdb6b6"] = true
+  }
+local alphaPokemonLookupTable = { 
+    ["0ae019"] = true,
+    ["9fb199"] = true,
+    ["16b485"] = true
+  }
+-- This will return nil if the lookup fails.
+local typeBoosterLookupTable = { 
+    ["f0148b"] = "Grass",
+    ["5fd7ec"] = "Water",
+    ["d6b09f"] = "Fire",
+    ["9799c2"] = "Poison",
+    ["780d75"] = "Ice",
+    ["6b6de5"] = "Dark",
+    ["d24da7"] = "Steel",
+    ["7897e1"] = "Psychic",
+    ["b4c21b"] = "Ghost",
+    ["000c14"] = "Fairy",
+    ["7cf603"] = "Ground",
+    ["a678b2"] = "Fighting",
+    ["c57af6"] = "Normal",
+    ["4ac0a2"] = "Dragon",
+    ["f160e6"] = "Flying",
+    ["c57077"] = "Electric",
+    ["46f499"] = "Bug",
+    ["9a8941"] = "Rock"
+  }
+
+--------------------------
+-- Save/Load functions.
+--------------------------
 
 function onSave()
   return JSON.encode({in_battle = inBattle})
@@ -164,7 +227,7 @@ function onLoad(saved_data)
 
     self.createButton({label="TEAM", click_function="seeDefenderRack",function_owner=self, tooltip="See Team",position={teamDefPos.x, 1000, teamDefPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="MOVES", click_function="seeMoveRules",function_owner=self, tooltip="Show Move Rules",position={movesDefPos.x, 1000, movesDefPos.z}, height=300, width=720, font_size=200})
-    self.createButton({label="RECALL", click_function="recallAtkArena",function_owner=self, tooltip="Recall Pokémon",position={recallDefPos.x, 1000, recallDefPos.z}, height=300, width=720, font_size=200})
+    self.createButton({label="RECALL", click_function="recallDefArena",function_owner=self, tooltip="Recall Pokémon",position={recallDefPos.x, 1000, recallDefPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="+", click_function="increaseDefArena",function_owner=self, tooltip="Increase Level",position={incLevelDefPos.x, 1000, incLevelDefPos.z}, height=300, width=240, font_size=200})
     self.createButton({label="-", click_function="decreaseDefArena",function_owner=self, tooltip="Decrease Level",position={decLevelDefPos.x, 1000, decLevelDefPos.z}, height=300, width=240, font_size=200})
     self.createButton({label="+", click_function="addDefStatus",function_owner=self, tooltip="Add Status Counter",position={incStatusDefPos.x, 1000, incStatusDefPos.z}, height=300, width=200, font_size=200})
@@ -240,7 +303,12 @@ function onLoad(saved_data)
     end
 end
 
+--------------------------
+-- Support functions called by Global.lua.
+--------------------------
+
 function isBattleInProgress()
+  -- TODO: this returns true if the Trainer controlled attacker Pokemon is in the arena waiting. This is fine *for now*.
   -- NOTE: I am dumb. I forgot there is a "inBattle" variable. Can it be trusted? >.>
   if attackerData == nil or defenderData == nil then return false end
   return attackerData.type ~= nil or defenderData.type ~= nil
@@ -262,12 +330,19 @@ function getDefenderType()
   return defenderData.type
 end
 
+--------------------------
+-- Tera related functions.
+--------------------------
+
 function changeAttackerTeraType()
   if attackerPokemon.teraType == nil or attackerPokemon.types == nil then
     print("Cannot Terastallize the attacker without a Tera card!")
     return
   end
+  
   -- Update the atacker type.
+  -- The tera type is TECHNICALLY the only active type during dual typing. 
+  -- But the token value can't change so oh well.
   local previousType = attackerPokemon.types[1]
   attackerPokemon.types[1] = attackerPokemon.teraType
   attackerPokemon.teraType = previousType
@@ -283,7 +358,10 @@ function changeDefenderTeraType()
     print("Cannot Terastallize the defender without a Tera card!")
     return
   end
+
   -- Update the defender type.
+  -- The tera type is TECHNICALLY the only active type during dual typing. 
+  -- But the token value can't change so oh well.
   local previousType = defenderPokemon.types[1]
   defenderPokemon.types[1] = defenderPokemon.teraType
   defenderPokemon.teraType = previousType
@@ -293,6 +371,10 @@ function changeDefenderTeraType()
 
   showDefenderTeraButton(true, defenderPokemon.types[1])
 end
+
+--------------------------
+-- Core BattleManager functionality.
+--------------------------
 
 function flipGymLeader()
   if defenderData.type ~= GYM then
@@ -317,6 +399,14 @@ function flipGymLeader()
     }
 
     Global.call("despawn_now", despawn_data)
+  end
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", defenderPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
+    end
   end
 
   -- Remove the current data 
@@ -373,7 +463,7 @@ function flipGymLeader()
     if gymData.pokemon[2].idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = gymData.pokemon[2].idle_effect end
     if gymData.pokemon[2].spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = gymData.pokemon[2].spawn_effect end
     if gymData.pokemon[2].run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = gymData.pokemon[2].run_effect end
-    if gymData.pokemon[2].faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = gymData.pokemon[2].faint_attack end
+    if gymData.pokemon[2].faint_effect == nil then pokemonModelData.base.faint_effect = "Faint" else pokemonModelData.base.faint_effect = gymData.pokemon[2].faint_effect end
   end
 
   -- Flip the gym leader card.
@@ -422,10 +512,9 @@ function flipGymLeader()
     )
   end
 
-  -- Lock the rival token in place.
   Wait.condition(
     function()
-      -- Lock the rival in place.
+      -- Lock the gym card in place.
       gymLeaderCard.lock()
     end,
     function() -- Condition function
@@ -433,6 +522,32 @@ function flipGymLeader()
     end,
     2
   )
+
+  -- Check if we spawn a secondary type token.
+  if Global.call("getDualTypeEffectiveness") then
+    -- Reformat the data so that the secondary type token code can use it.
+    local secondary_token_data = {
+      chip_GUID = defenderData.trainerGUID,
+      base = {
+        name = defenderPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        types = defenderPokemon.types
+      },
+      picked_up = false,
+      in_creation = false,
+      isTwoFaced = true
+    }
+    secondary_token_data.chip = defenderData.trainerGUID
+    secondary_token_data.base.token_offset = {x=1.9, y=0, z=1.0}
+
+    -- Copy the base to a state.
+    secondary_token_data.state = secondary_token_data.base
+
+    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
+  end
 
   -- Clear texts.
   clearMoveText(ATTACKER)
@@ -462,6 +577,14 @@ function flipRivalPokemon()
     }
 
     Global.call("despawn_now", despawn_data)
+  end
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
+    end
   end
 
   -- Remove the current data 
@@ -513,7 +636,7 @@ function flipRivalPokemon()
     if attackerPokemon.idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = attackerPokemon.idle_effect end
     if attackerPokemon.spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = attackerPokemon.spawn_effect end
     if attackerPokemon.run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = attackerPokemon.run_effect end
-    if attackerPokemon.faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = attackerPokemon.faint_attack end
+    if attackerPokemon.faint_effect == nil then pokemonModelData.base.faint_effect = "Faint" else pokemonModelData.base.faint_effect = attackerPokemon.faint_effect end
   end
 
   -- Flip the rival token.
@@ -541,24 +664,128 @@ function flipRivalPokemon()
     2
   )
 
+  -- Check if we spawn a secondary type token.
+  if Global.call("getDualTypeEffectiveness") then
+    -- Reformat the data so that the secondary type token code can use it.
+    local secondary_token_data = {
+      chip_GUID = attackerPokemon.pokemonGUID,
+      base = {
+        name = attackerPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        types = attackerPokemon.types
+      },
+      picked_up = false,
+      in_creation = false,
+      isTwoFaced = true
+    }
+    secondary_token_data.chip = attackerPokemon.pokemonGUID
+    secondary_token_data.base.token_offset = {x=1.7, y=-0.1, z=0.7}
+
+    -- Copy the base to a state.
+    secondary_token_data.state = secondary_token_data.base
+
+    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
+  end
+
   -- Clear texts.
   clearMoveText(ATTACKER)
   clearMoveText(DEFENDER)
 end
 
-function battleWildPokemon()
+-- This function is called by Global. When called, the BattleManager will move the Wild token 
+-- to the arena and start the battle. The params.recall_params will allow a recall button to show.
+function moveAndBattleWildPokemon(params)
+  -- Check if a battle is in progress or if the Defender position is already occupied.
+  if getDefenderType() ~= nil then
+    printToAll("There is already a defending Pokémon in the arena")
+    return
+  end
+
+  -- Get a handle on the model.
+  local token = getObjectFromGUID(params.chip_guid)
+  if not token then
+    printToAll("Failed to find token for GUID " .. tostring(params.chip_guid))
+    return
+  end
+
+  -- Move the Pokemon to the defender position.
+  token.setPosition({defenderPos.pokemon[1], 2, defenderPos.pokemon[2]})
+
+  -- Move the model.
+  local pokemonData = Global.call("simple_get_active_pokemon_by_GUID", params.chip_guid)
+  local pokemonModel = getObjectFromGUID(pokemonData.base.model_GUID)
+  if pokemonModel ~= nil and Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+    pokemonData.chip = params.chip_guid
+
+    Wait.condition(
+      function() -- Conditional function.
+        -- Move the model.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end,
+      function() -- Condition function
+        return token ~= nil and token.resting and token.getPosition().y < 1.0
+      end,
+      2,
+      function() -- Timeout function.
+        -- Move the model. But the token is still moving, darn.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end
+    )
+  end
+
+  -- Wait for the token to come to a rest, then wait 0.5 seconds longer and start the battle.
+  Wait.condition(
+    function()
+      Wait.time(function() battleWildPokemon(params.wild_battle_params, true) end, 0.5)
+    end,
+    function() -- Condition function
+      return token.resting
+    end,
+    2
+  )
+end
+
+function battleWildPokemon(wild_battle_params, is_automated)
   -- Check if in a battle.
   if inBattle == false then
-    setTrainerType(DEFENDER, WILD)
+    -- Check if we have a GUID.
+    if not wildPokemonGUID then return end
 
+    -- Get the data of the Pokemon token we think is present.
     local pokemonData = Global.call("GetPokemonDataByGUID",{guid=wildPokemonGUID})
+
+    -- Check if the pokemon token is on the table.
+    local token = getObjectFromGUID(wildPokemonGUID)
+    if not token then
+      if pokemonData then
+        printToAll(pokemonData.name " token is not on the table")
+      else
+        printToAll("No data known for this token or the token is not on the table")
+      end
+      wildPokemonGUID = nil
+      wildPokemonKanto = nil
+      wildPokemonColorIndex = nil
+      return
+    end
+
+    -- Lock the wild token.
+    token.lock()
+
+    -- Update the BM data.
+    setTrainerType(DEFENDER, WILD)
     defenderPokemon = {}
     setNewPokemon(defenderPokemon, pokemonData, wildPokemonGUID)
-
     inBattle = true
     Global.call("PlayTrainerBattleMusic",{})
     printToAll("Wild " .. defenderPokemon.name .. " appeared!")
-
     updateMoves(DEFENDER, defenderPokemon)
 
     -- Update the defender value counter.
@@ -580,7 +807,43 @@ function battleWildPokemon()
       end
       self.editButton({index=36, label="END BATTLE"})
     end
+    
+    -- Create a button that allows someone to click it to catch the wild Pokemon.
+    self.editButton({index=13, position={teamDefPos.x, 0.4, teamDefPos.z}, click_function="wildPokemonCatch", label="CATCH", tooltip="Catch Pokemon"})
+
+    -- Check if this is an automated Wild Battle.
+    -- NOTE: When using the BATTLE button manually this field is not empty since we are using
+    --       an Object-owned button. Userdata nonsense gets put in front of our arguments. So
+    --       we can't just check the wild_battle_params.
+    if type(is_automated) == "boolean" and is_automated then
+      -- Check if we can give a Recall button.
+      if wild_battle_params.position then
+        -- Valid position received.
+        wildPokemonKanto = wild_battle_params.position
+        self.editButton({index=14, position={movesDefPos.x, 0.4, movesDefPos.z}, click_function="wildPokemonFlee", label="FLEE", tooltip="Wild Pokemon Flees"})
+      else
+        print("Invalid Recall color given to battleWildPokemon: " .. tostring(wild_battle_params.color_index))
+      end
+      
+      -- Check if we can give a Faint button.
+      if wild_battle_params.color_index then
+        if wild_battle_params.color_index > 0 and wild_battle_params.color_index < 7 then
+          -- Valid color_index received.
+          wildPokemonColorIndex = wild_battle_params.color_index
+          self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="wildPokemonFaint", label="FAINT", tooltip="Wild Pokemon Faints"})
+        else
+          print("Invalid Faint color given to battleWildPokemon: " .. tostring(wild_battle_params.color_index))
+        end
+      end 
+    end
   else
+    -- Check if the pokemon token is on the table.
+    local token = getObjectFromGUID(wildPokemonGUID)
+    if token then
+      -- Unock the wild token.
+      token.unlock()
+    end
+
     inBattle = false
     text = getObjectFromGUID(defText)
     text.setValue(" ")
@@ -591,8 +854,272 @@ function battleWildPokemon()
     self.editButton({index=36, label="BATTLE"})
 
     Global.call("PlayRouteMusic",{})
+
+    -- Clear the wild Pokemon data.
+    wildPokemonGUID = nil
+    wildPokemonKanto = nil
+    wildPokemonColorIndex = nil
+    
+    -- Reset the buttons.
+    self.editButton({index=13, position={teamDefPos.x, 1000, teamDefPos.z}, click_function="seeDefenderRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=14, position={movesDefPos.x, 1000, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
+    self.editButton({index=15, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
   end
 end
+
+--------------------------
+-- Wild Battle Functions
+--------------------------
+
+function wildPokemonCatch(obj, player_color)
+  -- First, save off the wild Pokemon's GUID.
+  local wild_chip_guid = wildPokemonGUID
+  local color_index = wildPokemonColorIndex
+
+  -- Check if the user that clicked the button is the same user who is on attack, if applicable.
+  if attackerData.playerColor ~= nil and attackerData.playerColor ~= player_color then return end
+
+  -- Next, end the battle.
+  battleWildPokemon()
+
+  -- Figure out which rack we are dealing with.
+  local rack = nil
+  local rotation = { 0, 0, 0 }
+  if player_color == "Yellow" then
+    rack = getObjectFromGUID(yellowRack)
+    rotation[2] = -90
+  elseif player_color == "Green" then
+    rack = getObjectFromGUID(greenRack)
+    rotation[2] = -90
+  elseif player_color == "Blue" then
+    rack = getObjectFromGUID(blueRack)
+    rotation[2] = -180
+  elseif player_color == "Red" then
+    rack = getObjectFromGUID(redRack)
+    rotation[2] = -180
+  elseif player_color == "Purple" then
+    rack = getObjectFromGUID(purpleRack)
+    rotation[2] = -270
+  elseif player_color == "Orange" then
+    rack = getObjectFromGUID(orangeRack)
+    rotation[2] = -270
+  else
+    return
+  end
+
+  -- Make sure the rack exists.
+  if not rack then
+    print("Failed to get rack handle to allow a wild Pokémon to be caught. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Get a handle on the chip.
+  local token = getObjectFromGUID(wild_chip_guid)
+  if not token then
+    print("Failed to get chip handle to allow a wild Pokémon to Flee. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Get the rack X Pokemon positions.
+  local pokemon_x_pos_list = rack.call("getAvailablePokemonXPos")
+
+  -- Initialize the cast params.
+  local castParams = {}
+  castParams.direction = {0,-1,0}
+  castParams.type = 1
+  castParams.max_distance = 0.7
+  castParams.debug = debug
+
+  -- Loop through each X position and find the first empty slot.
+  local new_pokemon_position = nil
+  for x_index=1, #pokemon_x_pos_list do
+    local origin = {pokemon_x_pos_list[x_index], 0.94, -0.1}
+    castParams.origin = rack.positionToWorld(origin)
+    local hits = Physics.cast(castParams)
+
+    if #hits == 0 then -- Empty Slot
+      new_pokemon_position = castParams.origin
+      break
+    end
+  end
+
+  -- Check if the Trainer has no empty slots.
+  if not new_pokemon_position then
+    -- Determine the player's name.
+    local player_name = player_color
+    if Player[player_color].steam_name ~= nil then
+        player_name = Player[player_color].steam_name
+    end
+    printToAll(player_name .. " needs to release a Pokémon (including statuses, attach cards and level dice) before they can catch a wild Pokémon", player_color)
+    return
+  end
+
+  -- Catch the Pokemon.
+  token.setPosition(new_pokemon_position)
+  token.setRotation(rotation)
+
+  -- Move the model.
+  local pokemonData = Global.call("simple_get_active_pokemon_by_GUID", wild_chip_guid)
+  local pokemonModel = getObjectFromGUID(pokemonData.base.model_GUID)
+  if pokemonModel ~= nil and Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+    pokemonData.chip = wild_chip_guid
+
+    Wait.condition(
+      function() -- Conditional function.
+        -- Move the model.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end,
+      function() -- Condition function
+        return token ~= nil and token.resting and token.getPosition().y < 0.4
+      end,
+      2,
+      function() -- Timeout function.
+        -- Move the model. But the token is still moving, darn.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end
+    )
+  end
+
+  -- Wait for the token to come to a rest, then wait 0.2 seconds longer and start the battle.
+  Wait.condition(
+    function()
+      -- Refresh the rack.
+      rack.call("rackRefreshPokemon")
+    end,
+    function() -- Condition function
+      return token.resting and token.getPosition().y < 0.4
+    end,
+    2
+  )
+
+  -- Get a handle on the pokeball that we care about.
+  local pokeball = nil
+  if color_index ~= nil then
+    pokeball = getObjectFromGUID(deploy_pokeballs[color_index])
+    if not pokeball then
+      print("Failed to get Pokeball handle to allow a wild Pokémon to be caught. WHAT DID YOU DO?")
+      return
+    end
+  else
+    printToAll("Cannot deal a new Pokémon token unless you utilize the hotkey to initiate Wild Pokémon battles (Options > Game Keys > Wild Battle Pokemon)", player_color)
+  end
+
+  -- Wait for the token to come to a rest, then wait 0.3 seconds longer and deal a new token.
+  if pokeball ~= nil then
+    Wait.condition(
+      function()
+        -- Deal a new Pokemon chip of the appropriate color.
+        Wait.time(function() pokeball.call("deal") end, 0.3)
+      end,
+      function() -- Condition function
+        return token.resting
+      end,
+      2
+    )
+  end
+end
+
+function wildPokemonFlee()
+  -- First, save off the wild Pokemon's GUID and kanto location.
+  local wild_chip_guid = wildPokemonGUID
+  local kanto_location = wildPokemonKanto
+
+  -- Next, end the battle.
+  battleWildPokemon()
+
+  -- Get a handle on the chip.
+  local token = getObjectFromGUID(wild_chip_guid)
+  if not token then
+    print("Failed to get chip handle to allow a wild Pokémon to Flee. WHAT DID YOU DO?")
+    return
+  end
+  
+  -- Move the Pokemon chip back to its kanto location.
+  token.setPosition({kanto_location.x, 2, kanto_location.z})
+
+  -- Move the model.
+  local pokemonData = Global.call("simple_get_active_pokemon_by_GUID", wild_chip_guid)
+  local pokemonModel = getObjectFromGUID(pokemonData.base.model_GUID)
+  if pokemonModel ~= nil and Global.call("get_models_enabled") then
+    -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
+    pokemonData.chip = wild_chip_guid
+
+    Wait.condition(
+      function() -- Conditional function.
+        -- Move the model.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end,
+      function() -- Condition function
+        return token ~= nil and token.resting and token.getPosition().y < 1.1
+      end,
+      2,
+      function() -- Timeout function.
+        -- Move the model. But the token is still moving, darn.
+        pokemonModel.setPosition(Global.call("model_position", pokemonData))
+        pokemonModel.setRotation({token.getRotation().x, token.getRotation().y, token.getRotation().z})
+        pokemonModel.setLock(true)
+      end
+    )
+  end
+end
+
+function wildPokemonFaint()
+  -- First, save off the wild Pokemon's GUID and color index.
+  local wild_chip_guid = wildPokemonGUID
+  local color_index = wildPokemonColorIndex
+
+  -- Next, end the battle.
+  battleWildPokemon()
+
+  -- Get a handle on the chip.
+  local chip = getObjectFromGUID(wild_chip_guid)
+  if not chip then
+    print("Failed to get chip handle to allow a wild Pokémon to Faint. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Get a handle on the pokeball that we care about.
+  local pokeball = getObjectFromGUID(deploy_pokeballs[color_index])
+  if not pokeball then
+    print("Failed to get Pokeball handle to allow a wild Pokémon to Faint. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local pokemonData = Global.call("GetPokemonDataByGUID",{guid=wild_chip_guid})
+    local token_guid = Global.call("get_secondary_type_token_guid", wild_chip_guid)
+    if pokemonData and token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=pokemonData, secondary_type_token=token_guid})
+    end
+  end
+
+  -- Put the Pokemon chip back in its place.
+  pokeball.putObject(chip)
+
+  -- Wait for the token to come to a rest, then wait 0.3 seconds longer and deal a new token.
+  Wait.condition(
+    function()
+      -- Deal a new Pokemon chip of the appropriate color.
+      Wait.time(function() pokeball.call("deal") end, 0.3)
+    end,
+    function() -- Condition function
+      return getObjectFromGUID(wildPokemonGUID) == nil
+    end,
+    2
+  )
+end
+
+--------------------------
+-- "AI" Functions
+--------------------------
 
 function setScriptingEnabled(enabled)
   scriptingEnabled = enabled
@@ -615,7 +1142,6 @@ function setBattleState(state)
     arenaText.TextTool.setValue("ARENA")
   end
 end
-
 
 function confirmAttack()
 
@@ -1175,7 +1701,7 @@ function pokemonFaint(isAttacker, data)
 end
 
 function noPokemonInArena()
-    print("There is no Pokemon in the Arena")
+    print("There is no Pokémon in the Arena")
 end
 
 function attackMove1()
@@ -1233,38 +1759,82 @@ function selectMove(index, isAttacker, isRandom)
   -- Update the appropriate value counter.
   -- NOTE: could also leverage pokemonData.attackValue.attackRoll + pokemonData.attackValue.item here.
   pokemonData.attackValue.movePower = moveData.power
-  -- If the pokemon is the same type then add 1 to the attack power.
+
+  -- Stab. If the pokemon is the same type then add 1 to the attack power.
   if type(pokemonData.attackValue.movePower) == "string" then pokemonData.attackValue.movePower = 0 end
   if (moveData.type == pokemon.types[1] or moveData.type == pokemon.types[2]) and pokemonData.attackValue.movePower > 0 and moveData.STAB then 
     pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1 
   end
+
+  -- Initialize the item value.
+  pokemonData.attackValue.item = 0
+
+  -- Check for a few different attach cards.
+  if pokemon.vitamin then
+    -- Vitamin. Tasty.
+    pokemonData.attackValue.item = 1
+  elseif pokemon.alpha then
+    -- Alpha boy. Shudders.
+    if pokemonData.attackValue.movePower > 3 then
+      pokemonData.attackValue.item = 0
+    elseif pokemonData.attackValue.movePower == 3 then
+      pokemonData.attackValue.item = 1
+    else
+      pokemonData.attackValue.item = 2
+    end
+  elseif pokemon.type_booster == moveData.type and pokemonData.attackValue.movePower > 0 then
+    -- Valid type booster.
+    pokemonData.attackValue.item = 1
+  end
+
+  -- Calculate effectiveness.
   pokemonData.attackValue.effectiveness = DEFAULT
   local oppenent_data = isAttacker and defenderPokemon or attackerPokemon
+
+  -- Get the opponent types.
   local opponent_types = { "N/A" }
   if oppenent_data ~= nil and oppenent_data.types ~= nil then
-    opponent_types[1] = oppenent_data.types[1] -- Only the first type is used for effectiveness. For now. :()
+    opponent_types[1] = oppenent_data.types[1]
     if oppenent_data.types[2] ~= nil then
       opponent_types[2] = oppenent_data.types[2]
     else
       opponent_types[2] = "N/A"
     end
   end
+  
+  -- Get the typeData
   local typeData = Global.call("GetTypeDataByName", moveData.type)
-  for j=1, #typeData.effective do
-    if typeData.effective[j] == opponent_types[1] then  -- or typeData.effective[j] == opponent_types[2]
-      pokemonData.attackValue.effectiveness = 2
-      break
-    end
-  end
 
-  if pokemonData.attackValue.effectiveness == DEFAULT then
-    for j=1, #typeData.weak do
-      if typeData.weak[j] == opponent_types[1] then     -- or typeData.weak[j] == opponent_types[2]
-        pokemonData.attackValue.effectiveness= -2
-        break
+  -- Detrermine if we are doing dual type effectiveness.
+  local type_length = 1
+  if Global.call("getDualTypeEffectiveness") then
+    type_length = 2
+  end
+  
+  -- Calculate the effectiveness of this move.
+  for j=1, #typeData.effective do
+    for type_index = 1, type_length do
+      if typeData.effective[j] == opponent_types[type_index] then
+        pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness + 2
       end
     end
   end
+  for j=1, #typeData.weak do
+    for type_index = 1, type_length do
+      if typeData.weak[j] == opponent_types[type_index] then
+        pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness - 2
+      end
+    end
+  end
+
+  -- Super-Effective and Super-Weak are are +3/-3 respectively. So do a simple conversion.
+  if pokemonData.attackValue.effectiveness == 4 then
+    pokemonData.attackValue.effectiveness = 3
+  elseif pokemonData.attackValue.effectiveness == -4 then
+    pokemonData.attackValue.effectiveness = -3
+  end
+
+  -- Update the counter.
   calculateFinalAttack(isAttacker)
 
   -- Update the move text tool.
@@ -1294,6 +1864,10 @@ function selectMove(index, isAttacker, isRandom)
         if triggerListLength == 1 then
           local animationName = triggerList[1].name
           Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
+        elseif triggerListLength == 3 or triggerListLength == 4 then
+          -- Stupid, slow motion Gen 9 models.
+          local animationName = triggerList[1].name
+          Global.call("try_activate_effect", {model=model, effectName=animationName})
         elseif triggerListLength < 100 then
           local animationName = triggerList[math.random(triggerListLength - 1)].name
           Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
@@ -2082,7 +2656,7 @@ function seeMoveRules(obj, player_clicker_color)
     local playerColour = player_clicker_color
     local showPosition
 
-    if playerColour == "Blue" then
+    if playerColour == "Yellow" then
         showPosition = {x=0.02,y=0.24,z=-55.5}
     elseif playerColour == "Green" then
         showPosition = {x=-72,y=0.14,z=0.75}
@@ -2092,7 +2666,7 @@ function seeMoveRules(obj, player_clicker_color)
         showPosition = {x=72,y=0.14,z=0.88}
     elseif playerColour == "Red" then
         showPosition = {x=0.02,y=0.24,z=-55.5}
-    elseif playerColour == "Yellow" then
+    elseif playerColour == "Blue" then
         showPosition = {x=-72,y=0.14,z=0.75}
     end
 
@@ -2106,7 +2680,7 @@ end
 
 function sendToArenaGym(params)
   if defenderData.type ~= nil then
-    print ("There is already a Pokémon in the arena")
+    print("There is already a Pokémon in the arena")
     return false
   elseif attackerData.type ~= nil and attackerData.type ~= PLAYER then
     return false
@@ -2139,29 +2713,42 @@ function sendToArenaGym(params)
   local gymLeaderCard = gym.takeObject(takeParams)
 
   if params.isGymLeader then
-      -- Take Badge
-      takeParams = {position = {defenderPos.pokemon[1], 1.5, defenderPos.pokemon[2]}, rotation={0,180,0}}
-      gym.takeObject(takeParams)
+    -- Take Badge
+    takeParams = {position = {defenderPos.pokemon[1], 1.5, defenderPos.pokemon[2]}, rotation={0,180,0}}
+    gym.takeObject(takeParams)
 
-      Global.call("PlayGymBattleMusic",{})
+    Global.call("PlayGymBattleMusic",{})
   elseif params.isSilphCo then
-      Global.call("PlaySilphCoBattleMusic",{})
+    Global.call("PlaySilphCoBattleMusic",{})
 
-      -- Take Masterball
-      takeParams = {position = {defenderPos.pokemon[1], 1.5, defenderPos.pokemon[2]}, rotation={0,180,0}}
-      gym.takeObject(takeParams)
+    -- Take Masterball
+    takeParams = {position = {defenderPos.pokemon[1], 1.5, defenderPos.pokemon[2]}, rotation={0,180,0}}
+    gym.takeObject(takeParams)
   elseif params.isElite4 then
-      Global.call("PlayFinalBattleMusic",{})
+    Global.call("PlayFinalBattleMusic",{})
   elseif params.isRival then
-      Global.call("PlayRivalMusic",{})
+    Global.call("PlayRivalMusic",{})
   else
-      print("ERROR: uncertain which battle music to play")
-      Global.call("PlayGymBattleMusic",{})
+    print("ERROR: uncertain which battle music to play")
+    Global.call("PlayGymBattleMusic",{})
   end
 
   printToAll(defenderData.trainerName .. " wants to fight!", {r=246/255,g=192/255,b=15/255})
 
   inBattle = true
+
+  -- Check if we can provide a recall button in the arena.
+  -- gyms tiers: 1-8
+  -- elite4    : 9
+  -- champion  : 10
+  -- TR        : 11
+  if gymData.gymTier and gymData.gymTier >= 1 and gymData.gymTier <= 11 then
+    -- Save off the relevent data.
+    gymLeaderGuid = gymData.guid
+
+    -- Move the button.
+    self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="recallGymLeader", label="RECALL", tooltip="Recall Gym Leader"})
+  end
 
   if Global.call("get_models_enabled") then
     -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -2195,7 +2782,7 @@ function sendToArenaGym(params)
     if gymData.pokemon[1].idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = gymData.pokemon[1].idle_effect end
     if gymData.pokemon[1].spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = gymData.pokemon[1].spawn_effect end
     if gymData.pokemon[1].run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = gymData.pokemon[1].run_effect end
-    if gymData.pokemon[1].faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = gymData.pokemon[1].faint_attack end
+    if gymData.pokemon[1].faint_effect == nil then pokemonModelData.base.faint_effect = "Faint" else pokemonModelData.base.faint_effect = gymData.pokemon[1].faint_effect end
 
     -- Add it to the active chips.
     local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=params.trainerGUID, data=pokemonModelData})
@@ -2251,6 +2838,32 @@ function sendToArenaGym(params)
     2
   )
 
+  -- Check if we spawn a secondary type token.
+  if Global.call("getDualTypeEffectiveness") then
+    -- Reformat the data so that the secondary type token code can use it.
+    local secondary_token_data = {
+      chip_GUID = params.trainerGUID,
+      base = {
+        name = defenderPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        types = defenderPokemon.types
+      },
+      picked_up = false,
+      in_creation = false,
+      isTwoFaced = true
+    }
+    secondary_token_data.chip = params.trainerGUID
+    secondary_token_data.base.token_offset = {x=-0.1, y=0, z=1.0}
+
+    -- Copy the base to a state.
+    secondary_token_data.state = secondary_token_data.base
+
+    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
+  end
+
   if scriptingEnabled then
     defenderData.attackValue.level = defenderPokemon.baseLevel
     updateAttackValue(DEFENDER)
@@ -2269,17 +2882,63 @@ function sendToArenaGym(params)
   return true
 end
 
+function recallGymLeader()
+  -- Confirm we at least have a Gym Leader GUID.
+  if not gymLeaderGuid then return end
+
+  -- Get the data for this gym.
+  local gymData = Global.call("GetGymDataByGUID", {guid=gymLeaderGuid})
+
+  -- Remove the button.
+  self.editButton({index=15, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
+
+  -- Confirm we have a gym tier.
+  if not gymData or not gymData.gymTier then
+    print("Unknown tier for this gym leader. You need to recall it conventionally. :(")
+    return
+  end
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", gymLeaderGuid)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
+    end
+  end
+
+  -- Get a handle on the appropriate gym.
+  local gym = getObjectFromGUID(gyms[gymData.gymTier])
+  if not gym then
+    print("Failed to get gym handle to allow a Gym Leader to recall. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Reset the Gym Leader GUID.
+  gymLeaderGuid = nil
+
+  -- Recall the Gym Leader.
+  gym.call("recall")
+end
+
 function sendToArenaTrainer(params)
   if attackerData.type ~= nil then
-    print ("There is already a Pokémon in the arena")
+    print("There is already a Pokémon in the arena")
     return false
   elseif defenderData.type ~= nil and defenderData.type ~= PLAYER then
     return false
   end
 
+  -- Update attacker data.
   setTrainerType(ATTACKER, TRAINER, params)
 
-  -- Gym Leader
+  -- Update the buttons for the trainer battle. If this is second trainer fight, there is no need for a NEXT button. However, if users mix the two
+  -- recall buttons then this button can get out of sync.
+  self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallTrainerHook", label="RECALL", tooltip="Recall Trainer"})
+  if not isSecondTrainer then
+    self.editButton({index=40, position={rivalFipButtonPos.x, 0.4, rivalFipButtonPos.z}, click_function="nextTrainerBattle", label="NEXT", tooltip="Next Trainer Fight"})
+  end
+
+  -- Trainer Pokemon.
   local takeParams = {position = {attackerPos.pokemon[1], 1.5, attackerPos.pokemon[2]}, rotation={0,180,0}}
 
   local pokeball = getObjectFromGUID(params.pokeballGUID)
@@ -2338,6 +2997,31 @@ function sendToArenaTrainer(params)
     )
   end
 
+  -- Check if we spawn a secondary type token.
+  if Global.call("getDualTypeEffectiveness") then
+    -- Reformat the data so that the secondary type token code can use it.
+    local secondary_token_data = {
+      chip_GUID = pokemonGUID,
+      base = {
+        name = attackerPokemon.name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        types = attackerPokemon.types
+      },
+      picked_up = false,
+      in_creation = false,
+      isTwoFaced = true
+    }
+    secondary_token_data.chip = pokemonGUID
+
+    -- Copy the base to a state.
+    secondary_token_data.state = secondary_token_data.base
+
+    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
+  end
+
   return true
 end
 
@@ -2377,6 +3061,9 @@ function sendToArenaRival(params)
   inBattle = true
   Global.call("PlayTrainerBattleMusic",{})
   printToAll("Rival " .. params.trainerName .. " wants to fight!", {r=246/255, g=192/255, b=15/255})
+
+  -- Move the button.
+  self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallRivalHook", label="RECALL", tooltip="Recall Rival"})
   
   -- Update pokemon info.
   local pokemonData = params.pokemonData  -- This is a table with two pokemon.
@@ -2423,7 +3110,7 @@ function sendToArenaRival(params)
     if params.idle_effect == nil then pokemonModelData.base.idle_effect = "Idle" else pokemonModelData.base.idle_effect = params.idle_effect end
     if params.spawn_effect == nil then pokemonModelData.base.spawn_effect = "Special Attack" else pokemonModelData.base.spawn_effect = params.spawn_effect end
     if params.run_effect == nil then pokemonModelData.base.run_effect = "Run" else pokemonModelData.base.run_effect = params.run_effect end
-    if params.faint_attack == nil then pokemonModelData.base.faint_attack = "Faint" else pokemonModelData.base.faint_attack = params.faint_attack end
+    if params.faint_effect == nil then pokemonModelData.base.faint_effect = "Faint" else pokemonModelData.base.faint_effect = params.faint_effect end
 
     -- Add it to the active chips.
     local model_already_created = Global.call("add_to_active_chips_by_GUID", {guid=params.pokemonGUID, data=pokemonModelData})
@@ -2431,6 +3118,32 @@ function sendToArenaRival(params)
     -- Spawn in the model with the above arguments.
     pokemonModelData.base.created_before = model_already_created
     Global.call("check_for_spawn_or_despawn", pokemonModelData)
+  end
+
+  -- Check if we spawn a secondary type token.
+  if Global.call("getDualTypeEffectiveness") then
+    -- Reformat the data so that the secondary type token code can use it.
+    local secondary_token_data = {
+      chip_GUID = params.pokemonGUID,
+      base = {
+        name = params.pokemonData[1].name,
+        created_before = false,
+        in_creation = false,
+        persistent_state = true,
+        picked_up = false,
+        types = params.pokemonData[1].types
+      },
+      picked_up = false,
+      in_creation = false,
+      isTwoFaced = true
+    }
+    secondary_token_data.chip = params.pokemonGUID
+    secondary_token_data.base.token_offset = {x=0.1, y=0, z=0.7}
+
+    -- Copy the base to a state.
+    secondary_token_data.state = secondary_token_data.base
+
+    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
   end
 
   -- Lock the rival in place.
@@ -2453,8 +3166,19 @@ function sendToArenaRival(params)
 end
 
 function recallTrainer(params)
+  -- Remove both buttons.
+  self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
+  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 
   local trainerPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
+    end
+  end
 
   local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
   pokeball.putObject(trainerPokemon)
@@ -2507,7 +3231,14 @@ function recallGym()
   -- Remove this chip from the active list.
   Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
 
-  -- Lock the rival token in place. First save off the gym GUID.
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", defenderPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
+    end
+  end
+
   local gym = getObjectFromGUID(defenderData.gymGUID)
   Wait.condition(
     function()
@@ -2517,12 +3248,14 @@ function recallGym()
     function() -- Condition function
       return gymLeader.resting
     end,
-    2,
+    3,
     -- Timeout function.
     function()
      -- Put the gym leader back in its gym.
-      local gym = getObjectFromGUID(gymGUID)
-      gym.putObject(gymLeader)
+      local gym = getObjectFromGUID(defenderData.gymGUID)
+      if gym then
+        gym.putObject(gymLeader)
+      end
     end
   )
 
@@ -2575,6 +3308,14 @@ function recallRival()
     Global.call("despawn_now", despawn_data)
   end
 
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
+    end
+  end
+
   -- Get the rival token object and unlock it in place.
   local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
   rivalToken.unlock()
@@ -2590,7 +3331,6 @@ function recallRival()
   -- Save the pokeball GUID.
   local pokeballGUID = attackerData.pokeballGUID
 
-  -- Lock the rival token in place.
   Wait.condition(
     function()
       -- Put the rival token back in its pokeball.
@@ -2622,6 +3362,90 @@ function recallRival()
   showFlipRivalButton(false)
 end
 
+-- Basic helper function that hooks into the Rival Pokeball and calls its recall function.
+-- The Rival Pokeball recall function then calls recallRival(). :D
+function recallRivalHook()
+  -- Get a handle on the rival event pokeball.
+  local rivalEventPokeball = getObjectFromGUID("432e69")
+  if not rivalEventPokeball then
+    print("Failed to get Pokéball handle to allow a Rival Event to recall. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Remove the button.
+  self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
+
+  -- Recall the Gym Leader.
+  rivalEventPokeball.call("recall")
+end
+
+-- Basic helper function that hooks into the appropriate Pokeball and calls its recall function.
+-- The Pokeball recall function then calls recallTrainer(). :D
+function recallTrainerHook()
+  -- Remove both buttons.
+  self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
+  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+
+  -- Update the isSecondTrainer flag.
+  isSecondTrainer = false
+
+  -- Check if we at least have a pokeball GUID.
+  if not attackerData or not attackerData.pokeballGUID then
+    print("Unknown home for this Pokémon. You need to recall it conventionally. :(")
+    return
+  end
+
+  -- Get a handle on the appropriate pokeball.
+  local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
+  if not pokeball then
+    print("Failed to get Pokéball handle to allow a trainer to recall. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Recall this Pokemon.
+  pokeball.call("recall")
+end
+
+-- Basic helper function that allows a trainer to send in one more pokemon for the double trainer
+-- battles.
+function nextTrainerBattle()
+  -- Hide this button, since there is only ever a Trainer Battle (2) at most.
+  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+
+  -- Update the isSecondTrainer flag.
+  isSecondTrainer = true
+
+  -- Check if we at least have a pokeball GUID.
+  if not attackerData or not attackerData.pokeballGUID then
+    -- Failed to recall like this. Remove the button and have the user recall normally.
+    self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
+
+    print("Unknown home for this Pokémon. You need to recall it conventionally. :(")
+    return
+  end
+
+  -- Get a handle on the appropriate pokeball.
+  local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
+  if not pokeball then
+    print("Failed to get Pokéball handle to allow a trainer to send another Pokémon. WHAT DID YOU DO?")
+    return
+  end
+
+  -- Check if there is a secondary type token to despawn.
+  if Global.call("getDualTypeEffectiveness") then
+    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
+    if token_guid then
+      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
+    end
+  end
+
+  -- Recall this Pokemon.
+  pokeball.call("recall")
+
+  -- Send another Pokemon to battle.
+  Wait.time(function() pokeball.call("battle") end, 0.3)
+end
+
 function sendToArena(params)
     local isAttacker = params.isAttacker
     local arenaData = isAttacker and attackerPokemon or defenderPokemon
@@ -2631,14 +3455,15 @@ function sendToArena(params)
     -- Get pokemon. The model may not be present here.
     local pokemon = getObjectFromGUID(pokemonData.pokemonGUID)
 
-    if pokemon.getRotation().z == 180 then
-      print ("Cannot send a fainted Pokémon to the arena")
+    if not Global.call("isFaceUp", pokemon) then
+      print("Cannot send a fainted Pokémon to the arena")
       return
     elseif attackerPokemon ~= nil and isAttacker or defenderPokemon ~= nil and not isAttacker then
-      print ("There is already a Pokémon in the arena")
+      print("There is already a Pokémon in the arena")
       return
     end
 
+    -- Auto-pan the camera if selected.
     if params.autoCamera then
       Player[params.playerColour].lookAt({position = {x=-34.89,y=0.96,z=0.8}, pitch = 90, yaw = 0, distance = 22})
     end
@@ -2655,11 +3480,13 @@ function sendToArena(params)
       model_guid = pokemonData.model_GUID
     end
 
+    -- Assign the chip to the GUID.
+    pokemonData.chip = pokemonData.pokemonGUID
+
     -- Send the pokemon model to the arena, if present.
     local pokemonModel = getObjectFromGUID(model_guid)
     if pokemonModel ~= nil and Global.call("get_models_enabled") then
       -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
-      pokemonData.chip = pokemonData.pokemonGUID
       pokemonData.base = {offset = pokemonData.offset}
       pokemonModel.setPosition(Global.call("model_position", pokemonData))
       local modelYRotSend = params.yRotSend
@@ -2670,11 +3497,8 @@ function sendToArena(params)
       pokemonModel.setLock(true)
     end
 
-    if Player[params.playerColour].steam_name ~= nil then
-        printToAll(Player[params.playerColour].steam_name .. " sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
-    else
-        printToAll("This Player sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
-    end
+    -- Check if we need to send out secondary type tokens.
+    Global.call("move_secondary_type_token", pokemonData)
 
     -- Level Die
     local diceLevel = 0
@@ -2757,12 +3581,33 @@ function sendToArena(params)
               showDefenderTeraButton(true, pokemonData.types[1])
             end
           end
+        elseif vitaminLookupTable[pokemonData.itemCardGUID] ~= nil then
+          pokemonData.vitamin = true
+        elseif alphaPokemonLookupTable[pokemonData.itemCardGUID] ~= nil then
+          pokemonData.alpha = true
+        elseif typeBoosterLookupTable[pokemonData.itemCardGUID] ~= nil then
+          pokemonData.type_booster = typeBoosterLookupTable[pokemonData.itemCardGUID]
         end
       end
     end
 
     if hasTMCard == false and pokemonMoves[1].isTM then
       table.remove(pokemonMoves,1)
+    end
+
+    -- Announce the trainer sending their Pokemon.
+    if Player[params.playerColour].steam_name ~= nil then
+      if not pokemonData.alpha then
+        printToAll(Player[params.playerColour].steam_name .. " sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
+      else
+        printToAll(Player[params.playerColour].steam_name .. " sent out Alpha " .. pokemonData.name, stringColorToRGB(params.playerColour))
+      end
+    else
+      if not pokemonData.alpha then
+        printToAll("This Player sent out " .. pokemonData.name, stringColorToRGB(params.playerColour))
+      else
+        printToAll("This Player sent out Alpha " .. pokemonData.name, stringColorToRGB(params.playerColour))
+      end
     end
 
     local buttonParams = {
@@ -2892,13 +3737,15 @@ function recall(params)
       model_guid = pokemonData.model_GUID
     end
 
+    -- Assign the chip to the GUID.
+    pokemonData.chip = pokemonData.pokemonGUID
+
     -- Move the model back to the rack. Since the token moved first, we can just copy its position and rotation.
     local pokemonModel = getObjectFromGUID(model_guid)
     if pokemonModel ~= nil and Global.call("get_models_enabled") then
       -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.)
-      pokemonData.chip = pokemonData.pokemonGUID
       pokemonData.base = {offset = pokemonData.offset}
-      -- Lock the rival token in place.
+
       Wait.condition(
         function() -- Conditional function.
           -- Move the model.
@@ -2918,6 +3765,9 @@ function recall(params)
         end
       )
     end
+
+    -- Check if we need to send out secondary type tokens.
+    Global.call("move_secondary_type_token", pokemonData)
 
     -- Level Die
     if pokemonData.levelDiceGUID ~= nil then
@@ -3086,18 +3936,15 @@ function updateTypeEffectiveness()
     return
   end
 
-  local attackerPokemonType = attackerPokemon.types[1] -- Only pokemon's first type is used for effectiveness
-  local defenderPokemonType = defenderPokemon.types[1] -- Only pokemon's first type is used for effectiveness
-
   -- Attacker
-  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, defenderPokemonType)
+  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, defenderPokemon.types)
 
   -- Defender
-  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, attackerPokemonType)
+  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, attackerPokemon.types)
 end
 
 
-function calculateEffectiveness(isAttacker, moves, type)
+function calculateEffectiveness(isAttacker, moves, opponent_types)
 
   if isAttacker then
     moveText = atkMoveText
@@ -3124,10 +3971,8 @@ function calculateEffectiveness(isAttacker, moves, type)
       moveData.status = DEFAULT
 
       if canUseMoves == false then
-
         moveText.TextTool.setValue("Disabled")
         moveData.status = DISABLED
-
       else
         -- If move had NEUTRAL effect, don't calculate Effectiveness
         local calculateEffectiveness = true
@@ -3141,31 +3986,49 @@ function calculateEffectiveness(isAttacker, moves, type)
         end
 
         if calculateEffectiveness then
+          -- Get the type data.
           local typeData = Global.call("GetTypeDataByName", moveData.type)
-          local effective = typeData.effective
 
-          for j=1, #effective do
-            if effective[j] == type then
-              if isAITrainer(isAttacker) == false then
-                moveText.TextTool.setValue("Effective")
-              end
-              moveData.status = EFFECTIVE
-              break
-            end
+          -- Detrermine if we are doing dual type effectiveness.
+          local type_length = 1
+          if Global.call("getDualTypeEffectiveness") then
+            type_length = 2
           end
 
-          if moveData.status == DEFAULT then
-            local weak = typeData.weak
-            for j=1, #weak do
-              if weak[j] == type then
-                if isAITrainer(isAttacker) == false then
-                  moveText.TextTool.setValue("Weak")
-                end
-                moveData.status = WEAK
-                break
+          -- Intitialize the effectiveness score.
+          local effectiveness_score = 0
+
+          for j=1, #typeData.effective do
+            for type_index = 1, type_length do
+              if typeData.effective[j] == opponent_types[type_index] then
+                effectiveness_score = effectiveness_score + 2
               end
             end
           end
+
+          for j=1, #typeData.weak do
+            for type_index = 1, type_length do
+              if typeData.weak[j] == opponent_types[type_index] then
+                effectiveness_score = effectiveness_score - 2
+              end
+            end
+          end
+
+          -- Use the effectiveness score.
+          if effectiveness_score == 4 then 
+            moveText.TextTool.setValue("Super-Effective")
+            moveData.status = SUPER_EFFECTIVE
+          elseif effectiveness_score == 2 then 
+            moveText.TextTool.setValue("Effective")
+            moveData.status = EFFECTIVE
+          elseif effectiveness_score == -2 then 
+            moveText.TextTool.setValue("Weak")
+            moveData.status = WEAK
+          elseif effectiveness_score == -4 then 
+            moveText.TextTool.setValue("Super-Weak")
+            moveData.status = SUPER_WEAK
+          end
+
         end
       end
     end
@@ -3409,6 +4272,13 @@ function evolvePoke(params)
         end
       end
     end
+    -- Check if there is a secondary type token to despawn.
+    if Global.call("getDualTypeEffectiveness") then
+      local token_guid = Global.call("get_secondary_type_token_guid", pokemonData.pokemonGUID)
+      if token_guid then
+        Global.call("despawn_secondary_type_token", {pokemon=pokemonData, secondary_type_token=token_guid})
+      end
+    end
 
     if #evoList > 2 then -- More than 2 evos available so we need to spread them out
       -- Use this to keep track of the evos already retrieved, by name.
@@ -3564,7 +4434,7 @@ function evolvePoke(params)
         local position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
         evolvedPokemon.setPosition(position)
 
-        -- Check if there is a Z-Crystal card present.
+        -- Check if there is an attach card present.
         local cardMoveData = nil
         if arenaData.itemCardGUID ~= nil then
           -- Check if the attached card is a TM card.
@@ -3594,6 +4464,12 @@ function evolvePoke(params)
                 showDefenderTeraButton(true, defenderPokemon.types[1])
               end
             end
+          elseif vitaminLookupTable[arenaData.itemCardGUID] ~= nil then
+            arenaData.vitamin = true
+          elseif alphaPokemonLookupTable[arenaData.itemCardGUID] ~= nil then
+            arenaData.alpha = true
+          elseif typeBoosterLookupTable[arenaData.itemCardGUID] ~= nil then
+            arenaData.type_booster = typeBoosterLookupTable[arenaData.itemCardGUID]
           end
         end
 
@@ -3934,21 +4810,18 @@ function removeStatusCounter(isAttacker)
 end
 
 function onObjectEnterScriptingZone(zone, object)
-
-  if defenderData.type == nil then
-    if zone.getGUID() == wildPokeZone then
-      local pokeGUID = object.getGUID()
-      local data = Global.call("GetPokemonDataByGUID", {guid=pokeGUID})
-      if data ~= nil then
-        showWildPokemonButton(true)
-        wildPokemonGUID = pokeGUID
-      end
+  -- Check if the zone is of interest is the wildPokeZone.
+  if zone.getGUID() == wildPokeZone and defenderData.type == nil then
+    local pokeGUID = object.getGUID()
+    local data = Global.call("GetPokemonDataByGUID", {guid=pokeGUID})
+    if data ~= nil then
+      showWildPokemonButton(true)
+      wildPokemonGUID = pokeGUID
     end
   end
 end
 
 function onObjectLeaveScriptingZone(zone, object)
-
   if inBattle == false then
     showWildPokemonButton(false)
   end
@@ -4072,6 +4945,14 @@ function multiEvolve(index)
     
     if removeThisToken then
       for m = 1, #evoDataGuids do
+        -- Try to remove secondary type tokens.
+        if Global.call("getDualTypeEffectiveness") then
+          local token_guid = Global.call("get_secondary_type_token_guid", evoDataGuids[m])
+          if token_guid then
+            Global.call("despawn_secondary_type_token", {pokemon=evoData, secondary_type_token=token_guid})
+          end
+        end
+
         local status, pokemonToken = pcall(getObjectFromGUID, evoDataGuids[m])
         if pokemonToken ~= nil then
           local pokeball = getObjectFromGUID(evolvePokeballGUID[evoData.ball])
@@ -4300,11 +5181,10 @@ end
 
 
 function showAtkButtons(visible)
-    local buttonIndex = 0
     local yPos = visible and 0.4 or 1000
-    self.editButton({index=0, position={teamAtkPos.x, yPos, teamAtkPos.z}})
-    self.editButton({index=1, position={movesAtkPos.x, yPos, movesAtkPos.z}})
-    self.editButton({index=2, position={recallAtkPos.x, yPos, recallAtkPos.z}})
+    self.editButton({index=0, position={teamAtkPos.x, yPos, teamAtkPos.z}, click_function="seeAttackerRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=1, position={movesAtkPos.x, yPos, movesAtkPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
+    self.editButton({index=2, position={recallAtkPos.x, yPos, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL"})
     self.editButton({index=3, position={incLevelAtkPos.x, yPos, incLevelAtkPos.z}})
     self.editButton({index=4, position={decLevelAtkPos.x, yPos, decLevelAtkPos.z}})
     self.editButton({index=5, position={incStatusAtkPos.x, yPos, incStatusAtkPos.z}})
@@ -4318,11 +5198,10 @@ function showAtkButtons(visible)
 end
 
 function showDefButtons(visible)
-
     local yPos = visible and 0.4 or 1000
-    self.editButton({index=13, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="seeDefenderRack"})
-    self.editButton({index=14, position={movesDefPos.x, yPos, movesDefPos.z}, click_function="seeMoveRules"})
-    self.editButton({index=15, position={recallDefPos.x, yPos, recallDefPos.z}, click_function="recallDefArena"})
+    self.editButton({index=13, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="seeDefenderRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=14, position={movesDefPos.x, yPos, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
+    self.editButton({index=15, position={recallDefPos.x, yPos, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
     self.editButton({index=16, position={incLevelDefPos.x, yPos, incLevelDefPos.z}, click_function="increaseDefArena"})
     self.editButton({index=17, position={decLevelDefPos.x, yPos, decLevelDefPos.z}, click_function="decreaseDefArena"})
     self.editButton({index=18, position={incStatusDefPos.x, yPos, incStatusDefPos.z}, click_function="addDefStatus"})
@@ -4402,7 +5281,7 @@ end
 function showFlipRivalButton(visible)
 
   local yPos = visible and 0.5 or 1000
-  self.editButton({index=40, position={rivalFipButtonPos.x, yPos, rivalFipButtonPos.z}})
+  self.editButton({index=40, position={rivalFipButtonPos.x, yPos, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 end
 
 function showAttackerTeraButton(visible, type)

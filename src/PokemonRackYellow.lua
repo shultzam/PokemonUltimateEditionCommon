@@ -3,19 +3,19 @@
 --------------------------------------------------------------------------------
 local playerColour = "Yellow"
 
-local diceBagGUID = "3c7dbc"
+local diceBagGUID = "1a64da"
 local figureGUID = "f5f4be"
 
-local evolveRotation = 180
+local evolveRotation = 270
 
 local xRotSend = 0
-local yRotSend = 0
+local yRotSend = 270
 local zRotSend = 0
 local xRotRecall = 0
-local yRotRecall = 0
+local yRotRecall = -270
 local zRotRecall = 0
 
-local rackPosition = {x=-21.50,y=0.14,z=-48.00}
+local rackPosition = {x=-65,y=0.14,z=21.50}
 
 --------------------------------------------------------------------------------
 -- Generic Data
@@ -506,4 +506,16 @@ function evolveTwoArena(attDefParams)
     if inArena != false then
         rackEvolve(arenaIndex, 2)
     end
+end
+
+function getAvailablePokemonXPos()
+    local temp_x_pos = copyTable(pokemonXPos)
+    local count_removed = 0
+    for index=1, #temp_x_pos do
+        if next(rackData[index]) ~= nil then
+            table.remove(temp_x_pos, index - count_removed)
+            count_removed = count_removed + 1
+        end
+    end
+    return temp_x_pos
 end

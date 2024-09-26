@@ -39,7 +39,7 @@ local gen9EvoPokeballs = { "9c010b", "03ea82", "4217d6", "6ae5c4", "8963b5", "0d
 local gen9LeadersArr = { "e4988b", "7269d7", "80f567", "6f3326" }
 
 local customPokeballs = { "a927cf", "acd90d", "63bb92", "88b157", "8aaeef", "915bb4", "47780a" }
-local customEvoPokeballs = { "95fee8", "8a1c9a", "7f2cd7", "0d33b3", "8faab4" }
+local customEvoPokeballs = { "95fee8", "8a1c9a", "7f2cd7", "0d33b3", "8faab4", "34858b", "59b163" }
 local customLeadersArr = { "ab33b9", "f6be1f", "be2f56", "94584c" }
 
 -- The Starter Pokeball should be placed at {0, 2.69, 34}.
@@ -51,6 +51,11 @@ local setup_done = false
 local NONE_SELECT = 0
 local ALLOW_SELECT = 1
 local ALWAYS_SELECT = 2
+
+-- GUIDs.
+local elite4GymGuid = "a0f650"
+local rivalGymGuid = "c970ca"
+local teamRocketGymGuid = "19db0d"
 
 function onSave()
     return JSON.encode({settings_done=setup_done})
@@ -151,36 +156,9 @@ function beginSetup2(params)
         setupPokeballs(customEvoPokeballs, evoPokeballs)
     end
 
-    local blueRack = getObjectFromGUID("b366ea")
-    local greenRack = getObjectFromGUID("517511")
-    local orangeRack = getObjectFromGUID("341ead")
-    local purpleRack = getObjectFromGUID("a990ef")
-    local redRack = getObjectFromGUID("06c308")
-    local yellowRack = getObjectFromGUID("fc9c59")
-    local reversiChip = getObjectFromGUID("97021e")
-
-    local genParams = {
-        genOne = params.selectedGens[1],
-        genTwo = params.selectedGens[2],
-        genThree = params.selectedGens[3],
-        genFour = params.selectedGens[4],
-        genFive = params.selectedGens[5],
-        genSix = params.selectedGens[6],
-        genSeven = params.selectedGens[7],
-        genEight = params.selectedGens[8],
-        genNine = params.selectedGens[9],
-    }
-
-    blueRack.call("setGen", genParams)
-    greenRack.call("setGen", genParams)
-    orangeRack.call("setGen", genParams)
-    purpleRack.call("setGen", genParams)
-    redRack.call("setGen", genParams)
-    yellowRack.call("setGen", genParams)
-
-    -- delete Saves on starting
-    local tmpelite4Gym = getObjectFromGUID("a0f650")
-    local tmprivalGym = getObjectFromGUID("c970ca")
+    -- Delete Saves on starting
+    local tmpelite4Gym = getObjectFromGUID(elite4GymGuid)
+    local tmprivalGym = getObjectFromGUID(rivalGymGuid)
     tmpelite4Gym.call("deleteSave")
     tmprivalGym.call("deleteSave")
 
@@ -204,7 +182,7 @@ function beginSetup2(params)
     elseif params.leadersGen == 9 then
         setupGyms(gen9LeadersArr, 9, params.customGymLeaderOption)
     elseif params.leadersGen == -1 then
-        -- random leaders
+        -- Random Leaders.
         local gen
 
         -- Keep track of the leaders we have already retrieved. Can't retrieve them twice, lol.
@@ -249,7 +227,7 @@ function beginSetup2(params)
 
         -- Initialize the Elite 4 pokeballs list and gym object.
         local eliteFourPokeballs = { gen1LeadersArr[2], gen2LeadersArr[2], gen3LeadersArr[2], gen4LeadersArr[2], gen5LeadersArr[2], gen6LeadersArr[2], gen7LeadersArr[2], gen8LeadersArr[2], gen9LeadersArr[2] }
-        local elite4Gym = getObjectFromGUID("a0f650")
+        local elite4Gym = getObjectFromGUID(elite4GymGuid)
         for i = 1, 4 do
             -- Check if we need to consider custom Elite 4s.
             local pokeballs = ShallowCopy(eliteFourPokeballs)
@@ -282,7 +260,7 @@ function beginSetup2(params)
 
         -- Initialize the Rivals pokeballs list and gym object.
         local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3] }
-        local rivalGym = getObjectFromGUID("c970ca")
+        local rivalGym = getObjectFromGUID(rivalGymGuid)
         for i = 1, 3 do
             -- Check if we need to consider custom Rivals.
             local pokeballs = ShallowCopy(rivalPokeballs)
@@ -327,7 +305,7 @@ function beginSetup2(params)
         
         -- Determine the gen.
         gen = math.random(1, #teamRocketPokeballs)
-        local teamRocketGym = getObjectFromGUID("19db0d")
+        local teamRocketGym = getObjectFromGUID(teamRocketGymGuid)
         local teamRocketPokeball = getObjectFromGUID(teamRocketPokeballs[gen])
         if (#teamRocketPokeballs == 1 and teamRocketPokeballs[1] == customLeadersArr[4]) or gen == 10 then
             gen = "custom"
@@ -345,6 +323,26 @@ function beginSetup2(params)
 
         -- Add this to the leaders we have already retrieved list.
         table.insert(leadersRetrieved, teamRocketLeader.guid)
+    elseif params.leadersGen == -2 then
+        -- Chaos: ENGAGE.
+
+        -- Gens 1-8.
+        for i = 1, 8 do
+            local gym = getObjectFromGUID(gyms[i])
+            gym.call("setLeaderGUID", { "CHAOS" })
+        end
+
+        -- Elite 4.
+        local elite4Gym = getObjectFromGUID(elite4GymGuid)
+        elite4Gym.call("setLeaderGUID", { "CHAOS" })
+
+        -- Rival.
+        local rivalGym = getObjectFromGUID(rivalGymGuid)
+        rivalGym.call("setLeaderGUID", { "CHAOS" })
+
+        -- Team Rocket.
+        local teamRocketGym = getObjectFromGUID(teamRocketGymGuid)
+        teamRocketGym.call("setLeaderGUID", { "CHAOS" })
     end
 
     if params.randomStarters then
@@ -364,16 +362,6 @@ function beginSetup2(params)
             width = 2000,
             font_size = 300,
         })
-
-        -- Since we moved the Starter Pokeball, let's broadcast a message and ping it.
-        -- TODO: Remove this after a few updates.
-        broadcastToAll("The Starter Pokéball has been moved to be more consistent across maps. Please check ping.", "Yellow")
-        local seatedPlayers = getSeatedPlayers()
-        if #seatedPlayers ~= 0 then
-            local pingSelf = function() Player[seatedPlayers[1]].pingTable(getObjectFromGUID("ec1e4b").getPosition()) end
-            Wait.time(pingSelf, 3)
-            Wait.time(pingSelf, 5)
-        end
 
         -- Update the setup_done flag.
         setup_done = true
@@ -456,7 +444,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
         table.insert(leadersRetrieved, leader.guid)
     end
 
-    local elite4Gym = getObjectFromGUID("a0f650")
+    local elite4Gym = getObjectFromGUID(elite4GymGuid)
     for i = 1, 4 do
         -- Check if we need to consider custom Gym Leaders.
         local pokeballs = { leadersArr[2] }
@@ -491,7 +479,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
         table.insert(leadersRetrieved, leader.guid)
     end
 
-    local rivalGym = getObjectFromGUID("c970ca")
+    local rivalGym = getObjectFromGUID(rivalGymGuid)
     for i = 1, 3 do
         -- Check if we need to consider custom Rivals.
         local pokeballs = { leadersArr[3] }
@@ -527,7 +515,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption)
     end
 
     -- Team Rocket.
-    local silphCoGym = getObjectFromGUID("19db0d")
+    local silphCoGym = getObjectFromGUID(teamRocketGymGuid)
 
     -- Check if we need to consider custom Rivals.
     local pokeballs = { leadersArr[4] }
@@ -577,7 +565,7 @@ function start()
     itemDeck.shuffle()
     local eventDeck = getObjectFromGUID("656d8c")
     eventDeck.shuffle()
-    local tmDeck = getObjectFromGUID("3ed1f5")
+    local tmDeck = getObjectFromGUID("b779ed")
     tmDeck.shuffle()
     local pokeballDeck = getObjectFromGUID("e8bcad")
     pokeballDeck.shuffle()
