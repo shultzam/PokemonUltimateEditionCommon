@@ -43,12 +43,12 @@ local gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd
 local deploy_pokeballs = { "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f90" }
 local wildPokeZone = "f10ab0"
 
-local blueRack = "b366ea"
-local greenRack = "517511"
-local orangeRack = "341ead"
-local purpleRack = "a990ef"
-local redRack = "06c308"
-local yellowRack = "fc9c59"
+local blueRack = nil
+local greenRack = nil
+local orangeRack = nil
+local purpleRack = nil
+local redRack = nil
+local yellowRack = nil
 local evolvePokeballGUID = {"757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0", "96358f"}
 local evolvedPokeballGUID = "140fbd"
 local effectDice="6a319d"
@@ -145,23 +145,13 @@ local multiEvoData={}
 local multiEvoGuids={}
 
 -- States.
-inBattle = false
-battleState = NO_BATTLE
+local inBattle = false
+local battleState = NO_BATTLE
 
 --Arena Positions
 local defenderPos = {pokemon={-36.01, 4.19}, dice={-36.03, 6.26}, status={-31.25, 4.44}, statusCounters={-31.25, 6.72}, item={-40.87, 4.26}, moveDice={-36.11, 8.66}}
 local attackerPos = {pokemon={-36.06,-4.23}, dice={-36.03,-6.15}, status={-31.25,-4.31}, statusCounters={-31.25,-6.74}, item={-40.87,-4.13}, moveDice={-36.11,-8.53}}
 
--- Boost card lookup tables.
-local vitaminLookupTable = {
-    ["d71716"] = true,
-    ["b961ed"] = true,
-    ["56346f"] = true,
-    ["c94dfb"] = true,
-    ["a9deab"] = true,
-    ["25c20e"] = true,
-    ["a62ebf"] = true
-  }
 -- This one will likely never be used sadly. There is no way to add a zone to each mod with the same GUID.
 -- We can't save the zone as an object. :/
 local xAttackLookupTable = { 
@@ -174,42 +164,78 @@ local xAttackLookupTable = {
     ["65c113"] = true,
     ["bdb6b6"] = true
   }
-local alphaPokemonLookupTable = { 
-    ["0ae019"] = true,
-    ["9fb199"] = true,
-    ["16b485"] = true
-  }
 -- This will return nil if the lookup fails.
 local typeBoosterLookupTable = { 
-    ["f0148b"] = "Grass",
-    ["5fd7ec"] = "Water",
-    ["d6b09f"] = "Fire",
-    ["9799c2"] = "Poison",
-    ["780d75"] = "Ice",
-    ["6b6de5"] = "Dark",
-    ["d24da7"] = "Steel",
-    ["7897e1"] = "Psychic",
-    ["b4c21b"] = "Ghost",
-    ["000c14"] = "Fairy",
-    ["7cf603"] = "Ground",
-    ["a678b2"] = "Fighting",
-    ["c57af6"] = "Normal",
-    ["4ac0a2"] = "Dragon",
-    ["f160e6"] = "Flying",
-    ["c57077"] = "Electric",
-    ["46f499"] = "Bug",
-    ["9a8941"] = "Rock"
+    ["Grass Booster"] = "Grass",
+    ["Water Booster"] = "Water",
+    ["Fire Booster"] = "Fire",
+    ["Poison Booster"] = "Poison",
+    ["Ice Booster"] = "Ice",
+    ["Dark Booster"] = "Dark",
+    ["Steel Booster"] = "Steel",
+    ["Psychic Booster"] = "Psychic",
+    ["Ghost Booster"] = "Ghost",
+    ["Fairy Booster"] = "Fairy",
+    ["Ground Booster"] = "Ground",
+    ["Fighting Booster"] = "Fighting",
+    ["Normal Booster"] = "Normal",
+    ["Dragon Booster"] = "Dragon",
+    ["Flying Booster"] = "Flying",
+    ["Electric Booster"] = "Electric",
+    ["Bug Booster"] = "Bug",
+    ["Rock Booster"] = "Rock"
   }
 
 --------------------------
 -- Save/Load functions.
 --------------------------
 
+-- Basic initialize function that receives the rack GUIDs.
+function initialize(params)
+  yellowRack = params[1]
+  greenRack = params[2]
+  blueRack = params[3]
+  redRack = params[4]
+  purpleRack = params[5]
+  orangeRack = params[6]
+end
+
 function onSave()
-  return JSON.encode({in_battle = inBattle})
+  local save_table = {
+    in_battle = inBattle,
+    blueRack = blueRack,
+    greenRack = greenRack,
+    orangeRack = orangeRack,
+    purpleRack = purpleRack,
+    redRack = redRack,
+    yellowRack = yellowRack
+  }
+  return JSON.encode(save_table)
 end
 
 function onLoad(saved_data)
+    -- Check if there is saved data.
+    local save_table
+    if saved_data and saved_data ~= "" then
+      save_table = JSON.decode(saved_data)
+    end
+
+    -- Parse the saved data.
+    if save_table then
+      inBattle = save_table.in_battle
+      blueRack = save_table.blueRack
+      greenRack = save_table.greenRack
+      orangeRack = save_table.orangeRack
+      purpleRack = save_table.purpleRack
+      redRack = save_table.redRack
+      yellowRack = save_table.yellowRack
+    end
+  
+    -- Do some safety checks.
+    if inBattle == nil then
+      inBattle = false
+    end
+
     -- Create Arena Buttons
     self.createButton({label="TEAM", click_function="seeAttackerRack",function_owner=self, tooltip="See Team",position={teamAtkPos.x, 1000, teamAtkPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="MOVES", click_function="seeMoveRules",function_owner=self, tooltip="Show Move Rules",position={movesAtkPos.x, 1000, movesAtkPos.z}, height=300, width=720, font_size=200})
@@ -256,22 +282,6 @@ function onLoad(saved_data)
     self.createButton({label="", click_function="changeAttackerTeraType", function_owner=self, tooltip="Terastallize Attacker", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     self.createButton({label="NEXT POKEMON", click_function="flipRivalPokemon", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
-
-    -- Check if there is saved data.
-    local save_table
-    if saved_data and saved_data ~= "" then
-      save_table = JSON.decode(saved_data)
-    end
-
-    -- Parse the saved data.
-    if save_table then
-      inBattle = save_table.in_battle
-    end
-  
-    -- Do some safety checks.
-    if inBattle == nil then
-      inBattle = false
-    end
 
     -- Check if we are in battle.
     if inBattle then
@@ -1824,6 +1834,15 @@ function selectMove(index, isAttacker, isRandom)
       if typeData.weak[j] == opponent_types[type_index] then
         pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness - 2
       end
+    end
+  end
+
+  -- When teratyping into the secondary type, it can cause Super-Effective/Weak. We don't want that.
+  if Global.call("getDualTypeEffectiveness") and opponent_types[1] == opponent_types[2] then
+    if pokemonData.attackValue.effectiveness == 4 then
+      pokemonData.attackValue.effectiveness = 2
+    elseif pokemonData.attackValue.effectiveness == -4 then
+      pokemonData.attackValue.effectiveness = -2
     end
   end
 
@@ -3581,12 +3600,12 @@ function sendToArena(params)
               showDefenderTeraButton(true, pokemonData.types[1])
             end
           end
-        elseif vitaminLookupTable[pokemonData.itemCardGUID] ~= nil then
+        elseif itemCard and itemCard.getName() == "Vitamin" then
           pokemonData.vitamin = true
-        elseif alphaPokemonLookupTable[pokemonData.itemCardGUID] ~= nil then
+        elseif itemCard and itemCard.getName() == "Alpha" then
           pokemonData.alpha = true
-        elseif typeBoosterLookupTable[pokemonData.itemCardGUID] ~= nil then
-          pokemonData.type_booster = typeBoosterLookupTable[pokemonData.itemCardGUID]
+        elseif itemCard and itemCard.getName() then
+          pokemonData.type_booster = typeBoosterLookupTable[itemCard.getName()]
         end
       end
     end
@@ -4014,6 +4033,15 @@ function calculateEffectiveness(isAttacker, moves, opponent_types)
             end
           end
 
+          -- When teratyping into the secondary type, it can cause Super-Effective/Weak. We don't want that.
+          if Global.call("getDualTypeEffectiveness") and opponent_types[1] == opponent_types[2] then
+            if effectiveness_score == 4 then
+              effectiveness_score = 2
+            elseif effectiveness_score == -4 then
+              effectiveness_score = -2
+            end
+          end
+
           -- Use the effectiveness score.
           if effectiveness_score == 4 then 
             moveText.TextTool.setValue("Super-Effective")
@@ -4307,8 +4335,7 @@ function evolvePoke(params)
               end
               if continueCheck then
                 local xPos = 1.4 + (evoNum * 3) - (tokensWidth * 0.5)
-                local position = {xPos, 1, -28}
-                evolvedPokemon = pokeball.takeObject({guid=pokeObj.guid, position=position})
+                evolvedPokemon = pokeball.takeObject({guid=pokeObj.guid, position={xPos, 1, -28}})
                 if evolvedPokemon.guid ~= nil then
                   evoNum = evoNum + 1
                   --table.insert(multiEvoData, evoData)
@@ -4437,6 +4464,9 @@ function evolvePoke(params)
         -- Check if there is an attach card present.
         local cardMoveData = nil
         if arenaData.itemCardGUID ~= nil then
+          -- Get a reference to the item card.
+          local item_card = getObjectFromGUID(arenaData.itemCardGUID)
+
           -- Check if the attached card is a TM card.
           if arenaData.tmCard then
             local moveData = Global.call("GetTmDataByGUID", arenaData.itemCardGUID)
@@ -4464,12 +4494,12 @@ function evolvePoke(params)
                 showDefenderTeraButton(true, defenderPokemon.types[1])
               end
             end
-          elseif vitaminLookupTable[arenaData.itemCardGUID] ~= nil then
+          elseif item_card and item_card.getName() == "Vitamin" then
             arenaData.vitamin = true
-          elseif alphaPokemonLookupTable[arenaData.itemCardGUID] ~= nil then
+          elseif item_card and item_card.getName() == "Alpha" then
             arenaData.alpha = true
-          elseif typeBoosterLookupTable[arenaData.itemCardGUID] ~= nil then
-            arenaData.type_booster = typeBoosterLookupTable[arenaData.itemCardGUID]
+          elseif item_card and item_card.getName() then
+            arenaData.type_booster = typeBoosterLookupTable[item_card.getName()]
           end
         end
 

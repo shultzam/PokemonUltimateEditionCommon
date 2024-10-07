@@ -1,20 +1,30 @@
-local gymButtonPos = {0, 0, 2}
--- NOTE: The victory button on Unova is at {-18.5, 0, 5.4}
-local victoryButtonPos = {1, 0, -6}
+local gymButtonPos = {}
 
 local battleManager = "de7152"
 local leadersData = {}
 
 -- Chaos related fields.
 local chaos = false
-local tier = 10
-local genLeadersPokeballGuids = { "3ddf5f", "ec20b2", "2a9746", "537124", "3869d0", "ba0a27", "eeba9c", "8e8fd2", "80f567" }
-local customLeadersPokeballGuid = "be2f56"
+local tier = 9
+local genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7" }
+local customLeadersPokeballGuid = "f6be1f"
 local leaderGuid = nil
 local currentGen = nil
+local initialized = false
+
+function initialize(gym_button_position)
+  gymButtonPos = gym_button_position
+  initialized = true
+
+  self.createButton({ --Apply settings button
+      label="+", click_function="battle",
+      function_owner=self, tooltip="Start Elite Four Battle",
+      position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
+  })
+end
 
 function onSave()
-    saved_data = JSON.encode({saveLeadersData=leadersData, chaos=chaos})
+    saved_data = JSON.encode({saveLeadersData=leadersData, chaos=chaos, gym_button_position=gymButtonPos, initialized=initialized})
     return saved_data
 end
 
@@ -23,21 +33,20 @@ function onLoad(saved_data)
       local loaded_data = JSON.decode(saved_data)
       if loaded_data.saveLeadersData ~= nil then
           leadersData = copyTable(loaded_data.saveLeadersData)
-          chaos = loaded_data.chaos
       end
+      
+      chaos = loaded_data.chaos
+      gymButtonPos = loaded_data.gym_button_position
+      initialized = loaded_data.initialized
   end
-
-  self.createButton({ --Apply settings button
-      label="+", click_function="battle",
-      function_owner=self, tooltip="Start Rival Battle",
-      position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
-
-  self.createButton({ --Apply settings button
-      label="+", click_function="victory",
-      function_owner=self, tooltip="Play Victory Music",
-      position= victoryButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
+  
+  if initialized then
+    self.createButton({ --Apply settings button
+        label="+", click_function="battle",
+        function_owner=self, tooltip="Start Elite Four Battle",
+        position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
+    })
+  end
 end
 
 function deleteSave() 
@@ -71,8 +80,8 @@ function battle()
     gymGUID = self.getGUID(),
     isGymLeader = false,
     isSilphCo = false,
-    isRival = true,
-    isElite4 = false,
+    isRival = false,
+    isElite4 = true,
     pokemon = leaderData.pokemon
   }
 
@@ -83,7 +92,7 @@ function battle()
   if sentToArena then
     self.editButton({
         index=0, label="-", click_function="recall",
-        function_owner=self, tooltip="Recall Champion"
+        function_owner=self, tooltip="Recall Elite Four Member"
     })
   end
 end
@@ -119,7 +128,7 @@ function recall()
       end,
       5, -- 5 seconds, sheesh.
       function() -- Timeout function.
-        print("Timeout occurred waiting for the Rival card, please place it back in the Gen " .. currentGen .. " Rival Pokeball manually.")
+        print("Timeout occurred waiting for the Elite 4 card, please place it back in the Gen " .. currentGen .. " Elite 4 Pokeball manually.")
     
         -- Clear the gym data of the previous Gym Leader.
         uninitGym()
@@ -131,13 +140,10 @@ function recall()
 
   self.editButton({ --Apply settings button
       index=0, label="+", click_function="battle",
-      function_owner=self, tooltip="Start Champion Battle"
+      function_owner=self, tooltip="Start Elite Four Battle",
   })
 end
 
-function victory()
-    Global.call("PlayVictoryMusic",{})
-end
 
 function setLeaderGUID(params)
   if params[1] == "CHAOS" then
@@ -149,7 +155,7 @@ end
 
 function initGym(guid)
   local gymData = Global.call("GetGymDataByGUID", {guid=guid})
-  local leaderData = {guid=gymData.guid, trainerName= gymData.trainerName}
+  local leaderData = {guid= gymData.guid, trainerName= gymData.trainerName}
   local pokemonData = {}
   for i=1, #gymData.pokemon do
     local newPokemon = {}
@@ -157,7 +163,6 @@ function initGym(guid)
     table.insert(pokemonData, newPokemon)
   end
   leaderData.pokemon = pokemonData
-
   table.insert(leadersData, leaderData)
 end
 

@@ -1,5 +1,12 @@
 --[[ Lua code. See documentation: https://api.tabletopsimulator.com/ --]]
 
+-- Commonly used GUIDs.
+local BATTLE_MANAGER_GUID = "de7152"
+local battlemodels_GUID = 'bebe24'
+local TYPES_BAG_GUID = "98d9a7"
+local MAP_MANAGER_GUID = "026857"
+
+-- Current track reference.
 currentTrack = 1
 
 local deploy_pokeballs = { "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f90" }
@@ -41,7 +48,7 @@ local NONE_SELECT = 0
 local ALLOW_SELECT = 1
 local ALWAYS_SELECT = 2
 
--- Event Rival region selection.
+-- Event Rival and Map region selection.
 KANTO_REGION = "Kanto"
 JOHTO_REGION = "Johto"
 HOENN_REGION = "Hoenn"
@@ -51,6 +58,7 @@ KALOS_REGION = "Kalos"
 ALOLA_REGION = "Alola"
 GALAR_REGION = "Galar"
 PALDEA_REGION = "Paldea"
+ORANGE_ISLANDS_REGION = "Orange Islands"
 
 -- Setup Variables
 leadersGen = 1 -- NOTE: 0 = Custom
@@ -61,9 +69,10 @@ battleScripting = false
 aiDifficulty = 0
 
 -- Save Data
-customGen = false
-eventRivalRegion = KANTO_REGION
-customGymLeaderOption = NONE_SELECT
+local customGen = false
+local eventRivalRegion = KANTO_REGION
+local customGymLeaderOption = NONE_SELECT
+local selected_map = nil
 
 --[[ 
   NOTE: Lua cannot handle sparse arrays and, apparently, false terms can create sparse array
@@ -73,7 +82,6 @@ customGymLeaderOption = NONE_SELECT
 selectedGens = {true,true,true,true,true,true,true,true,true}
 
 -- Model tables and variables.
-battlemodels_GUID = 'bebe24'
 active_chips = {}
 active_models = {}
 models_enabled = true
@@ -194,7 +202,6 @@ local HR_dual_type_effectiveness = false
 local HR_hp_rule_2 = false
 
 -- Dual Type Effectiveness related GUIDs.
-local TYPES_BAG_GUID = "98d9a7"
 local TYPE_TOKEN_GUID_TABLE =
 {
   { type = "Bug",      guid = "36b0e6" },
@@ -272,7 +279,8 @@ local BASE_HEALTH_OBJECT_GUID = "5ab909"
 --   2- To use an existing model: look for the model_GUID field in the existing Pokemon data. I suggest you copy any effects and offsets as well.
 --
 -- LEADER POKEMON NOTES:
---   1- The first type is the only type that matters for opponent effectiveness. Dual-type effectiveness is not in this game (yet?).
+--   1- By default, the first type is the only type that matters for opponent effectiveness. The secondary type is only considered when using Dual Type Effectiveness.
+--      Your power values for existing moves should match the moveData values (STAB not included). New moves? Go wild.
 --   2- STAB calculations, though not perfect, are calulated using both types (dumb, I know). But it really only affects the inital counter values on the table.
 
 -- gymTier field values:
@@ -833,7 +841,7 @@ gen3PokemonData =
   { name = "Mawile",     level = 4, types = { "Steel", "Fairy" }, moves = { "Iron Defense", "Crunch" },       guids = { "825f3c" },                     evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "901321" } } }, model_GUID = "71f869", offset={x=0, y=0, z=-0.05} },
   { name = "Aron",       level = 2, types = { "Steel", "Rock" }, moves = { "Headbutt", "Mud-Slap" },          guids = { "2bdf79" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "1ad335" } } }, model_GUID = "156c85", spawn_effect="Physical Attack" },
   { name = "Lairon",     level = 4, types = { "Steel", "Rock" }, moves = { "Metal Claw", "Rock Throw" },      guids = { "fc819f", "1ad335" },           evoData = { { cost = 2, ball = RED, gen = 3, guids = { "19c95d", "037e57" } } }, model_GUID = "d48d21", custom_scale=0.75 },
-  { name = "Aggron",     level = 6, types = { "Steel", "Rock" }, moves = { "Earthquake", "Iron Tail" },       guids = { "a5daad", "19c95d", "037e57" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "8f5016", "b94e60" } } }, model_GUID = "ce1109", custom_scale=0.8 },
+  { name = "Aggron",     level = 6, types = { "Steel", "Rock" }, moves = { "Earthquake", "Iron Tail" },       guids = { "a5daad", "19c95d", "037e57" }, evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "8f5016", "b94e60" } } }, model_GUID = "ce1109", custom_scale=0.9 },
   { name = "Meditite",   level = 2, types = { "Fighting", "Psychic" }, moves = { "Hidden Power", "Detect" },  guids = { "8cae23" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "925a8f" } } }, model_GUID = "da149f" },
   { name = "Medicham",   level = 4, types = { "Fighting" }, moves = { "Confusion", "Brick Break" },           guids = { "1b2da9", "925a8f" },           evoData = { { cost = "Mega", ball = MEGA, gen = 3, cycle = true, guids = { "19680e", "97834f" } } }, model_GUID = "1e9b7e" },
   { name = "Electrike",  level = 2, types = { "Electric" }, moves = { "Thunder Wave", "Quick Attack" },       guids = { "e37270" },                     evoData = { { cost = 2, ball = YELLOW, gen = 3, guids = { "24b582" } } }, model_GUID = "b0e819" },
@@ -1335,7 +1343,7 @@ gen6PokemonData =
   { name = "Inkay",       level = 2, types = { "Dark", "Psychic" }, moves = { "Hypnosis", "Peck" },          guids = { "c8dc46" },                     evoData = { { cost = 2, ball = YELLOW, gen = 6, guids = { "0dca90" }, model_GUID = "76d4d2" } }, model_GUID = "95c70d" },
   { name = "Malamar",     level = 4, types = { "Dark", "Psychic" }, moves = { "Superpower", "Foul Play" },   guids = { "8bd2d5", "0dca90" }, model_GUID = "76d4d2" },
   { name = "Binacle",     level = 3, types = { "Rock", "Water" }, moves = { "Shell Smash", "Clamp" },        guids = { "2c77cd" },                     evoData = { { cost = 2, ball = YELLOW, gen = 6, guids = { "3ed28a" }, model_GUID = "7acdd8" } }, model_GUID = "d68ddb", spawn_effect="Physical Attack" },
-  { name = "Barbaracle",  level = 4, types = { "Rock", "Water" }, moves = { "Razor Shell", "Cross Chop" },   guids = { "e9dd78", "c6fcdc" }, model_GUID = "7acdd8" },
+  { name = "Barbaracle",  level = 5, types = { "Rock", "Water" }, moves = { "Razor Shell", "Cross Chop" },   guids = { "e9dd78", "c6fcdc" }, model_GUID = "7acdd8" },
   { name = "Skrelp",      level = 3, types = { "Poison", "Water" }, moves = { "Poison Tail", "Water Gun" },  guids = { "183099" },                     evoData = { { cost = 3, ball = RED, gen = 6, guids = { "661d8b" }, model_GUID = "2c5c3c" } }, model_GUID = "47af48" },
   { name = "Dragalge",    level = 6, types = { "Poison", "Dragon" }, moves = { "Dragon Pulse", "Hydro Pump" }, guids = { "3a948e", "661d8b" }, model_GUID = "2c5c3c" },
   { name = "Clauncher",   level = 3, types = { "Water" },    moves = { "Aqua Jet", "Vise Grip" },            guids = { "913807" },                     evoData = { { cost = 2, ball = YELLOW, gen = 6, guids = { "63a317" }, model_GUID = "3bdfca" } }, model_GUID = "7d382e" },
@@ -1417,7 +1425,7 @@ gen7PokemonData =
   { name = "Wishiwashi",   level = 4, types = { "Water" },    moves = { "Beat Up", "Brine" },                  guids = { "acfcee" }, model_GUID = "7da1df", custom_scale = 0.35 },
   { name = "Mareanie",     level = 3, types = { "Poison", "Water" }, moves = { "Wide Guard", "Toxic Spikes" }, guids = { "45598a" }, model_GUID = "437e25", spawn_effect="Physical Attack", evoData = { { cost = 2, ball = RED, gen = 7, guids = { "bd3b27" }, model_GUID = "0abc27" } } },
   { name = "Toxapex",      level = 5, types = { "Poison", "Water" }, moves = { "Bane. Bunker", "Poison Jab" }, guids = { "e0c877", "bd3b27" }, model_GUID = "0abc27" },
-  { name = "Mudbray",      level = 2, types = { "Ground" },   moves = { "Double Kick", "Mud-Slap" },           guids = { "482345" }, model_GUID = "d128ab", evoData = { { cost = 2, ball = RED, gen = 7, guids = { "c06039" }, model_GUID = "28b051", spawn_effect="Physical Attack" } } },
+  { name = "Mudbray",      level = 2, types = { "Ground" },   moves = { "Double Kick", "Mud-Slap" },           guids = { "482345" }, model_GUID = "d128ab", evoData = { { cost = 2, ball = BLUE, gen = 7, guids = { "c06039" }, model_GUID = "28b051", spawn_effect="Physical Attack" } } },
   { name = "Mudsdale",     level = 4, types = { "Ground" },   moves = { "H. Horsepower", "Stomp" },            guids = { "d66f99", "c06039" }, model_GUID = "28b051", spawn_effect="Physical Attack", custom_scale=0.5, offset={x=0, y=0, z=-0.05} },
 
   -- Gen 7 751-775
@@ -1592,8 +1600,8 @@ gen8PokemonData =
   { name = "Ice Eiscue",    level = 3, types = { "Ice" }, moves = { "Headbutt", "Hail" }, guids = { "7367d0" }, model_GUID = "399eee", ball = BLUE  }, -- Ice
   { name = "Noice Eiscue",  level = 3, types = { "Ice" }, moves = { "Amnesia", "Mist" }, guids = { "7da34a" }, ball = BLUE },                          -- Noice, I believe we don't have a model for this version
   { name = "Indeedee",      level = 3, types = { "Psychic", "Normal" }, moves = { "Disarming Voice", "Psychic" }, guids = { "d23303"  }, model_GUID = "1cb82f" },
-  { name = "Full Belly Morpeko", level = 3, types = { "Electric" }, moves = { "Aura Wheel Electric", "Thrash" }, guids = { "d7c95a" }, model_GUID = "6393df", ball = BLUE }, -- Yellow Happy :)
-  { name = "Hangry Morpeko", level = 3, types = { "Dark" }, moves = { "Aura Wheel Dark", "Thrash" }, guids = { "ccf33f" }, model_GUID = "1128d8", ball = BLUE },             -- Purple Angry :(
+  { name = "Full Belly Morpeko", level = 3, types = { "Electric","Dark" }, moves = { "Aura Wheel Electric", "Thrash" }, guids = { "d7c95a" }, model_GUID = "6393df", ball = BLUE }, -- Yellow Happy :)
+  { name = "Hangry Morpeko", level = 3, types = { "Dark", "Electric" }, moves = { "Aura Wheel Dark", "Thrash" }, guids = { "ccf33f" }, model_GUID = "1128d8", ball = BLUE },             -- Purple Angry :(
   { name = "Cufant",        level = 3, types = { "Steel" }, moves = { "Rock Smash", "Iron Defense" }, guids = { "e94da5" }, evoData = { { cost = 2, ball = RED, gen = 8, guids = { "bb0dab" }, model_GUID = "fa0704" } }, model_GUID = "a37dd9" },
   { name = "Copperajah",    level = 5, types = { "Steel" }, moves = { "H. Horsepower", "Iron Head" }, guids = { "772688", "bb0dab" },                                evoData = { { cost = "GMax", ball = MEGA, gen = 8, cycle = true, guids = { "ad2c75", "1e68f7" }, model_GUID = "be6c58" } }, model_GUID = "fa0704", custom_scale=0.4 },
   { name = "Dracozolt",     level = 4, types = { "Electric", "Dragon" }, moves = { "Ancient Power", "Discharge" }, guids = { "8c8145" }, model_GUID = "37afb9", custom_scale=0.8 },
@@ -1709,7 +1717,7 @@ gen9PokemonData =
   { name = "Meowscarada",   level = 5, types = { "Grass", "Dark" }, moves = { "Flower Trick", "Knock Off" },     guids = { "7b87eb", "2b0cec", "603216" }, model_GUID = "5684f7" },
   { name = "Fuecoco",       level = 1, types = { "Fire" }, moves = { "Ember", "Leer" },         guids = { "53ad3b" },               evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "2a93fc" } } }, model_GUID = "1f41ed", offset={x=0, y=0.035, z=0} },
   { name = "Crocalor",      level = 3, types = { "Fire" }, moves = { "Incinerate", "Bite" }, guids = { "f49cc4", "2a93fc" },   evoData = { { cost = 2, ball = RED, gen = 9, guids = { "0528b7", "91d3a3" } } }, model_GUID = "54f5c5", offset={x=0, y=0.2, z=0} },
-  { name = "Skeledirge",    level = 5, types = { "Fire", "Ghost" }, moves = { "Shadow Ball", "Torch Song" }, guids = { "6b9ddf", "0528b7", "91d3a3" }, model_GUID = "57d1c7", offset={x=0, y=0.11, z=0} },
+  { name = "Skeledirge",    level = 5, types = { "Fire", "Ghost" }, moves = { "Shadow Ball", "Torch Song" }, guids = { "6b9ddf", "0528b7", "91d3a3" }, model_GUID = "57d1c7", offset={x=0, y=0.11, z=0}, custom_scale=0.75 },
   { name = "Quaxly",        level = 1, types = { "Water" }, moves = { "Water Gun", "Growl" },    guids = { "4a2233" },               evoData = { { cost = 2, ball = BLUE, gen = 9, guids = { "76b74f" } } }, model_GUID = "14aae3" },
   { name = "Quaxwell",      level = 3, types = { "Water" }, moves = { "Feather Dance", "Aqua Jet" }, guids = { "dc2818", "76b74f" },    evoData = { { cost = 2, ball = RED, gen = 9, guids = { "517d88", "7bf3d4" } } }, model_GUID = "676de9", offset={x=0, y=0.02, z=0} },
   { name = "Quaquaval",     level = 5, types = { "Water", "Fighting" }, moves = { "Aqua Step", "Counter" }, guids = { "07d04b", "517d88", "7bf3d4" }, model_GUID = "8db18f", offset={x=0, y=0.015, z=0} },
@@ -1887,7 +1895,7 @@ moveData =
     {name="Brutal Swing",   power=2,      type="Dark",      dice=6, STAB=true },
     {name="Ceaseless Edge", power=3,      type="Dark",      dice=8, STAB=true },
     {name="Crunch",         power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=6}} },
-    {name="Darkest Lariat", power=3,      type="Dark",      dice=6, STAB=true  },
+    {name="Darkest Lariat", power=2,      type="Dark",      dice=6, STAB=true  },
     {name="Dark Pulse",     power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Embargo",        power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"}} },
     {name="Fake Tears",     power=0,      type="Dark",      dice=6, STAB=false, effects={{name="AttackUp2", target="Self"}} },
@@ -1897,7 +1905,7 @@ moveData =
     {name="Hone Claws",     power=0,      type="Dark",      dice=6, STAB=false, effects={{name="AttackUp2", target="Self"}}},
     {name="Hyperspace Fury",power=3,      type="Dark",      dice=6, STAB=false, effects={{name="AttackUp", target="Self"}} },
     {name="Jaw Lock",       power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
-    {name="Knock Off",      power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Knock Off",      power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Kowtow Cleave",  power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
     {name="Nasty Plot",     power=0,      type="Dark",      dice=6, STAB=false, effects={{name="AttackUp2", target="Self"}} },
     {name="Night Slash",    power=2,      type="Dark",      dice=8, STAB=true   },
@@ -2039,19 +2047,19 @@ moveData =
     {name="Hammer Arm",     power=2,      type="Fighting",  dice=6, STAB=true},
     {name="High Jump Kick", power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
     {name="Jump Kick",      power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
-    {name="Karate Chop",    power=1,      type="Fighting",  dice=8, STAB=true},
+    {name="Karate Chop",    power=2,      type="Fighting",  dice=8, STAB=true},
     {name="Low Kick",       power=1,      type="Fighting",  dice=4, STAB=true},
     {name="Mach Punch",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Priority", target="Self"}} },
     {name="No Retreat",     power=0,      type="Fighting",  dice=6, STAB=false, effects={{name="Priority", target="Self"}, {name="AttackUp2", target="Self"}} },
     {name="Octolock",       power=0,      type="Fighting",  dice=6, STAB=false, effects={{name="Custom"},{name="AttackUp2", target="Self"}} },
-    {name="Power-Up Punch", power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
+    {name="Power-Up Punch", power=1,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self"}} },
     {name="Raging Bull Fighting",power=2, type="Fighting",  dice=6, STAB=true},
     {name="Revenge",        power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", condition="Power"}} },
     {name="Rock Smash",     power=1,      type="Fighting",  dice=6, STAB=true,  effects={{name="AttackUp", target="Self", chance=5}} },
     {name="Sacred Sword",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Secret Sword",   power=3,      type="Fighting",  dice=6, STAB=true},
     {name="Seismic Toss",   power="Self", type="Fighting",  dice=6, STAB=false},
-    {name="Sky Uppercut",   power=3,      type="Fighting",  dice=6, STAB=true},
+    {name="Sky Uppercut",   power=2,      type="Fighting",  dice=6, STAB=true},
     {name="Storm Throw",    power=3,      type="Fighting",  dice=8, STAB=true},
     {name="Submission",     power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="KO", target="Self", chance=6}} },
     {name="Superpower",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
@@ -2069,7 +2077,7 @@ moveData =
     {name="Blazing Torque", power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Blue Flare",     power=4,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Ember",          power=1,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
-    {name="Eruption",       power=4,      type="Fire",    dice=6, STAB=true},
+    {name="Eruption",       power=3,      type="Fire",    dice=6, STAB=true},
     {name="Fiery Dance",    power=3,      type="Fire",    dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=4}} },
     {name="Fire Fang",      power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}, {name="AttackDown", target="Enemy", chance=6}} },
     {name="Fire Blast",     power=2,      type="Fire",    dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=6}} },
@@ -2117,10 +2125,10 @@ moveData =
     {name="Beak Blast",     power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=4}} },
     {name="Bleakwind Storm",power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Freeze", target="Enemy", chance=5}} },
     {name="Bounce",         power=2,      type="Flying",  dice=6, STAB=true,    effects={{name="Paralyse", target="Enemy", chance=5}}},
-    {name="Brave Bird",     power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="KO", target="Self"}} },
+    {name="Brave Bird",     power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="KO", target="Self"}} },
     {name="Chatter",        power=2,      type="Flying",  dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=6}} },
     {name="Drill Peck",     power=2,      type="Flying",  dice=6, STAB=true},
-    {name="Dual Wingbeat",  power=3,      type="Flying",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
+    {name="Dual Wingbeat",  power=1,      type="Flying",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self"}} },
     {name="Gust",           power=1,      type="Flying",  dice=6, STAB=true},
     {name="Fly",            power=3,      type="Flying",  dice=6, STAB=true},
     {name="Feather Dance",  power=0,      type="Flying",  dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
@@ -2132,8 +2140,8 @@ moveData =
     {name="Sunny Day",      power=0,      type="Flying",  dice=8, STAB=false,   effects={{name="Custom"}} },
     {name="Wing Attack",    power=2,      type="Flying",  dice=6, STAB=true},
     {name="Airstream",      power=3,      type="Flying",  dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Supersonic Skystrike",power=4, type="Flying",  dice=6, STAB=true,    effects={{name="Recharge", target="Self"} } },
-    {name="Wind Rage",      power=4,      type="Flying",  dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Supersonic Skystrike",power=4, type="Flying",  dice=6, STAB=false,   effects={{name="Recharge", target="Self"} } },
+    {name="Wind Rage",      power=4,      type="Flying",  dice=6, STAB=true,    effects={{name="Custom"}} },
 
     -- Ghost
     {name="Astral Barrage", power=3,      type="Ghost",   dice=6, STAB=true},
@@ -2208,7 +2216,7 @@ moveData =
     {name="Syrup Bomb",     power=2,      type="Grass",   dice=6, STAB=true},
     {name="Trailblaze",     power=1,      type="Grass",   dice=6, STAB=true,    effects={{name="Priority", target="Self"}}},
     {name="Trop Kick",      power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}},
-    {name="Vine Whip",      power=3,      type="Grass",   dice=6, STAB=true},
+    {name="Vine Whip",      power=1,      type="Grass",   dice=6, STAB=true},
     {name="Wood Hammer",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
     {name="Vine Lash",      power=2,      type="Grass",   dice=6, STAB=false,   effects={{name="ExtraDice", target="Self"}} },
     {name="Drum Solo",      power=4,      type="Grass",   dice=6, STAB=true},
@@ -2274,7 +2282,7 @@ moveData =
     {name="Body Slam",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Paralyse", target="Enemy", chance=5}} },
     {name="Bind",           power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
     {name="Blood Moon",     power=2,      type="Normal",  dice=6, STAB=true},
-    {name="Boomburst",      power=4,      type="Normal",  dice=6, STAB=true},
+    {name="Boomburst",      power=3,      type="Normal",  dice=6, STAB=true},
     {name="Camouflage",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Chip Away",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Priority", target="Self"}} },
     {name="Comet Punch",    power=1,      type="Normal",  dice=4, STAB=true,    effects={{name="ExtraDice", target="Self", chance=4}} },
@@ -2308,7 +2316,7 @@ moveData =
     {name="Growth",         power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackUp2", target="Self"}} },
     {name="Guillotine",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="KO", target="Enemy", chance=5}} },
     {name="Harden",         power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="AttackDown", target="Enemy"}} },
-    {name="Head Charge",    power=4,      type="Normal",  dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
+    {name="Head Charge",    power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
     {name="Headbutt",       power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Heal Bell",      power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Hidden Power",   power=2,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
@@ -2345,7 +2353,7 @@ moveData =
     {name="Relic Song",     power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Sleep", target="Enemy", chance=6}} },
     {name="Rapid Spin",     power=1,      type="Normal",  dice=6, STAB=true},
     {name="Retaliate",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Revival Blessing",power=2,     type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
+    {name="Revival Blessing",power=0,     type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Roar",           power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Switch", target="Enemy"}} },
     {name="Razor Wind",     power=2,      type="Normal",  dice=8, STAB=true,    effects={{name="Recharge", target="Self"}} },
     {name="Safeguard",      power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
@@ -2450,12 +2458,12 @@ moveData =
     {name="Freezing Glare", power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Frozen", target="Enemy", chance=6}} },
     {name="Future Sight",   power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
     {name="Healing Wish",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"},{name="KO", target="Self"}} },
-    {name="Heart Stamp",    power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
+    {name="Heart Stamp",    power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=5}} },
     {name="Hyperspace Hole",power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Hypnosis",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=4}} },
     {name="Imprison",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Light Screen",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackDown2", target="Enemy"}} },
-    {name="Lumina Crash",   power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
+    {name="Lumina Crash",   power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self"}} },
     {name="Luster Purge",   power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy", chance=4}} },
     {name="Magic Coat",     power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Meditate",       power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="AttackUp", target="Self"}} },
@@ -2467,7 +2475,7 @@ moveData =
     {name="Psyblade",       power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Psywave",        power="Self", type="Psychic", dice=6, STAB=false    },
     {name="Psychic",        power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackUp", target="Self", chance=6}} },
-    {name="Psychic Fangs",  power=3,      type="Psychic", dice=6, STAB=true },
+    {name="Psychic Fangs",  power=2,      type="Psychic", dice=6, STAB=true },
     {name="Psycho Boost",   power=4,      type="Psychic", dice=6, STAB=true     },
     {name="Psycho Cut",     power=2,      type="Psychic", dice=8, STAB=true     },
     {name="Psyshield Bash", power=3,      type="Psychic", dice=6, STAB=true,    effects={{name="AttackDown", target="Enemy"}}     },
@@ -2768,7 +2776,7 @@ rivalData =
         tier = RED,
         pokemon = {
           { name = "Staraptor", level = 5, types = { "Flying", "Normal" }, moves = { "Aerial Ace", "Close Combat" }, model_GUID = "88b32f" },
-          { name = "Empoleon", level = 6, types = { "Water" }, moves = { "Hydro Pump", "Ice Beam" }, model_GUID = "85b6c8", spawn_effect="Status Attack", offset={x=0,y=0.1,z=-0.2} } }
+          { name = "Empoleon", level = 6, types = { "Water", "Steel" }, moves = { "Hydro Pump", "Ice Beam" }, model_GUID = "85b6c8", spawn_effect="Status Attack", offset={x=0,y=0.1,z=-0.2} } }
       }
     }
   },
@@ -4294,7 +4302,7 @@ gymData =
     gen = 8,
     gymTier = 9,
     pokemon = {
-      { name = "Morpeko",  level = 9, types = { "Electric" }, moves = { "Seed Bomb", "Bite", "Aura Wheel Electric" }, model_GUID = "6393df" },
+      { name = "Full Belly Morpeko", level = 9, types = { "Electric", "Dark" }, moves = { "Seed Bomb", "Bite", "Aura Wheel Electric" }, model_GUID = "6393df" },
       { name = "Grimmsnarl", level = 10, types = { "Dark", "Fairy" }, moves = { "Spirit Break", "Darkest Lariat", "Play Rough" }, model_GUID = "3db539" } }
   },
   {
@@ -5239,31 +5247,17 @@ function closeSettings(player, value, id)
   UI.hide('Settings')
 end
 
--- TEMP
-local genPokeballs = { "681d76", "d7d981", "818525", "30391b", "758036", "bb73fd", "78fdbb", "d87f03", "2fd969", "2c76f4", 
-"710bab", "521e8b", "9f4fb9", "f5d806", "e05c61", "b3ede1", "80c3c3", "5ded3e", "4f4570", "ee7d71", "feea6b", "be7627", 
-"8079e7", "49e675", "f7a234", "fadfc3", "a63903", "9f5985", "291a17", "890df4", "1341cb", "6ee713", "de1f71", "48a192", 
-"296ec5", "590ae3", "d80d72", "ce15ef", "9fe972", "7f1ebb", "401e23", "1fa353", "426038", "b3a265", "a77d5e", "44c820", 
-"4903d2", "652a56", "405d8e", "307988", "09cb0e", "99b8aa", "d6ef76", "0faf4d", "ad4ceb", "a1750a", "3168f8", "de981e", 
-"7ced83", "345260", "d63e7c", "3fcea5", "79df8a" }
-local genEvoPokeballs = { "e9d043", "7de53d", "f30baf", "ceb9a5", "5293ec", "98bf25", "01efbd", "c6e80b", "d86df8", "f59319", 
-"538c67", "6f201a", "ad0f19", "02db20", "31b1ec", "9b3ecb", "613cb1", "1b49a8", "8d3dfb", "fd9bcb", "1bf5ba", "cccfb4", 
-"e15056", "24a5c8", "a7d340", "bfb915", "7eb6b9", "96a1c9", "db9cda", "425115", "aefa83", "cb4ad6", "e16953", "8abcf1", 
-"59de2d", "315a95", "f02e17", "943c81", "c67911", "de7f1f", "750e11", "21b1c8", "6d2737", "2b7b9b", "79e3f4", "21ba50", 
-"74eeff", "432142", "79ee2f", "bc1673", "4f7b73", "2d873a", "a32b0d", "d2b2ca", "637026", "02689f", "9c010b", "03ea82", 
-"4217d6", "6ae5c4", "8963b5", "0dc3f5", "4e3f1d" }
-local battlemodelsList = { battlemodels_GUID }
-
 function onLoad(saved_data)
+  -- Check if we can even start a game.
+  checkBeginState()
+  
   -- Get a handle to the models bag object.
   battlemodels = getObjectFromGUID(battlemodels_GUID)
   if battlemodels == nil then
     printToAll("Unable to find Models Pokéball object :(")
   else
-    -- Hide the models.
-    --battlemodels.interactable = false
-    --battlemodels.setLock(true)
-    battlemodels.setPosition({-51, 0.5, 76})
+    battlemodels.setPosition({94, -0.47, 67})
+    battlemodels.setLock(true)
   end
 
   -- Get a handle to the secondary type tokens object.
@@ -5271,101 +5265,9 @@ function onLoad(saved_data)
   if type_tokens_bag == nil then
     printToAll("Unable to find Secondary Type Tokens bag object :(")
   else
-    -- Hide the models.
-    --battlemodels.interactable = false
-    --battlemodels.setLock(true)
-    type_tokens_bag.setPosition({-48, 0.5, 76})
+    type_tokens_bag.setPosition({94, -1.05, 65})
+    battlemodels.setLock(true)
   end
-
-  -- TEMP | TODO: Apply appropriate tag to all pokemon chips and all models.
-  --[[
-    1. Spawn in the TEMP TAG POKEBALL
-    2. Copy the genXPokeballs and genXEvoPokeballs from StarterPokeball.lua to this file.
-    3. Run the following on one list at a time.
-    4. Save game.
-  ]]
-  -- local pokeballs_list = genPokeballs
-  -- for pokeball_index=1, #pokeballs_list do
-  --   -- Get handle to the home pokeball and temp pokeball.
-  --   local home_pokeball = getObjectFromGUID(pokeballs_list[pokeball_index])
-  --   local temp_pokeball = getObjectFromGUID("e08c3e")
-
-  --   -- Loop through each item in the pokeball.
-  --   for token_index = 1, #home_pokeball.getObjects() do
-  --     -- Take object from home pokeball.
-  --     local token = home_pokeball.takeObject({})
-
-  --     -- Apply the tag to the Pokemon TOKEN.
-  --     token.addTag("Pokemon Token")
-
-  --     -- Put the Pokemon into  into the temp pokeball.
-  --     temp_pokeball.putObject(token)
-  --   end
-
-  --   -- Now take the object back from the temp pokeball and put them back 
-  --   -- into the home pokeball.
-  --   for token_index = 1, #temp_pokeball.getObjects() do
-  --     home_pokeball.putObject(temp_pokeball.takeObject({}))
-  --   end
-  -- end
-
-  -- local pokeballs_list = genEvoPokeballs
-  -- for pokeball_index=1, #pokeballs_list do
-  --   -- Get handle to the home pokeball and temp pokeball.
-  --   local home_pokeball = getObjectFromGUID(pokeballs_list[pokeball_index])
-  --   local temp_pokeball = getObjectFromGUID("e08c3e")
-
-  --   -- Loop through each item in the pokeball.
-  --   for token_index = 1, #home_pokeball.getObjects() do
-  --     -- Take object from home pokeball.
-  --     local token = home_pokeball.takeObject({})
-
-  --     -- Apply the tag to the Pokemon TOKEN.
-  --     token.addTag("Pokemon Token")
-
-  --     -- Put the Pokemon into  into the temp pokeball.
-  --     temp_pokeball.putObject(token)
-  --   end
-
-  --   -- Now take the object back from the temp pokeball and put them back 
-  --   -- into the home pokeball.
-  --   for token_index = 1, #temp_pokeball.getObjects() do
-  --     home_pokeball.putObject(temp_pokeball.takeObject({}))
-  --   end
-  -- end
-
-  -- The models take much more effort. Move them back and forth into the temp pokeball on seperate saves.
-  -- local pokeballs_list = battlemodelsList
-  -- for pokeball_index=1, #pokeballs_list do
-  --   -- Get handle to the home pokeball and temp pokeball.
-  --   local home_pokeball = getObjectFromGUID(pokeballs_list[pokeball_index])
-  --   local temp_pokeball = getObjectFromGUID("e08c3e")
-
-  --   -- Loop through each item in the pokeball.
-  --   for model_index = 1, #home_pokeball.getObjects() do
-  --     -- Take object from home pokeball.
-  --     local model = home_pokeball.takeObject({})
-
-  --     -- Apply the tag to the Pokemon Model.
-  --     model.addTag("Pokemon Model")
-
-  --     -- Put the Pokemon into  into the temp pokeball.
-  --     temp_pokeball.putObject(model)
-  --   end
-  -- end
-
-  -- Get handle to the home pokeball and temp pokeball.
-  -- local home_pokeball = getObjectFromGUID(battlemodels_GUID)
-  -- local temp_pokeball = getObjectFromGUID("e08c3e")
-
-  -- -- Loop through each item in the pokeball.
-  -- for model_index = 1, #temp_pokeball.getObjects() do
-  --   -- Take object from home pokeball.
-  --   local model = temp_pokeball.takeObject({})
-
-  --   -- Put the Pokemon into the home pokeball.
-  --   home_pokeball.putObject(model)
-  -- end
 
   local save_table
   if saved_data and saved_data ~= "" then
@@ -5388,6 +5290,8 @@ function onLoad(saved_data)
     HR_hard_gym_leaders=save_table.HR_hard_gym_leaders
     HR_hp_rule_2=save_table.HR_hp_rule_2    
     HR_dual_type_effectiveness=save_table.HR_dual_type_effectiveness
+    -- Current map. Can only change at Setup.
+    selected_map=save_table.selected_map
   end
 
   -- Do some safety checks.
@@ -5562,18 +5466,8 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 09/22/2024 - v3.1 \
-   - Added this Change Log :D \
-   - Added new Hotkey to help with Wild Battle scripting (Options > Game Keys > Battle Wild Pokemon). Using this hotkey will provide you with additional Battle Arena buttons to speed up the game. \
-   - New Recall buttons for Rival Events, Gym Leader and Trainer Battles \
-   - Optional Scripted House Rules! \
-     * Dual Types \
-       o When playing Dual Type, look for the secondary type tokens on the Pokémon Token or configure the Query Pokemon Info game key in Options > Game Keys \
-     * Chaos Gym Leaders \
-       o This will cause Gym Leaders (of the same tier) to be randomly chosen from all Generations each time the gyms are battled \
-   - Pokémon with multiple forms now have been merged into one, with multiple States. In wild situations, battle the default and, on catch, choose the form permanently (Right-click > choose State). \
-   - Battle counters should be much more accurate \
-   - Gen 9 Models now have (painfully slow) animations", 
+  printToAll("Last update on 10/07/2024 - v3.2 \
+   - merged the mods.. that's it! Enjoy (:", 
   "Pink")
 end
 
@@ -5640,7 +5534,9 @@ function onSave()
     -- House Rules.
     HR_hard_gym_leaders=HR_hard_gym_leaders,
     HR_hp_rule_2=HR_hp_rule_2,
-    HR_dual_type_effectiveness=HR_dual_type_effectiveness
+    HR_dual_type_effectiveness=HR_dual_type_effectiveness,
+    -- Current map. Can only change at Setup.
+    selected_map=selected_map
   }
   return JSON.encode(save_table)
 end
@@ -5732,12 +5628,12 @@ function battle_wild_pokemon(chip)
   -- Basic checks.
   if not chip or not chip.hasTag("Pokemon Token") then return end
   if not isFaceUp(chip) then
-    print("You must flip the Pokémon Token before sneding it to the Arena for battle")
+    print("You must flip the Pokémon Token before sending it to the Arena for battle")
     return
   end
 
   -- Get a handle to the BattleManager.
-  local battle_manager = getObjectFromGUID("de7152")
+  local battle_manager = getObjectFromGUID(BATTLE_MANAGER_GUID)
   if not battle_manager then
     -- Game over basically.
     printToAll("The BattleManager was not found. Hmm.")
@@ -5903,13 +5799,18 @@ function any_state_created_before(states)
 end
 
 function beginSetup(player, value, id)
+  if selected_map == nil then
+    print("Please select a map.")
+    return
+  end
   UI.hide('Settings')
   local params = {
     selectedGens = selectedGens,
     customGen = customGen,
     leadersGen = leadersGen,
     randomStarters = randomStarters,
-    customGymLeaderOption = customGymLeaderOption
+    customGymLeaderOption = customGymLeaderOption,
+    selected_map = selected_map
   }
 
   --[[ Initialize the random seed. I know, why 3? Well, when I only did this once Gen VII Gym 5
@@ -5919,7 +5820,7 @@ function beginSetup(player, value, id)
   math.randomseed(os.time())
   math.randomseed(os.time())
 
-  local battleManager = getObjectFromGUID("de7152")
+  local battleManager = getObjectFromGUID(BATTLE_MANAGER_GUID)
   battleManager.call("setScriptingEnabled", battleScripting)
 
   local starterPokeball = getObjectFromGUID("ec1e4b")
@@ -6046,6 +5947,7 @@ end
 
 function randomStartersToggle()
   randomStarters = not randomStarters
+  checkBeginState()
 end
 
 -----------------
@@ -6102,7 +6004,8 @@ function setLeaders(gen, isOn)
   if leadersGen == -2 then
     -- Chaos Gym Leaders.
     printToAll("\nChaos Gym Leaders: Enabled \
-  - This will cause Gym Leaders (of the same tier) to be randomly chosen from all Generations each time the gyms are battled.", 
+  - Dual Type Effectiveness Rules \
+    * This will cause Gym Leaders (of the same tier) to be randomly chosen from all Generations each time the gyms are battled.", 
     "Pink")
   end
 
@@ -6114,6 +6017,59 @@ function setLeaders(gen, isOn)
   end
 
   checkBeginState()
+end
+
+-----------------
+-- Region Selection.
+-----------------
+
+-- This function does nothing except set the URL of the map as a preview for players as well
+-- as setting the Global reference to the current map.
+function regionMapSet(player, option, id)
+  if option == "-- Select Region --" then 
+    UI.setAttribute("beginBtn", "interactable", false)
+    selected_map = nil
+    return
+  end
+
+  local map_manager = getObjectFromGUID(MAP_MANAGER_GUID)
+  if not map_manager then
+    printToAll("Cannot find the Map Manager :(", "Red")
+    return
+  end
+
+  -- Have the Map Manager set the map image. The variable selected_map is a global reference
+  -- in case we foolishly save during setup. Also lets us pass the data to StarterPokeball.
+  selected_map = map_manager.Call("set_map_image_only", option)
+
+  checkBeginState()
+end
+
+-- Helper function to reset the current hands on the board. This is called by MapManager
+-- and is required because Hands is only accessible within Global (apparently).
+function reinitialize_hand_zones(hand_config_table)
+  -- Move all zones way up into the sky.
+  Player["Teal"].setHandTransform({position = {0,75,0}})
+  Player["Brown"].setHandTransform({position = {0,75,0}})
+  Player["Pink"].setHandTransform({position = {0,75,0}})
+  Player["White"].setHandTransform({position = {0,75,0}})
+
+  -- Move the player hands we care about.
+  Player["Yellow"].setHandTransform(hand_config_table["Yellow"])
+  Player["Green"].setHandTransform(hand_config_table["Green"])
+  Player["Blue"].setHandTransform(hand_config_table["Blue"])
+  Player["Red"].setHandTransform(hand_config_table["Red"])
+  Player["Purple"].setHandTransform(hand_config_table["Purple"])
+  Player["Orange"].setHandTransform(hand_config_table["Orange"])
+
+  -- Delete the hand zones we do not want.
+  local current_hands = Hands.getHands()
+  for hand_index=1, #current_hands do
+    local current_position = current_hands[hand_index].getPosition()
+    if current_position.y > 50 then
+      destroyObject(current_hands[hand_index])
+    end
+  end
 end
 
 -----------------
@@ -6164,7 +6120,7 @@ function setAIDifficulty(difficulty, isOn)
 end
 
 function checkBeginState()
-  UI.setAttribute("beginBtn", "interactable", hasEnoughPokemon and customAndTooFewLeaders == false)
+  UI.setAttribute("beginBtn", "interactable", hasEnoughPokemon and customAndTooFewLeaders == false and selected_map ~= nil)
 end
 
 -----------------
@@ -6352,7 +6308,7 @@ function despawn_secondary_type_token(params)
   end
 
   -- de7152 is the BattleManager. If this functionality tries to destroy the BattleManager then the whole game breaks, lol.
-  if params.secondary_type_token.getGUID() == "de7152" then return end
+  if params.secondary_type_token.getGUID() == BATTLE_MANAGER_GUID then return end
   
   active_secondary_type_tokens[params.secondary_type_token.getGUID()] = nil
   params.pokemon.secondary_type_token = nil
@@ -6622,7 +6578,7 @@ function has_something_on_top(pokemon)
   })
   for i=1,#hits do
     -- GUID de7152 is the BattleManager. Somehow, Gym Leaders cards register as having it on top. Not sure why lol.
-    if hits[i].hit_object ~= pokemon.model and hits[i].hit_object ~= pokemon.chip and hits[i].hit_object.getGUID() ~= "de7152" then
+    if hits[i].hit_object ~= pokemon.model and hits[i].hit_object ~= pokemon.chip and hits[i].hit_object.getGUID() ~= BATTLE_MANAGER_GUID then
       return true
     end
   end
@@ -6739,7 +6695,7 @@ end
 
 function despawn_model(pokemon, model)
   -- de7152 is the BattleManager. If this functionality tries to destroy the BattleManager then the whole game breaks, lol.
-  if model.getGUID() == "de7152" then return end
+  if model.getGUID() == BATTLE_MANAGER_GUID then return end
 
   active_models[model.getGUID()] = nil
   if model.getGUID() == pokemon.state.model_GUID then
@@ -7093,7 +7049,7 @@ end
 function toggle_models_enabled()
   -- If a battle is in progress, we do not allow toggling of models. 
   -- Gyms and rivals have despawn functionality but not respawn.
-  local battleManager = getObjectFromGUID("de7152")
+  local battleManager = getObjectFromGUID(BATTLE_MANAGER_GUID)
   if battleManager ~= nil then
     if battleManager.call("isBattleInProgress") then
       printToAll("Cannot toggle models during battle.")
@@ -7192,8 +7148,8 @@ function onObjectHover(player_color, hover_object)
     if pokemon and next(Player[player_color].getHoldingObjects()) and Player[player_color].getHoldingObjects()[1].getGUID() ~= pokemon.chip_GUID then
       if pokemon.model and has_something_on_top(pokemon) then
         -- de7152 is the BattleManager. If this functionality tries to destroy the BattleManager then the whole game breaks, lol.
-        if type(pokemon.model) == "string" and pokemon.model == "de7152" then return end
-        if pokemon.model.getGUID() == "de7152" then return end
+        if type(pokemon.model) == "string" and pokemon.model == BATTLE_MANAGER_GUID then return end
+        if pokemon.model.getGUID() == BATTLE_MANAGER_GUID then return end
 
         -- Safely despawn the model.
         despawn_now(pokemon)
@@ -7291,7 +7247,7 @@ function onObjectStateChange(object, old_state_guid)
     Wait.condition(
       function()
         -- Take the chip back out of the pokeball.
-        local takeParams = {guid = pokemon_guid, position = {pokemon_position.x, 1.5, pokemon_position.z}, rotation=pokemon_rotation}
+        local takeParams = {guid=pokemon_guid, position={pokemon_position.x, 1.5, pokemon_position.z}, rotation=pokemon_rotation}
         pokeball.takeObject(takeParams)
       end,
       function() -- Condition function
@@ -7370,7 +7326,7 @@ function update_playlists()
           WILD = 3
           RIVAL = 4
     ]]
-    local battleManager = getObjectFromGUID("de7152")
+    local battleManager = getObjectFromGUID(BATTLE_MANAGER_GUID)
     if getObjectFromGUID("ec1e4b") ~= nil then
       -- The setup is not complete, don't update the current song.
       return

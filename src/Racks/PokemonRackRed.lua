@@ -496,20 +496,6 @@ function evolveTwoArena(attDefParams)
     end
 end
 
--- Helper function to print a table.
-function dump_table(o)
-    if type(o) == 'table' then
-        local s = '{ '
-        for k,v in pairs(o) do
-            if type(k) ~= 'number' then k = '"'..k..'"' end
-            s = s .. '['..k..'] = ' .. dump_table(v) .. ','
-        end
-        return s .. '} '
-    else
-        return tostring(o)
-    end
-end
-
 function getAvailablePokemonXPos()
     local temp_x_pos = copyTable(pokemonXPos)
     local count_removed = 0

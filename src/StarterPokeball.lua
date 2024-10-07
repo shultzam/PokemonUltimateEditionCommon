@@ -57,6 +57,24 @@ local elite4GymGuid = "a0f650"
 local rivalGymGuid = "c970ca"
 local teamRocketGymGuid = "19db0d"
 
+-- Initial badge GUIDs.
+local original_badge_guids = { "bce8e0", "a83bf0", "286901", "cbbade", "c81eab", "23b4f1", "e53b76", "9b0053" }
+
+-- Iniital Rack GUIDs. These are based on the Johto GUIDs, since that is the initial state of the racks.
+-- Order: Yellow, Green, Blue, Red, Purple, Orange.
+local initial_rack_guids = { "8b1324", "b085a0", "7a85a9", "7af2f7", "b581f3", "e3d3fd" }
+
+-- The standard and extras pokeball GUIDs.
+local standard_guid = "35950f"
+local map_specific_guid = "18e364"
+
+-- Counter GUIDs.
+local def_counter_guid = "b76b2a"
+local atk_counter_guid = "73b431"
+
+-- Stupid Arena text GUID.
+local arena_text_guid = "f0b393"
+
 function onSave()
     return JSON.encode({settings_done=setup_done})
 end
@@ -105,7 +123,10 @@ function onLoad(saved_data)
 end
 
 function beginSetup2(params)
-    -- tokens
+    -- Load the required map shenanigans.
+    setup_map(params.selected_map)
+
+    -- Tokens
     if params.selectedGens[1] then
         setupPokeballs(gen1Pokeballs, pokeballs)
         setupPokeballs(gen1EvoPokeballs, evoPokeballs)
@@ -193,7 +214,7 @@ function beginSetup2(params)
 
         for i = 1, 8 do
             -- Check if we need to consider custom Gym Leaders.
-            local pokeballs = ShallowCopy(gymPokeballs)
+            local pokeballs = shallowCopy(gymPokeballs)
             local custom_leaders_available = customs_available(customLeadersArr[1], i, leadersRetrieved)
             if params.customGymLeaderOption == ALLOW_SELECT and custom_leaders_available then
                 table.insert(pokeballs, customLeadersArr[1])
@@ -230,7 +251,7 @@ function beginSetup2(params)
         local elite4Gym = getObjectFromGUID(elite4GymGuid)
         for i = 1, 4 do
             -- Check if we need to consider custom Elite 4s.
-            local pokeballs = ShallowCopy(eliteFourPokeballs)
+            local pokeballs = shallowCopy(eliteFourPokeballs)
             local custom_leaders_available = customs_available(customLeadersArr[2], 9, leadersRetrieved)
             if params.customGymLeaderOption == ALLOW_SELECT and custom_leaders_available then
                 table.insert(pokeballs, customLeadersArr[2])
@@ -263,7 +284,7 @@ function beginSetup2(params)
         local rivalGym = getObjectFromGUID(rivalGymGuid)
         for i = 1, 3 do
             -- Check if we need to consider custom Rivals.
-            local pokeballs = ShallowCopy(rivalPokeballs)
+            local pokeballs = shallowCopy(rivalPokeballs)
             local custom_leaders_available = customs_available(customLeadersArr[3], 10, leadersRetrieved)
             if params.customGymLeaderOption == ALLOW_SELECT and custom_leaders_available then
                 table.insert(pokeballs, customLeadersArr[3])
@@ -366,6 +387,243 @@ function beginSetup2(params)
         -- Update the setup_done flag.
         setup_done = true
     end
+end
+
+-- Region name to generation lookup table.
+local regionToGenNumberLookupTable = {
+    ["Kanto"] = 1,
+    ["Johto"] = 2,
+    ["Hoenn"] = 3,
+    ["Sinnoh"] = 4,
+    ["Unova"] = 5,
+    ["Kalos"] = 6,
+    ["Alola"] = 7,
+    ["Galar"] = 8,
+    ["Paldea"] = 9,
+    ["Orange Islands"] = 10
+  }
+
+function setup_map(selected_map_name)
+    -- Get a handle on the Map Manager.
+    local map_manager = getObjectFromGUID("026857")
+    if not map_manager then
+        printToAll("Cannot find the Map Manager :(. Reload the mod.", "Red")
+        return
+    end
+
+    -- Get the map data from the Map Manager.
+    local map_data = map_manager.call("get_map_data_for_region", selected_map_name)
+    if not map_data then
+        printToAll("Selected map has not been implemented yet: " .. tostring(selected_map_name) .. ". Reload the mod.", "Red")
+        return
+    end
+
+    -- Snappoints.
+    Global.setSnapPoints(map_data.snaps)
+
+    -- Board Pokemon.
+    local unusedBoardPokeball = getObjectFromGUID("a09162")
+    if unusedBoardPokeball then
+        if map_data.board_pokemon then
+            for pokemon_i=1, #map_data.board_pokemon do
+                local board_pokemon_data = copyTable(map_data.board_pokemon[pokemon_i])
+                local token = unusedBoardPokeball.takeObject({ guid = board_pokemon_data.guid, position = board_pokemon_data.position, rotation = {0, 180, 0} })
+            end
+        end
+    end
+
+    -- Initialize Tier 1-8 Pokeballs with Kanto locations.
+    -- NOTE: pokeball_index starts at 2 to skip over the Starter Pokeball object.
+    for pokeball_index=2, #pokeballs do
+        local pokeball = getObjectFromGUID(pokeballs[pokeball_index])
+        if pokeball then
+            -- The -1 offset here is because the Map Manager does not consider the Starter Pokeball being a part of this.
+            pokeball.call("initialize", map_data.kanto_locations[pokeball_index-1])
+        end
+    end
+
+    -- Get a handle on the pokeball with the standard items that are common to every map.
+    local standard_items_pokeball = getObjectFromGUID(standard_guid)
+    
+    -- TTS does not like setting the state of something to its current state ID for some reason. 
+    -- So keep track of the new state for future checks.
+    local new_state_id = regionToGenNumberLookupTable[selected_map_name]
+
+    -- Initialize and move the tier 1-8 gyms.
+    for gym_index=1, #gyms do
+        local gym = getObjectFromGUID(gyms[gym_index])
+        if gym then
+            local gym_info = copyTable(map_data.gyms_info[gym_index])
+            -- Get the badge of this gym tier.
+            local original_badge_guid = original_badge_guids[gym_index]
+            local original_badge = standard_items_pokeball.takeObject({guid=original_badge_guid})
+            if original_badge then
+                -- Change this badge to the state of this region number.
+                -- TTS does not like setting the state of something to its current state ID for some reason.
+                if original_badge.getStateId() ~= new_state_id then
+                    original_badge = original_badge.setState(new_state_id)
+                end
+                
+                -- Clone the badge 5 times and put all clones into the gym.
+                for badge_index = 1, 5 do
+                    local cloned_badge = original_badge.clone()
+                    gym.putObject(cloned_badge)
+                end
+    
+                -- Put the original badge into the gym.
+                gym.putObject(original_badge)
+            else
+                print("Failed to get the original badge for tier " .. tostring(gym_index))
+            end
+            
+            -- Move the gym to its destination.
+            move_gym_and_set_name({obj = gym, name = gym_info.name, position = gym_info.position, rotation = gym_info.rotation})
+            gym.call("initialize", gym_info.button_pos)
+        else
+            print("ERROR: Could not find gym #" .. tostring(gym_index))
+        end
+    end
+
+    -- Initialize the Elite 4 gym.
+    local elite4Gym = getObjectFromGUID(elite4GymGuid)
+    if elite4Gym then
+        local gym_info = copyTable(map_data.gyms_info[9])
+        move_gym_and_set_name({obj = elite4Gym, position = gym_info.position, rotation = gym_info.rotation})
+        elite4Gym.call("initialize", gym_info.button_pos)
+    else
+        print("ERROR: Could not find Elite 4 Gym")
+    end
+
+    -- Initialize the Rival/Champion gym.
+    local rivalGym = getObjectFromGUID(rivalGymGuid)
+    if rivalGym then
+        local gym_info = copyTable(map_data.gyms_info[10])
+        move_gym_and_set_name({obj = rivalGym, position = gym_info.position, rotation = gym_info.rotation})
+        rivalGym.call("initialize", { gym_button_position = gym_info.button_pos, victory_button_pos = gym_info.victory_button_pos })
+    else
+        print("ERROR: Could not find Rival Gym")
+    end
+
+    -- Initialize the Team Rocket gym.
+    local teamRocketGym = getObjectFromGUID(teamRocketGymGuid)
+    if teamRocketGym then
+        local gym_info = copyTable(map_data.gyms_info[11])
+        move_gym_and_set_name({obj = teamRocketGym, name = gym_info.name, position = gym_info.position, rotation = gym_info.rotation})
+        teamRocketGym.call("initialize", { gym_button_position = gym_info.button_pos, gym_name = gym_info.name })
+    else
+        print("ERROR: Could not find Team Rocket Gym")
+    end
+
+    -- Initialize the racks.
+    local rack_guid_param = {}
+    for rack_index=1, #initial_rack_guids do
+        -- Get the rack by its initial GUID.
+        local rack = getObjectFromGUID(initial_rack_guids[rack_index])
+
+        -- If there is no rack the user's may have deleted them already. Charge forward!
+        local new_guid = nil
+        if rack then
+            if rack.getStateId() ~= new_state_id then
+                rack = rack.setState(new_state_id)
+            end
+            rack.setLock(true)
+            new_guid = rack.getGUID()
+        else
+            new_guid = nil
+        end
+
+        -- Append the new GUID to the rack GUID param we are sending to the Battle Manager.
+        table.insert(rack_guid_param, new_guid)
+    end
+
+    -- Tell the BattleManager what the rack GUIDs are.
+    local battle_manager = getObjectFromGUID("de7152")
+    battle_manager.call("initialize", rack_guid_param)
+
+    -- Loop through the decks.
+    -- Deck order: Pokeballs, Shop Items, Boost Items, Item Cards, Event Cards, Z-Crystals, Type Boosters, Tera Types, TM Cards
+    for deck_index=1, #map_data.deck_locations do
+        -- Move the deck.
+        local params = copyTable(map_data.deck_locations[deck_index])
+        local deck_obj = standard_items_pokeball.takeObject({guid=params.guid})
+
+        -- The Item Cards and Event Cards need some extra work since they change depending on the map.
+        if deck_index == 4 or deck_index == 5 then
+            -- Set the deck's state and shuffle it after .5 seconds.
+            if deck_obj.getStateId() ~= new_state_id then
+                deck_obj = deck_obj.setState(new_state_id)
+            end
+        end
+
+        -- Shuffle the deck. The shop items don't really need to be shuffled but oh well.
+        deck_obj.shuffle()
+
+        -- Move the deck to its destination.
+        deck_obj.setPosition(params.position)
+        deck_obj.setRotation(params.rotation)
+    end
+
+    -- Unova has decks off the base table area. So we need to populate some empty text strings for its decks.
+    if selected_map_name == "Unova" then
+        -- Z-Crystal Deck.
+        local z_crystal_deck = getObjectFromGUID("e01b2d")
+        if z_crystal_deck then
+            z_crystal_deck.TextTool.setValue("Z-Crystals")
+        end
+        -- Type Boosters Deck.
+        local type_boosters_deck = getObjectFromGUID("012b94")
+        if type_boosters_deck then
+            type_boosters_deck.TextTool.setValue("Type Boosters")
+        end
+        -- Tera Types Deck.
+        local tera_types_deck = getObjectFromGUID("b37916")
+        if tera_types_deck then
+            tera_types_deck.TextTool.setValue("Tera Types")
+        end
+    end
+
+    -- Move counters.
+    local def_counter = standard_items_pokeball.takeObject({guid=def_counter_guid, position={-30, 0.6, 10.72}, rotation={0,0,0}})
+    def_counter.setLock(true)
+    local atk_counter = standard_items_pokeball.takeObject({guid=atk_counter_guid, position={-30, 0.6, -10.72}, rotation={0,0,0}})
+    atk_counter.setLock(true)
+
+    -- Populate the "Arena" text.
+    local arenaText = getObjectFromGUID(arena_text_guid)
+    if arenaText then
+        arenaText.TextTool.setValue("ARENA")
+    end
+
+    -- Move the additional items in the standard items list.
+    for standard_index=1, #map_data.standard_items do
+        local params = copyTable(map_data.standard_items[standard_index])
+        local object_reference = standard_items_pokeball.takeObject(params)
+        object_reference.setLock(true)
+    end
+
+    -- Get a reference to the map specific pokeball.
+    local map_specific_pokeball = getObjectFromGUID(map_specific_guid)
+    if not map_specific_pokeball then
+        print("Could not find the Map Specific Pokéball")
+        return
+    end
+
+    -- Move the Map Specific Items.
+    for map_sepecfic_index=1, #map_data.map_specific_items do
+        local params = copyTable(map_data.map_specific_items[map_sepecfic_index])
+        local object_reference = map_specific_pokeball.takeObject(params)
+        object_reference.setLock(true)
+    end
+end
+
+-- Helper function to name a gym, move and rotate it to its desired location.
+function move_gym_and_set_name(params)
+    if params.name then
+        params.obj.setName(params.name)
+    end
+    params.obj.setPosition(params.position)
+    params.obj.setRotation(params.rotation)
+    params.obj.setLock(true)
 end
 
 -- Helper function that checks if there are custom Gym Leaders available for a particular tier that have not already been selected.
@@ -560,24 +818,6 @@ function start()
         self.removeButton(0)
     end
 
-    -- Shuffle the decks that should be random.
-    local itemDeck = getObjectFromGUID("30f8c1")
-    itemDeck.shuffle()
-    local eventDeck = getObjectFromGUID("656d8c")
-    eventDeck.shuffle()
-    local tmDeck = getObjectFromGUID("b779ed")
-    tmDeck.shuffle()
-    local pokeballDeck = getObjectFromGUID("e8bcad")
-    pokeballDeck.shuffle()
-    local zCrystalDeck = getObjectFromGUID("7df5b9")
-    zCrystalDeck.shuffle()
-    local typeBoosterDeck = getObjectFromGUID("13497d")
-    typeBoosterDeck.shuffle()
-    local teraTypesDeck = getObjectFromGUID("d60fd9")
-    teraTypesDeck.shuffle()
-    local boostItemsDeck = getObjectFromGUID("acfa1d")
-    boostItemsDeck.shuffle()
-
     local pinkPokeball = getObjectFromGUID("9c4411")
     -- Move Starter Pokémon to Pink Pokéball
     for _ = 1, #self.getObjects() do
@@ -630,7 +870,7 @@ end
 
 -- Shallow-copy a table. If our data gets more complicated (nested tables, etc.) we will need a
 -- deep copy instead.
-function ShallowCopy(orig_table)
+function shallowCopy(orig_table)
     local orig_type = type(orig_table)
     local copy
     if orig_type == 'table' then
@@ -642,4 +882,15 @@ function ShallowCopy(orig_table)
         copy = orig_table
     end
     return copy
+  end
+
+  function copyTable(original)
+    local copy = {}
+      for k, v in pairs(original) do
+          if type(v) == "table" then
+              v = copyTable(v)
+          end
+          copy[k] = v
+      end
+      return copy
   end

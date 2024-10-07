@@ -1,43 +1,59 @@
-local gymButtonPos = {0,0,2}
+local gymButtonPos = {}
 
+local gymData = nil
+local pokemonData = nil
 local battleManager = "de7152"
-local leadersData = {}
 
 -- Chaos related fields.
 local chaos = false
-local tier = 9
-local genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7" }
-local customLeadersPokeballGuid = "f6be1f"
+local tier = 3
+local genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
+local customLeadersPokeballGuid = "ab33b9"
 local leaderGuid = nil
 local currentGen = nil
+local initialized = false
+
+function initialize(gym_button_position)
+  gymButtonPos = gym_button_position
+  initialized = true
+
+  self.createButton({ --Apply settings button
+    label="+", click_function="battle",
+    function_owner=self, tooltip="Start Gym Battle",
+    position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
+  })
+end
 
 function onSave()
-    saved_data = JSON.encode({saveLeadersData=leadersData, chaos=chaos})
+    saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos, gym_button_position=gymButtonPos, initialized=initialized})
     return saved_data
 end
 
 function onLoad(saved_data)
   if saved_data ~= "" then
       local loaded_data = JSON.decode(saved_data)
-      if loaded_data.saveLeadersData ~= nil then
-          leadersData = copyTable(loaded_data.saveLeadersData)
-          chaos = loaded_data.chaos
+      if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
+        gymData = copyTable(loaded_data.saveGymData)
+        pokemonData = copyTable(loaded_data.savePokemonData)
       end
+      
+      chaos = loaded_data.chaos
+      gymButtonPos = loaded_data.gym_button_position
+      initialized = loaded_data.initialized
   end
-  
-  self.createButton({ --Apply settings button
-      label="+", click_function="battle",
-      function_owner=self, tooltip="Start Elite Four Battle",
-      position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
-end
 
-function deleteSave() 
-  leadersData = {}
+  if initialized then
+    self.createButton({ --Apply settings button
+        label="+", click_function="battle",
+        function_owner=self, tooltip="Start Gym Battle",
+        position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
+    })
+  end
 end
 
 function battle()
-  if #leadersData == 0 and not chaos then return end
+  -- Ensure we have gym data OR we are in chaos mode.
+  if gymData == nil and not chaos then return end
 
   if chaos then
     -- Get a GUID for a random gen.
@@ -53,19 +69,16 @@ function battle()
     initGym(leaderGuid)
   end
 
-  -- Randomly get a leader data index.
-  local leaderData = leadersData[math.random(1, #leadersData)]
-
   -- Create the params.
   local params = {
-    trainerName = leaderData.trainerName,
-    trainerGUID = leaderData.guid,
+    trainerName = gymData.trainerName,
+    trainerGUID = gymData.guid,
     gymGUID = self.getGUID(),
-    isGymLeader = false,
+    pokemon = pokemonData,
+    isGymLeader = true,
     isSilphCo = false,
     isRival = false,
-    isElite4 = true,
-    pokemon = leaderData.pokemon
+    isElite4 = false
   }
 
   -- Send the Gym Leader card to the arena.
@@ -75,15 +88,17 @@ function battle()
   if sentToArena then
     self.editButton({
         index=0, label="-", click_function="recall",
-        function_owner=self, tooltip="Recall Elite Four Member"
+        function_owner=self, tooltip="Recall Gym Leader",
+        position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
     })
   end
 end
 
 function recall()
   -- Tell BM to send the card back to us.
+  local params = {gymGUID = self.getGUID()}
   local battleManager = getObjectFromGUID(battleManager)
-  battleManager.call("recallGym")
+  battleManager.call("recallGym", params)
 
   if chaos then
     -- Take the leader card out of.. myself and put it back into its Pokeball.
@@ -111,7 +126,7 @@ function recall()
       end,
       5, -- 5 seconds, sheesh.
       function() -- Timeout function.
-        print("Timeout occurred waiting for the Elite 4 card, please place it back in the Gen " .. currentGen .. " Elite 4 Pokeball manually.")
+        print("Timeout occurred waiting for the Gym Leader card, please place it back in the Gen " .. currentGen .. " Gym Leader Pokeball manually.")
     
         -- Clear the gym data of the previous Gym Leader.
         uninitGym()
@@ -123,10 +138,10 @@ function recall()
 
   self.editButton({ --Apply settings button
       index=0, label="+", click_function="battle",
-      function_owner=self, tooltip="Start Elite Four Battle",
+      function_owner=self, tooltip="Start Gym Battle",
+      position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
   })
 end
-
 
 function setLeaderGUID(params)
   if params[1] == "CHAOS" then
@@ -137,20 +152,18 @@ function setLeaderGUID(params)
 end
 
 function initGym(guid)
-  local gymData = Global.call("GetGymDataByGUID", {guid=guid})
-  local leaderData = {guid= gymData.guid, trainerName= gymData.trainerName}
-  local pokemonData = {}
+  pokemonData = {}
+  gymData = Global.call("GetGymDataByGUID", {guid=guid})
   for i=1, #gymData.pokemon do
     local newPokemon = {}
     setNewPokemon(newPokemon, gymData.pokemon[i])
     table.insert(pokemonData, newPokemon)
   end
-  leaderData.pokemon = pokemonData
-  table.insert(leadersData, leaderData)
 end
 
 function uninitGym()
-  leadersData = {}
+  gymData = {}
+  pokemonData = {}
   currentGen = nil
   leaderGuid = nil
 end
