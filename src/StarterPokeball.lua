@@ -135,16 +135,31 @@ function beginSetup2(params)
     if params.selectedGens[2] then
         setupPokeballs(gen2Pokeballs, pokeballs)
         setupPokeballs(gen2EvoPokeballs, evoPokeballs)
+        if not params.selectedGens[1] then
+        	setupPokeballs(gen1EvoPokeballs, evoPokeballs)
+        end
     end
 
     if params.selectedGens[3] then
         setupPokeballs(gen3Pokeballs, pokeballs)
         setupPokeballs(gen3EvoPokeballs, evoPokeballs)
+        if not params.selectedGens[2] then
+        	setupPokeballs(gen2EvoPokeballs, evoPokeballs)
+        end
     end
 
     if params.selectedGens[4] then
         setupPokeballs(gen4Pokeballs, pokeballs)
         setupPokeballs(gen4EvoPokeballs, evoPokeballs)
+        if not params.selectedGens[3] then
+        	setupPokeballs(gen3EvoPokeballs, evoPokeballs)
+        end
+        if not params.selectedGens[2] then
+        	setupPokeballs(gen2EvoPokeballs, evoPokeballs)
+        end
+        if not params.selectedGens[1] then
+        	setupPokeballs(gen1EvoPokeballs, evoPokeballs)
+        end
     end
 
     if params.selectedGens[5] then

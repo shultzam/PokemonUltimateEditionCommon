@@ -832,7 +832,7 @@ gen3PokemonData =
   { name = "Exploud",    level = 6, types = { "Normal" },   moves = { "Extrasensory", "Echoed Voice" },       guids = { "bebdb9", "f2324f", "5b1de6" }, model_GUID = "1567e6" },
   { name = "Makuhita",   level = 2, types = { "Fighting" }, moves = { "Arm Thrust", "Tackle" },               guids = { "52f60d" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "9266af" } } }, model_GUID = "b12e69" },
   { name = "Hariyama",   level = 4, types = { "Fighting" }, moves = { "Smelling Salts", "Vital Throw" },      guids = { "840d39", "9266af" }, model_GUID = "25ea1f", custom_scale=0.4 },
-  { name = "Azurill",    level = 0, types = { "Normal", "Fairy" }, moves = { "Bubble" },                      guids = { "4132b8" },                     evoData = { { cost = 2, ball = GREEN, gen = 2, guids = { "e76d9a" } } }, model_GUID = "3c11df" },
+  { name = "Azurill",    level = 0, types = { "Normal", "Fairy" }, moves = { "Bubble" },                      guids = { "4132b8" },                     evoData = { { cost = 1, ball = GREEN, gen = 2, guids = { "e76d9a" } } }, model_GUID = "3c11df" },
   { name = "Nosepass",   level = 3, types = { "Rock" },     moves = { "Thunder Wave", "Rock Throw" },         guids = { "d3a1d5" },                     evoData = { { cost = 2, ball = YELLOW, gen = 4, guids = { "261bac" } } }, model_GUID = "ef03a1" },
   { name = "Skitty",     level = 2, types = { "Normal" },   moves = { "Double Slap", "Attract" },             guids = { "2ded89" },                     evoData = { { cost = 2, ball = BLUE, gen = 3, guids = { "9cca58" } } }, model_GUID = "701147" },
   -- Gen 3 301-325
@@ -4828,11 +4828,9 @@ function GetPokemonDataByGUID(params)
 
   local data
   for i = 1, #selectedGens do
-    if selectedGens[i] then
-      data = getPokemonData(genData[i], params.guid)
-      if data != nil then
-        return data
-      end
+    data = getPokemonData(genData[i], params.guid)
+    if data != nil then
+      return data
     end
   end
 
@@ -5093,6 +5091,16 @@ end
 
 function GetSelectedGens()
   return selectedGens
+end
+
+function GetFirstGenSelected()
+  local selectedGens = GetSelectedGens()
+  for i, value in ipairs(selectedGens) do
+    if value == true then
+      return i
+    end
+  end
+  return nil
 end
 
 function GetAIDifficulty()
