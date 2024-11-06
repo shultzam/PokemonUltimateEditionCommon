@@ -4199,8 +4199,8 @@ function updateEvolveButtons(params, slotData, level)
   if evoData ~= nil then
     for i=1, #evoData do
       local evolution = evoData[i]
-      -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
-      if selectedGens[evolution.gen] or evolution.ball == 8 then 
+      -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve. Or evolution gen is lower than first gen selected
+      if selectedGens[evolution.gen] or evolution.ball == 8 or evolution.gen < Global.call("GetFirstGenSelected") then
         if type(evolution.cost) == "string" then
           for _, evoGuid in ipairs(evolution.guids) do
             local evoData = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
@@ -4288,8 +4288,8 @@ function evolvePoke(params)
           break
         end
       elseif evolution.cost <= diceLevel then
-        -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
-        if selectedGens[evolution.gen] or evolution.ball == 8 then
+        -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve. Or evolution gen is lower than first gen selected
+        if selectedGens[evolution.gen] or evolution.ball == 8 or evolution.gen < Global.call("GetFirstGenSelected") then
           table.insert(evoList, evolution)
         else
           for _, evoGuid in ipairs(evolution.guids) do
