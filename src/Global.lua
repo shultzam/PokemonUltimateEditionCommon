@@ -6855,7 +6855,7 @@ function onLoad(saved_data)
     force_shiny = save_table.force_shiny
     tokens_checked_for_shiny = save_table.tokens_checked_for_shiny
     shiny_pokemon_that_exist_table = save_table.shiny_pokemon_that_exist_table
-    -- Selected Pokemon.
+    -- Selected Pokemon and leaders.
     selectedGens = save_table.selectedGens
     customGen = save_table.customGen
     customGymLeaderOption = save_table.customGymLeaderOption
@@ -6899,6 +6899,9 @@ function onLoad(saved_data)
   end
   if shiny_pokemon_that_exist_table == nil then
     shiny_pokemon_that_exist_table = {}
+  end
+  if leadersGen == nil then
+    leadersGen = 1
   end
 
   -- Update the music playlists.
