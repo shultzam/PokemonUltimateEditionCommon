@@ -1,17 +1,17 @@
-local gymButtonPos = {}
-local victoryButtonPos = {}
+gymButtonPos = {}
+victoryButtonPos = {}
 
-local battleManager = "de7152"
-local leadersData = {}
+battleManager = "de7152"
+leadersData = {}
 
 -- Chaos related fields.
-local chaos = false
-local tier = 10
-local genLeadersPokeballGuids = { "3ddf5f", "ec20b2", "2a9746", "537124", "3869d0", "ba0a27", "eeba9c", "8e8fd2", "80f567" }
-local customLeadersPokeballGuid = "be2f56"
-local leaderGuid = nil
-local currentGen = nil
-local initialized = false
+chaos = false
+tier = 10
+genLeadersPokeballGuids = { "3ddf5f", "ec20b2", "2a9746", "537124", "3869d0", "ba0a27", "eeba9c", "8e8fd2", "80f567", "163374" }
+customLeadersPokeballGuid = "be2f56"
+leaderGuid = nil
+currentGen = nil
+initialized = false
 
 function initialize(params)
   gymButtonPos = params.gym_button_position
@@ -71,10 +71,15 @@ end
 function battle()
   if #leadersData == 0 and not chaos then return end
 
+  -- Get a handle on the Battle Manager.
+  local battleManager = getObjectFromGUID(battleManager)
+  if battleManager.call("getDefenderType") ~= nil then return end
+
   if chaos then
     -- Get a GUID for a random gen.
-    currentGen = math.random(1, 9)
-    leaderGuid = Global.call("RandomGymGuidOfTier", {gen=currentGen, tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 10), tier=tier, retrievedList={}})
+    leaderGuid = random_leader_params.guid
+    currentGen = random_leader_params.leader_gen
 
     -- Take the leader card out of the Pokeball and put it inside of.. myself.
     local pokeball = getObjectFromGUID(genLeadersPokeballGuids[currentGen])
@@ -100,11 +105,8 @@ function battle()
     pokemon = leaderData.pokemon
   }
 
-  -- Send the Gym Leader card to the arena.
-  local battleManager = getObjectFromGUID(battleManager)
-  local sentToArena = battleManager.call("sendToArenaGym", params)
-
-  if sentToArena then
+  -- Send the Rival card to the arena.
+  if battleManager.call("sendToArenaGym", params) then
     self.editButton({
         index=0, label="-", click_function="recall",
         function_owner=self, tooltip="Recall Champion"

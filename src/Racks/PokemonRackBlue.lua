@@ -159,7 +159,6 @@ function rackRecall()
       statusZPos = statusZPos,
       itemZPos = itemZPos,
       index = arenaIndex,
-      arenaAttack = arenaAttack,
       rackGUID = self.getGUID(),
       autoCamera = autoCamera
   }
@@ -484,14 +483,14 @@ end
 
 function evolveArena(attDefParams)
 
-    if inArena != false then
+    if inArena ~= false then
         rackEvolve(arenaIndex, 1)
     end
 end
 
 function evolveTwoArena(attDefParams)
 
-    if inArena != false then
+    if inArena ~= false then
         rackEvolve(arenaIndex, 2)
     end
 end

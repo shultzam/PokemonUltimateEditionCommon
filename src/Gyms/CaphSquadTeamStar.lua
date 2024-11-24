@@ -1,4 +1,4 @@
-gymButtonPos = {}
+gymButtonPos = {1.5, 0, 9.7}
 
 gymData = nil
 pokemonData = nil
@@ -6,49 +6,33 @@ battleManager = "de7152"
 
 -- Chaos related fields.
 chaos = false
-tier = 8
-genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "8c717e" }
-customLeadersPokeballGuid = "ab33b9"
+tier = 11
+genLeadersPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "2317bd" }
+customLeadersPokeballGuid = "94584c"
 leaderGuid = nil
 currentGen = nil
-initialized = false
-
-function initialize(gym_button_position)
-  gymButtonPos = gym_button_position
-  initialized = true
-
-  self.createButton({ --Apply settings button
-    label="+", click_function="battle",
-    function_owner=self, tooltip="Start Gym Battle",
-    position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
-end
 
 function onSave()
-    saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos, gym_button_position=gymButtonPos, initialized=initialized})
-    return saved_data
+  saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos})
+  return saved_data
 end
 
 function onLoad(saved_data)
   if saved_data ~= "" then
-      local loaded_data = JSON.decode(saved_data)
-      if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
-        gymData = copyTable(loaded_data.saveGymData)
-        pokemonData = copyTable(loaded_data.savePokemonData)
-      end
-
-      chaos = loaded_data.chaos
-      gymButtonPos = loaded_data.gym_button_position
-      initialized = loaded_data.initialized
+    local loaded_data = JSON.decode(saved_data)
+    if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
+      gymData = copyTable(loaded_data.saveGymData)
+      pokemonData = copyTable(loaded_data.savePokemonData)
+    end
+    
+    chaos = loaded_data.chaos
   end
 
-  if initialized then
-    self.createButton({ --Apply settings button
-        label="+", click_function="battle",
-        function_owner=self, tooltip="Start Gym Battle",
-        position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-    })
-  end
+  self.createButton({ --Apply settings button
+    label="+", click_function="battle",
+    function_owner=self, tooltip="Start Gym Battle",
+    position=gymButtonPos, rotation={0,0,0}, height=600, width=600, font_size=15000
+  })
 end
 
 function battle()
@@ -80,8 +64,8 @@ function battle()
     trainerGUID = gymData.guid,
     gymGUID = self.getGUID(),
     pokemon = pokemonData,
-    isGymLeader = true,
-    isSilphCo = false,
+    isGymLeader = false,
+    isSilphCo = true,
     isRival = false,
     isElite4 = false
   }

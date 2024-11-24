@@ -1,4 +1,4 @@
-gymButtonPos = {}
+gymButtonPos = {1.3, 0, 10.3}
 
 gymData = nil
 pokemonData = nil
@@ -6,49 +6,33 @@ battleManager = "de7152"
 
 -- Chaos related fields.
 chaos = false
-tier = 8
+tier = 5
 genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "8c717e" }
 customLeadersPokeballGuid = "ab33b9"
 leaderGuid = nil
 currentGen = nil
-initialized = false
 
-function initialize(gym_button_position)
-  gymButtonPos = gym_button_position
-  initialized = true
+function onSave()
+  saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos})
+  return saved_data
+end
+
+function onLoad(saved_data)
+  if saved_data ~= "" then
+    local loaded_data = JSON.decode(saved_data)
+    if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
+      gymData = copyTable(loaded_data.saveGymData)
+      pokemonData = copyTable(loaded_data.savePokemonData)
+    end
+    
+    chaos = loaded_data.chaos
+  end
 
   self.createButton({ --Apply settings button
     label="+", click_function="battle",
     function_owner=self, tooltip="Start Gym Battle",
     position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
   })
-end
-
-function onSave()
-    saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos, gym_button_position=gymButtonPos, initialized=initialized})
-    return saved_data
-end
-
-function onLoad(saved_data)
-  if saved_data ~= "" then
-      local loaded_data = JSON.decode(saved_data)
-      if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
-        gymData = copyTable(loaded_data.saveGymData)
-        pokemonData = copyTable(loaded_data.savePokemonData)
-      end
-
-      chaos = loaded_data.chaos
-      gymButtonPos = loaded_data.gym_button_position
-      initialized = loaded_data.initialized
-  end
-
-  if initialized then
-    self.createButton({ --Apply settings button
-        label="+", click_function="battle",
-        function_owner=self, tooltip="Start Gym Battle",
-        position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-    })
-  end
 end
 
 function battle()

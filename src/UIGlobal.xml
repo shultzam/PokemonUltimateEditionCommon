@@ -1,6 +1,13 @@
 <Defaults>
     <Text class="UIText" fontSize="18" fontStyle="Bold" Color="#FFFFFF"/>
 </Defaults>
+<Panel id="WelcomeMessage" width="564" height="200" returnToOriginalPositionWhenReleased="false" color="#DDDDDD">
+    <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
+        <Text text="Join the Discord Channel" fontSize="20" fontStyle="Bold"/>
+        <Text fontSize="16" text="500+ Members. Discuss the game, suggest new features, arrange sessions to play with other members and browse additional content. https://discord.gg/hkVrKar"/>
+        <Button text="Close" preferredHeight="40" width="300" onClick="start"/>
+    </VerticalLayout>
+</Panel>
 <Panel id="Settings" visibility="false" width="660" height="775" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <VerticalLayout>
@@ -12,11 +19,11 @@
                 <Option>Hoenn</Option>
                 <Option>Sinnoh</Option>
                 <Option>Unova</Option>
-                <!-- <Option>Kalos</Option> -->
-                <!-- <Option>Alola</Option> -->
-                <!-- <Option>Galar</Option> -->
-                <!-- <Option>Paldea</Option> -->
-                <!-- <Option>Orange Islands</Option> -->
+                <Option>Kalos</Option>
+                <Option>Alola</Option>
+                <Option>Galar</Option>
+                <Option>Paldea</Option>
+                <Option>Orange Islands</Option>
                 <Option>Random</Option>
             </Dropdown>
         </VerticalLayout>
@@ -53,6 +60,7 @@
                     <Option>Gen VII</Option>
                     <Option>Gen VIII</Option>
                     <Option>Gen IX</Option>
+                    <Option>Orange Islands</Option>
                     <Option>Random</Option>
                     <Option>Chaos</Option>
                 </Dropdown>
@@ -69,6 +77,7 @@
                     <Option>Alola</Option>
                     <Option>Galar</Option>
                     <Option>Paldea</Option>
+                    <Option>Orange Islands</Option>
                     <Option>Random</Option>
                 </Dropdown>
             </VerticalLayout>
@@ -85,6 +94,7 @@
             <Text fontSize="18" text="Scripted House Rules (Optional)" alignment="MiddleLeft" fontStyle="Bold"/>
             <HorizontalLayout spacing="15" childForceExpandHeight="false">
                 <Toggle id="setDualTypeEffectiveness" onValueChanged="dualTypeEffectivenessSet" interactable="true" >Dual Type Effectiveness</Toggle>
+                <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leaders Get Boosters (35% chance)</Toggle>
                 <!--<Toggle id="setHardGymLeaders" onValueChanged="hardGymLeadersSet" interactable="true" >Hard Gym Leaders</Toggle>-->
                 <!--<Toggle id="setHpRule2" onValueChanged="hpRule2Set" interactable="true" >HP Rule 2</Toggle>-->
             </HorizontalLayout>

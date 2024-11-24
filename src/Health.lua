@@ -17,12 +17,8 @@
     "Baobots". The same token was used, but the script is written from scratch.
     https://steamcommunity.com/sharedfiles/filedetails/?id=2352739177
 
-
-
     Changelog:
-    9/3/2024 - Modified by Allen S. for usage in Pokemon Master Trainer Ultimate Edition (various mods)
-
-    
+    9/3/2024 - Modified by Allen S. for usage in Pokemon Master Trainer Ultimate Edition
 
     License (MIT):
 

@@ -9,23 +9,40 @@ local trainerName = nil
 local pokemonData = nil
 local battleManager = "de7152"
 
+-- All button Y values are the same.
+local buttonOptionY = -3.15
+
 -- Model button fields.
 -- NOTE: It is pretty silly to tie the model buttons to this object but Rival Event object is permanent and really close to 
 --       the button locations. I am not proud, but may the future developers here not judge me too harshly.
 local MODEL_SIZE_CHANGE_STEP = 1.0
 local SPAWN_DELAY_CHANGE_STEP = 0.1
 local modelOptionX = -45.0
-local modelOptionY = -3.15
 local modelOptionZ = -3.2
 local modelOptionsShown = false
 local modelOptionButtons = {}
+local SHINY_CHANGE_STEP = 1   -- Percent
 
--- Model button fields.
+-- Music button fields.
+-- NOTE: It is pretty silly to tie the music buttons to this object but Rival Event object is permanent and really close to 
+--       the button locations. I am not proud, but may the future developers here not judge me too harshly.
 local musicOptionX = -30.0
-local musicOptionY = -3.15
 local musicOptionZ = -3.2
 local musicOptionsShown = false
 local musicOptionButtons = {}
+
+-- Auto-Roller fields.
+-- NOTE: It is pretty silly to ... you get the point.
+local autoRollerOptionX = -30.0
+local autoRollerOptionZ = 8.0
+local currentAutoRollerIndex = 0
+local autoRollersTable = { [0] = "No AutoRoller", [1] = "AutoRoller Logs", [2] = "AutoRoller Dice"  } -- [3] = "Simulate Logs (beta)"
+
+-- Turn Counter fields.
+-- NOTE: you can't stop me.
+local turnCounterOptionX = -45.0
+local turnCounterOptionZ = 8.0
+local turnCount = 0
 
 -- Event Rival region table.
 local REGION_TABLE = {
@@ -38,10 +55,11 @@ local REGION_TABLE = {
   "Alola",
   "Galar",
   "Paldea",
+  "Orange Islands"
 }
 
 function onSave()
-  local saved_data = JSON.encode({saveRegion=region, saveTrainerName=trainerName, savePokemonData=pokemonData})
+  local saved_data = JSON.encode({saveRegion=region, saveTrainerName=trainerName, savePokemonData=pokemonData, saveCurrentAutoRollerIndex=currentAutoRollerIndex, turnCount=turnCount})
   return saved_data
 end
 
@@ -53,6 +71,16 @@ function onLoad(saved_data)
       trainerName = loaded_data.saveTrainerName
       pokemonData = copyTable(loaded_data.savePokemonData)
     end
+
+    currentAutoRollerIndex = loaded_data.saveCurrentAutoRollerIndex
+    if currentAutoRollerIndex == nil then
+      currentAutoRollerIndex = 0
+    end
+
+    turnCount = loaded_data.turnCount
+    if turnCount == nil then
+      turnCount = 0
+    end
   end
 
   -- Create the buttons and hide them if there is no data.
@@ -61,17 +89,31 @@ function onLoad(saved_data)
 
   -- Model button functionality.
   self.tooltip = false
-  self.createButton({ --Apply settings button
+  self.createButton({ --Apply button
       label="3D Model Options", click_function="click_model_options",
       function_owner=self,
-      position={modelOptionX, modelOptionY, modelOptionZ}, height=2000, width=7000, font_size=1000,
+      position={modelOptionX, buttonOptionY, modelOptionZ}, height=2000, width=7000, font_size=1000
   })
 
   -- Music button functionality.
-  self.createButton({ --Apply settings button
+  self.createButton({ --Apply button
       label="Music Options", click_function="click_music_options",
       function_owner=self,
-      position={musicOptionX, musicOptionY, musicOptionZ}, height=2000, width=7000, font_size=1000,
+      position={musicOptionX, buttonOptionY, musicOptionZ}, height=2000, width=7000, font_size=1000,
+  })
+
+  -- AutoRoller button functionality.
+  self.createButton({ --Apply button
+    label=autoRollersTable[currentAutoRollerIndex], click_function="increment_auto_roller_index",
+    function_owner=self,
+    position={autoRollerOptionX, buttonOptionY, autoRollerOptionZ}, height=2000, width=7000, font_size=1000,
+  })
+
+  -- TurnCounter button functionality.
+  self.createButton({ --Apply button
+    label="Turn " .. tostring(turnCount), click_function="adjust_turn_counter",
+    function_owner=self,
+    position={turnCounterOptionX, buttonOptionY, turnCounterOptionZ}, height=2000, width=7000, font_size=1000,
   })
 end
 
@@ -256,13 +298,13 @@ function click_model_options()
     -- Enable Models
     self.createButton({
       label="Enable Models", click_function="splash", function_owner=self,
-      position={modelOptionX-2.0,modelOptionY,modelOptionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.0,buttonOptionY,modelOptionZ+2.8}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_model_button("Enable Models")
     self.createButton({
       label="", click_function="toggle_models",
       function_owner=self, tooltip="Check to enable 3D models",
-      position={modelOptionX+3.0,modelOptionY,modelOptionZ+3.0}, height=400, width=400, font_size=600
+      position={modelOptionX+3.0,buttonOptionY,modelOptionZ+2.8}, height=400, width=400, font_size=600
     })
     register_model_button("toggle_models")
     set_enable_button()
@@ -270,46 +312,85 @@ function click_model_options()
     -- Model size
     self.createButton({
       label="Model Size", click_function="splash", function_owner=self,
-      position={modelOptionX-2.0,modelOptionY,modelOptionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.0,buttonOptionY,modelOptionZ+4.1}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_model_button("Model Size")
     self.createButton({
       click_function="decrease_model_size",
       function_owner=self, tooltip="Click to decrease the model size",
-      position={modelOptionX+2.5,modelOptionY,modelOptionZ+4.5}, height=400, width=400, font_size=600, label="-"
+      position={modelOptionX+2.5,buttonOptionY,modelOptionZ+4.1}, height=400, width=400, font_size=600, label="-"
     })
     register_model_button("decrease_model_size")
     self.createButton({
       click_function="increase_model_size",
       function_owner=self, tooltip="Click to increase the model size",
-      position={modelOptionX+3.5,modelOptionY,modelOptionZ+4.5}, height=400, width=400, font_size=600, label="+"
+      position={modelOptionX+3.5,buttonOptionY,modelOptionZ+4.1}, height=400, width=400, font_size=600, label="+"
     })
     register_model_button("increase_model_size")
 
     -- Spawn delay
     self.createButton({
       label="Spawn Delay", click_function="splash", function_owner=self,
-      position={modelOptionX-2.25,modelOptionY,modelOptionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX-2.25,buttonOptionY,modelOptionZ+5.4}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_model_button("Spawn Delay")
     self.createButton({
       label="", click_function="splash_spawn_delay", function_owner=self,
-      position={modelOptionX+5.7,modelOptionY,modelOptionZ+6.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={modelOptionX+5.7,buttonOptionY,modelOptionZ+5.4}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_model_button("splash_spawn_delay")
     set_spawn_delay_label()
     self.createButton({
       click_function="decrease_spawn_delay",
       function_owner=self, tooltip="Click to decrease the delay before the spawn animation shows (useful if some players cannot see the spawn animations).",
-      position={modelOptionX+2.5,modelOptionY,modelOptionZ+6.0}, height=400, width=400, font_size=600, label="-"
+      position={modelOptionX+2.5,buttonOptionY,modelOptionZ+5.4}, height=400, width=400, font_size=600, label="-"
     })
     register_model_button("decrease_spawn_delay")
     self.createButton({
       click_function="increase_spawn_delay",
       function_owner=self, tooltip="Click to increase the delay before the spawn animation shows (useful if some players cannot see the spawn animations).",
-      position={modelOptionX+3.5,modelOptionY,modelOptionZ+6.0}, height=400, width=400, font_size=600, label="+"
+      position={modelOptionX+3.5,buttonOptionY,modelOptionZ+5.4}, height=400, width=400, font_size=600, label="+"
     })
     register_model_button("increase_spawn_delay")
+
+    -- Shiny Chance.
+    self.createButton({
+      label="Shiny Chance", click_function="splash", function_owner=self,
+      position={modelOptionX-2.25,buttonOptionY,modelOptionZ+6.7}, height=0, width=0, font_size=600, font_color={1,1,1}
+    })
+    register_model_button("Shiny Chance")
+    self.createButton({
+      label="", click_function="splash_shiny_chance", function_owner=self,
+      position={modelOptionX+5.7,buttonOptionY,modelOptionZ+6.7}, height=0, width=0, font_size=600, font_color={1,1,1}
+    })
+    register_model_button("splash_shiny_chance")
+    set_shiny_chance_label()
+    self.createButton({
+      click_function="decrease_shiny_chance",
+      function_owner=self, tooltip="Click to decrease the the chance for shiny models to spawn.",
+      position={modelOptionX+2.5,buttonOptionY,modelOptionZ+6.7}, height=400, width=400, font_size=600, label="-"
+    })
+    register_model_button("decrease_shiny_chance")
+    self.createButton({
+      click_function="increase_shiny_chance",
+      function_owner=self, tooltip="Click to increase the chance for shiny models to spawn.",
+      position={modelOptionX+3.5,buttonOptionY,modelOptionZ+6.7}, height=400, width=400, font_size=600, label="+"
+    })
+    register_model_button("increase_shiny_chance")
+
+    -- Force Shiny.
+    self.createButton({
+      label="Force Shiny", click_function="splash", function_owner=self,
+      position={modelOptionX-2.25,buttonOptionY,modelOptionZ+8.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+    })
+    register_model_button("Force Shiny")
+    self.createButton({
+      label="", click_function="toggle_force_shiny",
+      function_owner=self, tooltip="Check to Force the Next (eligible) Model to be Shiny",
+      position={modelOptionX+3.0,buttonOptionY,modelOptionZ+8.0}, height=400, width=400, font_size=600
+    })
+    register_model_button("toggle_force_shiny")
+    set_force_shiny()
   end
 end
 
@@ -364,11 +445,51 @@ function decrease_spawn_delay()
   set_spawn_delay_label()
 end
 
+function set_shiny_chance_label()
+  local shiny_chance_label = find_button("splash_shiny_chance")
+  local shiny_label = Global.Call("get_shiny_chance") .. "%"
+  self.editButton({index=shiny_chance_label.index, label=shiny_label})
+end
+
+function increase_shiny_chance()
+  Global.Call("increase_shiny_chance", {chance=SHINY_CHANGE_STEP})
+  set_shiny_chance_label()
+end
+
+function decrease_shiny_chance()
+  Global.Call("increase_shiny_chance", {chance=-SHINY_CHANGE_STEP})
+  set_shiny_chance_label()
+end
+
+function toggle_force_shiny()
+  Global.Call("toggle_force_shiny")
+  set_force_shiny()
+end
+
+function set_force_shiny()
+  local forced_shiny_button = find_button("toggle_force_shiny")
+  if Global.call("get_shiny_forced") then
+    printToAll("Forcing the next model to be shiny (if eligible).")
+    self.editButton({index=forced_shiny_button.index, label=string.char(10004), color={0,1,0}})
+  else
+    self.editButton({index=forced_shiny_button.index, label="", color={1,1,1}})
+  end
+end
+
+function remove_forced_shiny()
+  local forced_shiny_button = find_button("toggle_force_shiny")
+  self.editButton({index=forced_shiny_button.index, label="", color={1,1,1}})
+end
+
 function splash()
   --But nothing happened!
 end
 
 function splash_spawn_delay()
+  --Nothing happened! But with style.
+end
+
+function splash_shiny_chance()
   --Nothing happened! But with style.
 end
 
@@ -386,13 +507,13 @@ function click_music_options()
     -- Enable original music.
     self.createButton({
       label="Original Music", click_function="splash", function_owner=self,
-      position={musicOptionX-2.0,musicOptionY,musicOptionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={musicOptionX-2.0,buttonOptionY,musicOptionZ+3.0}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_music_button("Original Music")
     self.createButton({
       label="", click_function="toggle_original_music",
       function_owner=self, tooltip="Check to enable the more traditional music",
-      position={musicOptionX+3.0,musicOptionY,musicOptionZ+3.0}, height=400, width=400, font_size=600
+      position={musicOptionX+3.0,buttonOptionY,musicOptionZ+3.0}, height=400, width=400, font_size=600
     })
     register_music_button("toggle_original_music")
     set_enable_originals_button()
@@ -400,13 +521,13 @@ function click_music_options()
     -- Enable remix music.
     self.createButton({
       label="Remixes", click_function="splash", function_owner=self,
-      position={musicOptionX-0.5,musicOptionY,musicOptionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
+      position={musicOptionX-0.5,buttonOptionY,musicOptionZ+4.5}, height=0, width=0, font_size=600, font_color={1,1,1}
     })
     register_music_button("Remixes")
     self.createButton({
       label="", click_function="toggle_remix_music",
       function_owner=self, tooltip="Check to enable some dope remixes :D",
-      position={musicOptionX+3.0,musicOptionY,musicOptionZ+4.5}, height=400, width=400, font_size=600
+      position={musicOptionX+3.0,buttonOptionY,musicOptionZ+4.5}, height=400, width=400, font_size=600
     })
     register_music_button("toggle_remix_music")
     set_enable_remixes_button()
@@ -443,4 +564,57 @@ end
 function toggle_remix_music()
   Global.Call("toggle_remix_music_enabled")
   set_enable_remixes_button()
+end
+
+function increment_auto_roller_index()
+  -- Get a handle on the Battle Manager.
+  local battleManager = getObjectFromGUID(battleManager)
+  if not battleManager then
+    print("Could not find the BattleManager.. :(")
+    return
+  end
+
+  -- Ensure we are not in battle.
+  if battleManager.call("isBattleInProgress") then
+    printToAll("Cannot toggle AutoRollers during battle.")
+    return
+  end
+
+  -- Get the current button label.
+  local current_label = autoRollersTable[currentAutoRollerIndex]
+
+  -- Increment the index and take the modulos.
+  currentAutoRollerIndex = currentAutoRollerIndex + 1
+  currentAutoRollerIndex = currentAutoRollerIndex % (#autoRollersTable + 1)
+
+  -- Edit the button to use the new label.
+  local auto_rollers_button = find_button(current_label)
+  self.editButton({index=auto_rollers_button.index, label=autoRollersTable[currentAutoRollerIndex]})
+end
+
+function get_auto_roller_type()
+  return currentAutoRollerIndex
+end
+
+function adjust_turn_counter(obj, color, alt)
+  -- Get the current button label.
+  local current_label = turnCount
+
+  -- Adjust the turn count.
+  if alt then
+    turnCount = turnCount - 1
+  else
+    turnCount = turnCount + 1
+  end
+
+  -- Make sure the Turn Count doesn't underflow.
+  if turnCount < 0 then turnCount = 0 end
+
+  -- Edit the button to use the new label.
+  local turn_count_button = find_button("Turn " .. current_label)
+  self.editButton({index=turn_count_button.index, label="Turn " .. tostring(turnCount)})
+end
+
+function increment_turn_counter()
+  adjust_turn_counter(0, 0, false)
 end

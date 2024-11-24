@@ -1,16 +1,16 @@
-local gymButtonPos = {}
+gymButtonPos = {}
 
-local battleManager = "de7152"
-local leadersData = {}
+battleManager = "de7152"
+leadersData = {}
 
 -- Chaos related fields.
-local chaos = false
-local tier = 9
-local genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7" }
-local customLeadersPokeballGuid = "f6be1f"
-local leaderGuid = nil
-local currentGen = nil
-local initialized = false
+chaos = false
+tier = 9
+genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7" }
+customLeadersPokeballGuid = "f6be1f"
+leaderGuid = nil
+currentGen = nil
+initialized = false
 
 function initialize(gym_button_position)
   gymButtonPos = gym_button_position
@@ -56,10 +56,15 @@ end
 function battle()
   if #leadersData == 0 and not chaos then return end
 
+  -- Get a handle on the Battle Manager.
+  local battleManager = getObjectFromGUID(battleManager)
+  if battleManager.call("getDefenderType") ~= nil then return end
+
   if chaos then
     -- Get a GUID for a random gen.
-    currentGen = math.random(1, 9)
-    leaderGuid = Global.call("RandomGymGuidOfTier", {gen=currentGen, tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 9), tier=tier, retrievedList={}})
+    leaderGuid = random_leader_params.guid
+    currentGen = random_leader_params.leader_gen
 
     -- Take the leader card out of the Pokeball and put it inside of.. myself.
     local pokeball = getObjectFromGUID(genLeadersPokeballGuids[currentGen])
@@ -85,11 +90,8 @@ function battle()
     pokemon = leaderData.pokemon
   }
 
-  -- Send the Gym Leader card to the arena.
-  local battleManager = getObjectFromGUID(battleManager)
-  local sentToArena = battleManager.call("sendToArenaGym", params)
-
-  if sentToArena then
+  -- Send the Elite 4 card to the arena.
+  if battleManager.call("sendToArenaGym", params) then
     self.editButton({
         index=0, label="-", click_function="recall",
         function_owner=self, tooltip="Recall Elite Four Member"

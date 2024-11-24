@@ -1,17 +1,17 @@
-local gymButtonPos = {}
+gymButtonPos = {}
 
-local gymData = nil
-local pokemonData = nil
-local battleManager = "de7152"
+gymData = nil
+pokemonData = nil
+battleManager = "de7152"
 
 -- Chaos related fields.
-local chaos = false
-local tier = 3
-local genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
-local customLeadersPokeballGuid = "ab33b9"
-local leaderGuid = nil
-local currentGen = nil
-local initialized = false
+chaos = false
+tier = 3
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "8c717e" }
+customLeadersPokeballGuid = "ab33b9"
+leaderGuid = nil
+currentGen = nil
+initialized = false
 
 function initialize(gym_button_position)
   gymButtonPos = gym_button_position
@@ -55,10 +55,15 @@ function battle()
   -- Ensure we have gym data OR we are in chaos mode.
   if gymData == nil and not chaos then return end
 
+  -- Get a handle on the Battle Manager.
+  local battleManager = getObjectFromGUID(battleManager)
+  if battleManager.call("getDefenderType") ~= nil then return end
+
   if chaos then
     -- Get a GUID for a random gen.
-    currentGen = math.random(1, 9)
-    leaderGuid = Global.call("RandomGymGuidOfTier", {gen=currentGen, tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 10), tier=tier, retrievedList={}})
+    leaderGuid = random_leader_params.guid
+    currentGen = random_leader_params.leader_gen
 
     -- Take the leader card out of the Pokeball and put it inside of.. myself.
     local pokeball = getObjectFromGUID(genLeadersPokeballGuids[currentGen])
@@ -82,10 +87,7 @@ function battle()
   }
 
   -- Send the Gym Leader card to the arena.
-  local battleManager = getObjectFromGUID(battleManager)
-  local sentToArena = battleManager.call("sendToArenaGym", params)
-
-  if sentToArena then
+  if battleManager.call("sendToArenaGym", params) then
     self.editButton({
         index=0, label="-", click_function="recall",
         function_owner=self, tooltip="Recall Gym Leader",
