@@ -4849,6 +4849,9 @@ function evolvePoke(params)
                     -- Check if the Pokemon has a Model GUID that was shiny. This call is used to get a handle on the model.
                     if Global.call("get_models_enabled") then
                       Global.call("force_shiny_spawn", {guid=pokeObj.guid, state=shiny_state})
+                      if shiny_state then
+                        evolvedPokemon.setColorTint({255/255, 215/255, 0/255})
+                      end
                     end
                     break
                   end
@@ -5045,6 +5048,11 @@ function evolvePoke(params)
         rackGUID = params.rackGUID
       }
       updateEvolveButtons(evolveButtonParams, evolvedPokemonData, diceLevel)
+    
+      -- Change the token to shiny.
+      if evolvedPokemon and shiny_state then
+        evolvedPokemon.setColorTint({255/255, 215/255, 0/255})
+      end
 
       return pokemonData
     end

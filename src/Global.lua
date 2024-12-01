@@ -378,17 +378,18 @@ customMoveData =
 --   5- In the TTS script editor: CTRL+A -> CTRL+V to overwrite the entirety of the old script with
 --       your new version
 --   6- In the TTS script editor: at the top-left of the window, click Save & Play.
---   7- If new: Apply the Pokemon Token tag to each of your tokens by right-clicking, click Tags and 
---              illuminate the Pokemon Token tag in the list.
---   8- If new: Right-click each of your new pokemon tokens and click Save Object. Now, if you respawn 
---              these tokens from saved objects in the future they will have the same GUID.
---   9- Back in the game, it is RECOMMENDED to apply the tag of "Pokemon Token" to your token to get some
+--   7- If new: x Apply the Pokemon Token tag to each of your tokens by right-clicking, click Tags and 
+--                illuminate the Pokemon Token tag in the list.
+--              x Click the size Gizmo and scale your token to {1.4, 1, 1.4}.
+--              x Right-click each of your new pokemon tokens and click Save Object. Now, if you respawn 
+--                these tokens from saved objects in the future they will have the same GUID.
+--   8- Back in the game, it is RECOMMENDED to apply the tag of "Pokemon Token" to your token to get some
 --      of this mod's built-in functionality to work for your token. Not mandatory though.
---   10-Now, move your Custom Tokens to their appropriate Pokeballs (Custom Pink, Green, Yellow, etc.),
+--   9 -Now, move your Custom Tokens to their appropriate Pokeballs (Custom Pink, Green, Yellow, etc.),
 --      NOTE: If they are an evo token, they must go in the evo Pokeball for their color.
---   11-Save your game *again*.
---   12-Start the game whenever you are ready. Ensure Custom Pokemon are enabled in the setup window.
---   13-You did it. :)
+--   10-Save your game *again*.
+--   11-Start the game whenever you are ready. Ensure Custom Pokemon are enabled in the setup window.
+--   12-You did it. :)
 --
 -- MODEL NOTES:
 --   1- To use a custom model:
@@ -1178,7 +1179,7 @@ gen5PokemonData =
   { name = "Timburr",         level = 2, types = { "Fighting" }, moves = { "Low Kick", "Leer" },               guids = { "89aae4" },                     evoData = { { cost = 2, ball = BLUE, gen = 5, guids = { "e8de1c" }, model_GUID = "0dfde4", spawn_effect="Physical Attack" } }, model_GUID = "334885", spawn_effect="Physical Attack" },
   { name = "Gurdurr",         level = 4, types = { "Fighting" }, moves = { "Dynamic Punch", "Chip Away" },     guids = { "84d209", "e8de1c" },           evoData = { { cost = 2, ball = RED, gen = 5, guids = { "2c58d6", "36840e" }, model_GUID = "04bed2" } }, model_GUID = "0dfde4", spawn_effect="Physical Attack" },
   { name = "Conkeldurr",      level = 6, types = { "Fighting" }, moves = { "Hammer Arm", "Stone Edge" },       guids = { "29c9eb", "2c58d6", "36840e" }, model_GUID = "04bed2", custom_scale=0.65, offset={x=0, y=0, z=-0.15} },
-  { name = "Tympole",         level = 2, types = { "Water" },    moves = { "Supersonic", "Bubble" },           guids = { "348d4f" },                     evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "18532d" }, model_GUID = "62c539", spawn_effect="Physical Attack" } }, model_GUID = "70136d" },
+  { name = "Tympole",         level = 2, types = { "Water" },    moves = { "Supersonic", "Bubble" },           guids = { "348d4f" },                     evoData = { { cost = 2, ball = BLUE, gen = 5, guids = { "18532d" }, model_GUID = "62c539", spawn_effect="Physical Attack" } }, model_GUID = "70136d" },
   { name = "Palpitoad",       level = 4, types = { "Water", "Ground" }, moves = { "Echoed Voice", "Bubble Beam" }, guids = { "fd66e4", "18532d" },           evoData = { { cost = 1, ball = RED, gen = 5, guids = { "a738c3", "373635" }, model_GUID = "f1d4fb" } }, model_GUID = "62c539", spawn_effect="Physical Attack" },
   { name = "Seismitoad",      level = 5, types = { "Water", "Ground" }, moves = { "Muddy Water", "Mud Shot" }, guids = { "578f18", "a738c3", "373635" }, model_GUID = "f1d4fb" },
   { name = "Throh",           level = 4, types = { "Fighting" }, moves = { "Bulk Up", "Seismic Toss" },        guids = { "72fcf5" }, model_GUID = "74563b" },
@@ -2057,8 +2058,8 @@ moveData =
     {name="Moonlight",      power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="LifeRecovery", target="Self"}} },
     {name="Spirit Break",   power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Disadvantage", target="Enemy"}} },
     {name="Spring. Storm",  power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Disadvantage", target="Enemy", chance=6},{name="Advantage", target="Self", chance=6}} },
-    {name="Strange Steam",  power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy", chanc=6}} },
-    {name="Draining Kiss",  power=1,      type="Fairy",     dice=6, STAB=true,  effects={{name="LifeRecovery", target="Self"}} },
+    {name="Strange Steam",  power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy", chanc=6}} },
+    {name="Draining Kiss",  power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="LifeRecovery", target="Self"}} },
     {name="Heal Pulse",     power=0,      type="Fairy",     dice=6, STAB=false, effects={{name="Revival", target="Self"}} },
     {name="Smite",          power=2,      type="Fairy",     dice=6, STAB=true,  effects={{name="Confuse", target="Enemy"}} },
     {name="Starfall",       power=3,      type="Fairy",     dice=6, STAB=true,  effects={{name="MistyTerrain"}} },
@@ -2100,7 +2101,7 @@ moveData =
     {name="Raging Bull Fighting",power=2, type="Fighting",  dice=6, STAB=true},
     {name="Revenge",        power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="Enraged", target="Self"}} },
     {name="Rock Smash",     power=1,      type="Fighting",  dice=6, STAB=true,  effects={{name="Advantage", target="Self", chance=4}} },
-    {name="Sacred Sword",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Sacred Sword",   power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Secret Sword",   power=3,      type="Fighting",  dice=6, STAB=true},
     {name="Seismic Toss",   power="Self", type="Fighting",  dice=6, STAB=false},
     {name="Sky Uppercut",   power=2,      type="Fighting",  dice=6, STAB=true},
@@ -2246,7 +2247,7 @@ moveData =
     {name="Leaf Tornado",   power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Disadvantage", target="Enemy", chance=4}}},
     {name="Magical Leaf",   power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Advantage", target="Self"}} },
     {name="Matcha Gotcha",  power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}, {name="LifeRecovery", target="Self"}} },
-    {name="Mega Drain",     power=1,      type="Grass",   dice=6, STAB=false,   effects={{name="LifeRecovery", target="Self"}} },
+    {name="Mega Drain",     power=1,      type="Grass",   dice=6, STAB=true,    effects={{name="LifeRecovery", target="Self"}} },
     {name="Needle Arm",     power=2,      type="Grass",   dice=6, STAB=true,    effects={{name="Disadvantage", target="Enemy", chance=5}} },
     {name="Petal Blizzard", power=2,      type="Grass",   dice=6, STAB=true},
     {name="Petal Dance",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Confuse", target="Self", chance=5}} },
@@ -2258,7 +2259,7 @@ moveData =
     {name="Solar Beam",     power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
     {name="Solar Blade",    power=3,      type="Grass",   dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
     {name="Spicy Extract",  power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="DoubleAdvantage", target="Self"}} },
-    {name="Spiky Shield",   power=1,      type="Grass",   dice=6, STAB=true,    effects={{name="Protection", target="Self"}, {name="Enraged", target="Self"}} },
+    {name="Spiky Shield",   power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Protection", target="Self"}, {name="Enraged", target="Self"}} },
     {name="Spore",          power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Sleep", target="Enemy"}} },
     {name="Stun Spore",     power=0,      type="Grass",   dice=6, STAB=false,   effects={{name="Paralyze", target="Enemy", chance=3}} },
     {name="Syrup Bomb",     power=2,      type="Grass",   dice=6, STAB=true},
@@ -2346,7 +2347,7 @@ moveData =
     {name="Conversion",     power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Conversion2",    power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Covet",          power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
-    {name="Crush Claw",     power=3,      type="Normal",  dice=6, STAB=true,    effects={{name="Advantage", target="Self", chance=4}} },
+    {name="Crush Claw",     power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Advantage", target="Self", chance=4}} },
     {name="Defense Curl",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Disadvantage", target="Enemy"}} },
     {name="Disable",        power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
     {name="Dizzy Punch",    power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=5}} },
@@ -2818,7 +2819,7 @@ rivalData =
         guid = "38ea83",
         tier = PINK,
         pokemon = {
-          { name = "Starly", level = 1, types = { "Flying" }, moves = { "Quick Attack", "Whirlwind" }, model_GUID = "befb97" },
+          { name = "Starly", level = 1, types = { "Flying", "Normal" }, moves = { "Quick Attack", "Whirlwind" }, model_GUID = "befb97" },
           { name = "Piplup", level = 2, types = { "Water" }, moves = { "Water Gun", "Peck" }, model_GUID = "c9b643" } }
       },
       {
@@ -4371,7 +4372,7 @@ gymData =
     gymTier = 5,
     pokemon = {
       { name = "Weezing", level = 5, types = { "Poison", "Fairy" }, moves = { "Fairy Wind", "Sludge", "Strange Steam" }, model_GUID = "e96342" },
-      { name = "Alcremie", level = 5, types = { "Fairy" }, moves = { "Sweet Kiss", "Acid Armor", "Draining Kiss" }, model_GUID = "44047f" } }
+      { name = "Alcremie", level = 6, types = { "Fairy" }, moves = { "Sweet Kiss", "Acid Armor", "Draining Kiss" }, model_GUID = "44047f" } }
   },
   {
     guid = "3ec0f8",
@@ -4578,7 +4579,7 @@ gymData =
     gymTier = 9,
     pokemon = {
       { name = "Camerupt", level = 9, types = { "Fire", "Ground" }, moves = { "Flash Cannon", "Earth Power", "Fire Blast" }, model_GUID = "f266b1", spawn_effect="Physical Attack", custom_scale=0.6, offset={x=0, y=0, z=-0.1} },
-      { name = "Clodsire",   level = 10, types = { "Ground", "Poison" }, moves = { "Protect", "Earthquake", "Poison Jab" }, model_GUID = "2263bf" } }
+      { name = "Clodsire",   level = 10, types = { "Ground" }, moves = { "Protect", "Earthquake", "Poison Jab" }, model_GUID = "2263bf" } }
   },
   {
     guid = "49c164",
@@ -7060,15 +7061,21 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 23 November 24 - v3.3 \
-   - New maps: Kalos, Alola, Galar, Paldea and Orange Islands. \
-   - Shiny Models! Force a shiny in the models menu. \
-   - New move effects (see rule books)! \
-   -- Over 100 Pokemon, 22 Gym Leaders and 16 TMs were changed. \
-   - Much requested auto rollers (logs and dice). \
-   - Optional House Rule: Gym Leaders have a 35% chance to get a Booster. \
-   - New events! New Item Cards! \
-   NOTE: there is a fairly common deployment problem causing an error when setting up the map. For now, just reload the mod and deploy again lol.", 
+  printToAll("Last update on 1 December 24 - v3.3.1 \
+  v3.3 \
+    - New maps: Kalos, Alola, Galar, Paldea and Orange Islands. \
+    - Shiny Models! Force a shiny in the models menu. \
+    - New move effects (see rule books)! \
+    -- Over 100 Pokemon, 22 Gym Leaders and 16 TMs were changed. \
+    - Much requested auto rollers (logs and dice). \
+    - Optional House Rule: Gym Leaders have a 35% chance to get a Booster. \
+    - New events! New Item Cards! \
+  v3.3.1 \
+    - Scripted shop. See the Item Costs card for buttons. :) (Thanks Halikon and Acutter for the suggestion.) \
+    - Properly scaled all tokens. \
+    - Bug fixes. \
+    \
+  NOTE: there is a fairly common deployment problem causing an error when setting up the map. For now, just reload the mod and deploy again lol.",
   "Pink")
 end
 
@@ -8455,19 +8462,21 @@ function spawn_model(pokemon)
     -- This is most likely due to a shiny Pokemon evolving.
     local shiny_status = tokens_checked_for_shiny[token_guid]
     -- If shiny_already_spawned is true then another token of this Pokemon is already a Shiny.
-    local shiny_already_spawned = shiny_pokemon_that_exist_table[pokemon_name]
+    local shiny_already_spawned = (shiny_pokemon_that_exist_table[pokemon_name] ~= nil and shiny_pokemon_that_exist_table[pokemon_name] ~= token_guid)
     if force_shiny or (shiny_status == nil and not shiny_already_spawned) then
       -- This token has not attempted to Spawn a model yet. Attempt to spawn a shiny.
-      if force_shiny or (math.random(1,100) > (100 - shiny_chance)) then
+      local scaling_factor = 1.0 and (shiny_chance > 20) or 1.25
+      if force_shiny or (math.random(1,100) > (100 - (shiny_chance * scaling_factor))) then
         -- Spawn a shiny!
-        pokemon.state.model_GUID = shiny_guid_table[pokemon_name]
+        pokemon.state.model_GUID = shiny_guid_table[pokemon_name]   -- TODO: maybe don't do this and callers can check for .shiny?
+        pokemon.state.shiny = true
         -- This offset only works the first time the Pokemon is loaded.
         pokemon.base.offset = {x=pokemon.base.offset.x, y=pokemon.base.offset.y + 0.05, z=pokemon.base.offset.z}
 
         -- Make sure this token is on the shiny check list.
         force_shiny_spawn({guid=token_guid, state=true})
         -- This prevents another token for this Pokemon also getting a Shiny.
-        shiny_pokemon_that_exist_table[pokemon_name] = true
+        shiny_pokemon_that_exist_table[pokemon_name] = token_guid
 
         -- Get a handle on the Token and set the color tint.
         local token = getObjectFromGUID(token_guid)
@@ -8501,7 +8510,7 @@ function spawn_model(pokemon)
       end
     elseif shiny_status then
       -- This token is already a Shiny. Respawn the shiny!
-      pokemon.state.model_GUID = shiny_guid_table[pokemon_name]
+      pokemon.state.shiny = true
 
       -- Determine if the current offset is the same that is in its data.
       local pokemonData = GetPokemonDataByGUID({guid=token_guid})
@@ -8827,7 +8836,7 @@ end
 
 function increase_shiny_chance(tbl)
   local new_shiny_chance = shiny_chance + tbl.chance
-  if new_shiny_chance >= 0 then
+  if new_shiny_chance >= 0 and new_shiny_chance <= 100 then
     shiny_chance = new_shiny_chance
   end
 end
@@ -8837,7 +8846,7 @@ function get_shiny_chance()
 end
 
 function toggle_force_shiny()
-  force_shiny = true
+  force_shiny = not force_shiny
 end
 
 function get_shiny_forced()
@@ -8848,8 +8857,7 @@ end
 function pokemon_has_shiny(params)
   if not params.name or not params.model_guid then return false end
 
-  -- Get the Pokemon name.
-  -- If this model has the same GUID as the 
+  -- Get the Pokemon name. If this model has the same GUID as the shiny GUID, it currently has a shiny model.
   if params.name and params.model_guid == shiny_guid_table[params.name] then
     return true
   end

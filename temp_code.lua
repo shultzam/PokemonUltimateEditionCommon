@@ -13,9 +13,10 @@ local genEvoPokeballs = { "e9d043", "7de53d", "f30baf", "ceb9a5", "5293ec", "98b
 "59de2d", "315a95", "f02e17", "943c81", "c67911", "de7f1f", "750e11", "21b1c8", "6d2737", "2b7b9b", "79e3f4", "21ba50", 
 "74eeff", "432142", "79ee2f", "bc1673", "4f7b73", "2d873a", "a32b0d", "d2b2ca", "637026", "02689f", "9c010b", "03ea82", 
 "4217d6", "6ae5c4", "8963b5", "0dc3f5", "4e3f1d" }
-local battlemodelsList = { battlemodels_GUID }
+local battlemodelsList = { MODELS_BALL_GUID }
 
--- TEMP | Apply appropriate tag to all pokemon chips and all models.
+-- Perform an operation on all tokens. Do the standard tokens first, then the evos.
+-- Always do models seperately.
 -- NOTE: this code would go into onLoad() in Global.lua.
 --[[
   1. Spawn in the TEMP TAG POKEBALL
@@ -24,6 +25,7 @@ local battlemodelsList = { battlemodels_GUID }
   4. Save game.
 ]]
 local pokeballs_list = genPokeballs
+--local pokeballs_list = genEvoPokeballs
 for pokeball_index=1, #pokeballs_list do
   -- Get handle to the home pokeball and temp pokeball.
   local home_pokeball = getObjectFromGUID(pokeballs_list[pokeball_index])
@@ -34,33 +36,7 @@ for pokeball_index=1, #pokeballs_list do
     -- Take object from home pokeball.
     local token = home_pokeball.takeObject({})
 
-    -- Apply the tag to the Pokemon TOKEN.
-    token.addTag("Pokemon Token")
-
-    -- Put the Pokemon into  into the temp pokeball.
-    temp_pokeball.putObject(token)
-  end
-
-  -- Now take the object back from the temp pokeball and put them back 
-  -- into the home pokeball.
-  for token_index = 1, #temp_pokeball.getObjects() do
-    home_pokeball.putObject(temp_pokeball.takeObject({}))
-  end
-end
-
-local pokeballs_list = genEvoPokeballs
-for pokeball_index=1, #pokeballs_list do
-  -- Get handle to the home pokeball and temp pokeball.
-  local home_pokeball = getObjectFromGUID(pokeballs_list[pokeball_index])
-  local temp_pokeball = getObjectFromGUID("e08c3e")
-
-  -- Loop through each item in the pokeball.
-  for token_index = 1, #home_pokeball.getObjects() do
-    -- Take object from home pokeball.
-    local token = home_pokeball.takeObject({})
-
-    -- Apply the tag to the Pokemon TOKEN.
-    token.addTag("Pokemon Token")
+    -- DO SOMETHING HERE
 
     -- Put the Pokemon into  into the temp pokeball.
     temp_pokeball.putObject(token)
@@ -105,3 +81,6 @@ for model_index = 1, #temp_pokeball.getObjects() do
   -- Put the Pokemon into the home pokeball.
   home_pokeball.putObject(model)
 end
+
+-- Get all the snap points.
+print(dump_table(Global.getSnapPoints()))

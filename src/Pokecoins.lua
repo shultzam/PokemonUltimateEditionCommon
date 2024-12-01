@@ -147,6 +147,24 @@ function onValueChanged(obj, color, input, stillEditing)
 end
 
 --[[
+    Added by Allen Degenerous.
+    Returns the current script value.
+]]
+function getValue()
+    return script_state.value
+end
+
+--[[
+    Added by Allen Degenerous.
+    Modifies value by amount.
+]]
+function adjustValue(adjustment)
+    script_state.value = script_state.value + adjustment
+
+    refreshTokenUI()
+end
+
+--[[
     Occurs when the label is clicked.
     If right-clicked, the value will be decremented.
     If left-clicked the value will be incrememented.
