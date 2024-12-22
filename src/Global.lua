@@ -8515,8 +8515,7 @@ function spawn_model(pokemon)
     local shiny_already_spawned = (shiny_pokemon_that_exist_table[pokemon_name] ~= nil and shiny_pokemon_that_exist_table[pokemon_name] ~= token_guid)
     if force_shiny or (shiny_status == nil and not shiny_already_spawned) then
       -- This token has not attempted to Spawn a model yet. Attempt to spawn a shiny.
-      local scaling_factor = 1.0 and (shiny_chance > 20) or 1.25
-      if force_shiny or (math.random(1,100) > (100 - (shiny_chance * scaling_factor))) then
+      if force_shiny or (math.random(1,100) > (100 - shiny_chance)) then
         -- Spawn a shiny!
         pokemon.state.model_GUID = shiny_guid_table[pokemon_name]   -- TODO: maybe don't do this and callers can check for .shiny?
         pokemon.state.shiny = true
