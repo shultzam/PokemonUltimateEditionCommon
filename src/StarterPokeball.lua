@@ -134,6 +134,26 @@ function beginSetup2(params)
     -- Load the required map shenanigans. If this map has multiple Gyms (like Alola, some Gym Leaders will get taken during this step).
     leadersRetrieved = setup_map(params.selected_map, params.leadersGen)
 
+    -- Check if we need to merge the TMs. setup_map() moves the filtered TM deck onto the table so this should be a save merge.
+    if not params.filterTMs then
+        -- Get a handle on both TM decks
+        local filtered_tm_deck = getObjectFromGUID("b779ed")
+        local bad_tm_deck = getObjectFromGUID("558862")
+
+        -- Get the position of the filtered TM deck.
+        --local filtered_position = filtered_tm_deck.getPosition()
+
+        -- Put the poopy deck into the filtered deck and shuffle.
+        filtered_tm_deck.putObject(bad_tm_deck)
+        filtered_tm_deck.shuffle()
+    end
+
+    -- Get a handle on the Map Manager and delete it.
+    local map_manager = getObjectFromGUID("026857")
+    if map_manager then
+        destroyObject(map_manager)
+    end
+
     -- Check if we need to collect Beast Pokemon.
     if params.selected_map == "Alola" then
         moveBeastPokemon()
