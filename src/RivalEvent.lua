@@ -478,7 +478,9 @@ end
 
 function remove_forced_shiny()
   local forced_shiny_button = find_button("toggle_force_shiny")
-  self.editButton({index=forced_shiny_button.index, label="", color={1,1,1}})
+  if forced_shiny_button then
+    self.editButton({index=forced_shiny_button.index, label="", color={1,1,1}})
+  end
 end
 
 function splash()

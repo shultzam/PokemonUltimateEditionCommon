@@ -57,6 +57,7 @@ local d4Dice="7c6144"
 local d6Dice="15df3c"
 local statusGUID = {burned="3b8a3d", poisoned="26c816", sleep="00dbc5", paralyzed="040f66", frozen="d8769a", confused="d2fe3e", cursed="5333b9"}
 boosterDeckGUID = "acfa1d"
+BASE_HEALTH_OBJECT_GUID = "5ab909"
 
 local levelDiceXOffset = 0.205
 local levelDiceZOffset = 0.13
@@ -78,7 +79,8 @@ local attackerData = {
   diceMod=0,
   addDice=0,
   teraType=nil,
-  model_GUID=nil
+  model_GUID=nil,
+  health_indicator_guid=nil
 }
 local attackerPokemon=nil
 
@@ -93,7 +95,8 @@ local defenderData = {
   diceMod=0,
   addDice=0,
   teraType=nil,
-  model_GUID=nil
+  model_GUID=nil,
+  health_indicator_guid=nil
 }
 local defenderPokemon=nil
 
@@ -137,17 +140,17 @@ local rivalFipButtonPos = {x=7.33, z=6.28}
 -- AutoRoll and Simulation values.
 local BATTLE_ROUND = 1
 local autoRollAtkPos = {x=13.4, z=12.2}
-local autoRollAtkDicePos = {blue={x=12.5675, z=12.77}, white={x=13.1225, z=12.77}, purple={x=13.6775, z=12.77}, red={x=14.2325, z=12.77}}
+local autoRollAtkDicePos = {purple={x=12.6, z=12.77}, white={x=13.4, z=12.77}, blue={x=14.2, z=12.77}, red={x=13.4, z=13.34}}
 local autoRollDefPos = {x=13.4, z=-12.2}
-local autoRollDefDicePos = {blue={x=12.5675, z=-12.77}, white={x=13.1225, z=-12.77}, purple={x=13.6775, z=-12.77}, red={x=14.2325, z=-12.77}}
+local autoRollDefDicePos = {purple={x=12.6, z=-12.77}, white={x=13.4, z=-12.77}, blue={x=14.2, z=-12.77}, red={x=13.4, z=-13.34}}
 
-local atkAutoRollCounts = {blue=0, white=1, purple=0, red=0}
-local defAutoRollCounts = {blue=0, white=1, purple=0, red=0}
+local atkAutoRollCounts = {purple=0, white=1, blue=0, red=0}
+local defAutoRollCounts = {purple=0, white=1, blue=0, red=0}
 
 local auto_roller_positions = {
-  {-37, 1.45, 13}, {-35.5, 1.45, 13}, {-33.5, 1.45, 13},
-  {-37, 1.45, 14.5}, {-35.5, 1.45, 14.5}, {-33.5, 1.45, 14.5}, {-31.5, 1.45, 14.5},
-  {-37, 1.45, 16}, {-35.5, 1.45, 16}, {-33.5, 1.45, 16}, {-31.5, 1.45, 16}
+  {-37, 1.45, 13}, {-35.5, 1.45, 13}, {-34, 1.45, 13},
+  {-37, 1.45, 14.5}, {-35.5, 1.45, 14.5}, {-34, 1.45, 14.5}, {-32.5, 1.45, 14.5},
+  {-37, 1.45, 16}, {-35.5, 1.45, 16}, {-34, 1.45, 16}, {-32.5, 1.45, 16}
 }
 
 local simulatePos = {x=13.2, z=0.0}
@@ -258,8 +261,8 @@ local inBattle = false
 local battleState = NO_BATTLE
 
 --Arena Positions
-local defenderPos = {pokemon={-36.01, 4.19}, dice={-36.03, 6.26}, status={-31.25, 4.44}, statusCounters={-31.25, 6.72}, item={-40.87, 4.26}, moveDice={-36.11, 8.66}, booster={-41.09, 13.40}}
-local attackerPos = {pokemon={-36.06,-4.23}, dice={-36.03,-6.15}, status={-31.25,-4.31}, statusCounters={-31.25,-6.74}, item={-40.87,-4.13}, moveDice={-36.11,-8.53}, booster={-41.10, -13.28}}
+local defenderPos = {pokemon={-36.01, 4.19}, dice={-36.03, 6.26}, status={-31.25, 4.44}, statusCounters={-31.25, 6.72}, item={-40.87, 4.26}, moveDice={-36.11, 8.66}, booster={-41.09, 13.40}, healthIndicator={-38, 1.06, 2.34}}
+local attackerPos = {pokemon={-36.06,-4.23}, dice={-36.03,-6.15}, status={-31.25,-4.31}, statusCounters={-31.25,-6.74}, item={-40.87,-4.13}, moveDice={-36.11,-8.53}, booster={-41.10, -13.28}, healthIndicator={-38, 1.06, -2.34}}
 
 -- This one will likely never be used sadly. There is no way to add a zone to each mod with the same GUID.
 -- We can't save the zone as an object. :/
@@ -390,21 +393,21 @@ function onLoad(saved_data)
     self.createButton({label="NEXT POKEMON", click_function="flipGymLeader", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
 
     -- Tera buttons.
-    self.createButton({label="", click_function="changeAttackerTeraType", function_owner=self, tooltip="Terastallize Attacker", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
-    self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
+    self.createButton({label="", click_function="changeAttackerTeraType", function_owner=self, tooltip="Terastallize Attacker", position={3.5, 1000, -0.6}, height=300, width=2200, font_size=200})
+    self.createButton({label="", click_function="changeDefenderTeraType", function_owner=self, tooltip="Terastallize Defender", position={3.5, 1000, -0.6}, height=300, width=2200, font_size=200})
     -- Next Rival.
     self.createButton({label="NEXT POKEMON", click_function="flipRivalPokemon", function_owner=self, position={3.5, 1000, -0.6}, height=300, width=1600, font_size=200})
     -- AutoRoller buttons.
     self.createButton({label="Autoroll", click_function="autoRollAttacker", function_owner=self, tooltip="AutoRoll Attacker", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200})
-    self.createButton({label="0", click_function="adjustAtkDiceBlue", function_owner=self, tooltip="D8 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Blue"})
-    self.createButton({label="1", click_function="adjustAtkDiceWhite", function_owner=self, tooltip="D6 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="White"})
-    self.createButton({label="0", click_function="adjustAtkDicePurple", function_owner=self, tooltip="D4 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Purple"})
-    self.createButton({label="0", click_function="adjustAtkDiceRed", function_owner=self, tooltip="Effect Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Red"})
+    self.createButton({label="0", click_function="adjustAtkDiceBlue", function_owner=self, tooltip="D8 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="Blue"})
+    self.createButton({label="1", click_function="adjustAtkDiceWhite", function_owner=self, tooltip="D6 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="White"})
+    self.createButton({label="0", click_function="adjustAtkDicePurple", function_owner=self, tooltip="D4 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="Purple"})
+    self.createButton({label="Effect Roll", click_function="rollAtkEffectDie", function_owner=self, tooltip="Roll One Effect Die", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200, color="Red"})
     self.createButton({label="Autoroll", click_function="autoRollDefender", function_owner=self, tooltip="AutoRoll Defender", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200})
-    self.createButton({label="0", click_function="adjustDefDiceBlue", function_owner=self, tooltip="D8 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Blue"})
-    self.createButton({label="1", click_function="adjustDefDiceWhite", function_owner=self, tooltip="D6 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="White"})
-    self.createButton({label="0", click_function="adjustDefDicePurple", function_owner=self, tooltip="D4 Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Purple"})
-    self.createButton({label="0", click_function="adjustDefDiceRed", function_owner=self, tooltip="Effect Dice", position={3.5, 1000, -0.6}, height=300, width=300, font_size=200, color="Red"})
+    self.createButton({label="0", click_function="adjustDefDiceBlue", function_owner=self, tooltip="D8 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="Blue"})
+    self.createButton({label="1", click_function="adjustDefDiceWhite", function_owner=self, tooltip="D6 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="White"})
+    self.createButton({label="0", click_function="adjustDefDicePurple", function_owner=self, tooltip="D4 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="Purple"})
+    self.createButton({label="Effect Roll", click_function="rollDefEffectDie", function_owner=self, tooltip="Roll One Effect Die", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200, color="Red"})
     self.createButton({label="Simulate", click_function="simulateRound", function_owner=self, tooltip="Simulate Battle Round", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200})
 
     -- Check if we are in battle.
@@ -472,23 +475,49 @@ end
 -- Tera related functions.
 --------------------------
 
+function createAttackerTeraLabel()
+  local label = attackerPokemon.types[1]
+  if attackerPokemon.teraActive then
+    label = attackerPokemon.teraType
+  elseif Global.call("getDualTypeEffectiveness") and attackerPokemon.types[2] then
+    label = label .. "/" .. attackerPokemon.types[2]
+  else
+  end
+  return label
+end
+
 function changeAttackerTeraType()
   if attackerPokemon.teraType == nil or attackerPokemon.types == nil then
     print("Cannot Terastallize the attacker without a Tera card!")
     return
   end
   
-  -- Update the atacker type.
-  -- The tera type is TECHNICALLY the only active type during dual typing. 
-  -- But the token value can't change so oh well.
-  local previousType = attackerPokemon.types[1]
-  attackerPokemon.types[1] = attackerPokemon.teraType
-  attackerPokemon.teraType = previousType
+  -- Toggle the tera active.
+  if attackerPokemon.teraActive == nil then attackerPokemon.teraActive = false end
+  attackerPokemon.teraActive = not (attackerPokemon.teraActive)
 
   -- Update the effectiveness of moves.
   updateTypeEffectiveness()
 
-  showAttackerTeraButton(true, attackerPokemon.types[1])
+  -- Show the attacker tera buttons.
+  local label = createAttackerTeraLabel()
+  showAttackerTeraButton(true, label)
+end
+
+function showAttackerTeraButton(visible, type_label)
+  local yPos = visible and 0.5 or 1000
+  local label = type_label and "Current: " .. type_label or ""
+  self.editButton({index=38, label=label, position={2.6, yPos, 0.6}})
+end
+
+function createDefenderTeraLabel()
+  local label = defenderPokemon.types[1]
+  if defenderPokemon.teraActive then
+    label = defenderPokemon.teraType
+  elseif Global.call("getDualTypeEffectiveness") and defenderPokemon.types[2] then
+    label = label .. "/" .. defenderPokemon.types[2]
+  end
+  return label
 end
 
 function changeDefenderTeraType()
@@ -497,17 +526,22 @@ function changeDefenderTeraType()
     return
   end
 
-  -- Update the defender type.
-  -- The tera type is TECHNICALLY the only active type during dual typing. 
-  -- But the token value can't change so oh well.
-  local previousType = defenderPokemon.types[1]
-  defenderPokemon.types[1] = defenderPokemon.teraType
-  defenderPokemon.teraType = previousType
+  -- Toggle the tera active.
+  if defenderPokemon.teraActive == nil then defenderPokemon.teraActive = false end
+  defenderPokemon.teraActive = not (defenderPokemon.teraActive)
 
   -- Update the effectiveness of moves.
   updateTypeEffectiveness()
 
-  showDefenderTeraButton(true, defenderPokemon.types[1])
+  -- Show the defender tera buttons.
+  local label = createDefenderTeraLabel()
+  showDefenderTeraButton(true, label)
+end
+
+function showDefenderTeraButton(visible, type_label)
+  local yPos = visible and 0.5 or 1000
+  local label = type_label and "Current: " .. type_label or ""
+  self.editButton({index=39, label=label, position={2.6, yPos, -0.6}})
 end
 
 --------------------------
@@ -699,6 +733,15 @@ function flipGymLeader()
     Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
   end
 
+  -- Check if we need to adjust a health indicator.
+  if Global.call("getHpRule2Set") then
+    -- Get a handle on the object.
+    local health_indicator = getObjectFromGUID(defenderData.health_indicator_guid)
+    if health_indicator then
+      health_indicator.call("setValue", defenderPokemon.pokemon2.baseLevel)
+    end
+  end
+
   -- Clear texts.
   clearMoveText(ATTACKER)
   clearMoveText(DEFENDER)
@@ -839,6 +882,15 @@ function flipRivalPokemon()
     secondary_token_data.state = secondary_token_data.base
 
     Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
+  end
+
+  -- Check if we need to adjust a health indicator.
+  if Global.call("getHpRule2Set") then
+    -- Get a handle on the object.
+    local health_indicator = getObjectFromGUID(attackerData.health_indicator_guid)
+    if health_indicator then
+      health_indicator.call("setValue", attackerPokemon.pokemon2.baseLevel)
+    end
   end
 
   -- Clear texts.
@@ -987,6 +1039,11 @@ function battleWildPokemon(wild_battle_params, is_automated)
         end
       end 
     end
+
+    -- Check if HP Rule 2 is enabled.
+    if Global.call("getHpRule2Set") then
+      cloneTempHpRuleHealthIndicatorToArena(DEFENDER, pokemonData.level)
+    end
   else
     -- Check if the pokemon token is on the table.
     local token = getObjectFromGUID(wildPokemonGUID)
@@ -1001,6 +1058,12 @@ function battleWildPokemon(wild_battle_params, is_automated)
     hideConfirmButton(DEFENDER)
 
     showAutoRollButtons()
+
+    -- Check if HP Rule 2 is enabled.
+    if Global.call("getHpRule2Set") then
+      -- Destroy the temporary Health Indicator.
+      destroyTempHealthIndicator(DEFENDER)
+    end
 
     clearPokemonData(DEFENDER)
     clearTrainerData(DEFENDER)
@@ -1856,7 +1919,6 @@ function wildPokemonLost()
 end
 
 function pokemonFaint(isAttacker, data)
-
   -- Flip token
   local pokemon = getObjectFromGUID(data.pokemonGUID)
   local rotation = pokemon.getRotation()
@@ -1963,10 +2025,10 @@ function selectMove(index, isAttacker, isRandom)
   -- Check if the Pokemon is using a move with Attack power of Self, Enemy or Sleep.
   if type(pokemonData.attackValue.movePower) == "string" then 
     if pokemonData.attackValue.movePower == status_ids.the_self then
-      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2) + 0.5)
+      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2))
     elseif pokemonData.attackValue.movePower == status_ids.enemy then
       local opponentData = isAttacker and defenderData or attackerData
-      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2) + 0.5)
+      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2))
     elseif pokemonData.attackValue.movePower == status_ids.sleep then
       -- Check if the opponent is asleep.
       local opponentPokemon = isAttacker and defenderPokemon or attackerPokemon
@@ -3130,6 +3192,12 @@ function sendToArenaTitan(params)
     showConfirmButton(DEFENDER, "RANDOM MOVE")
   end
 
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Create a Health Indicator.
+    cloneTempHpRuleHealthIndicatorToArena(DEFENDER, params.titanData.level)
+  end
+
   return true
 end
 
@@ -3342,6 +3410,12 @@ function sendToArenaGym(params)
     showConfirmButton(DEFENDER, "RANDOM MOVE")
   end
 
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Create a Health Indicator.
+    cloneTempHpRuleHealthIndicatorToArena(DEFENDER, pokemonData[1].baseLevel)
+  end
+
   return true
 end
 
@@ -3453,6 +3527,12 @@ function sendToArenaTrainer(params)
       end,
       2
     )
+  end
+
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Create a Health Indicator.
+    cloneTempHpRuleHealthIndicatorToArena(ATTACKER, pokemonData.level)
   end
 
   return true
@@ -3596,6 +3676,12 @@ function sendToArenaRival(params)
   showFlipRivalButton(true)
   showConfirmButton(ATTACKER, "RANDOM MOVE")
 
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Create a Health Indicator.
+    cloneTempHpRuleHealthIndicatorToArena(ATTACKER, pokemonData[1].level)
+  end
+
   return true
 end
 
@@ -3631,6 +3717,12 @@ function recallTrainer(params)
     removeStatus(defenderPokemon)
   end
 
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Destroy the temporary Health Indicator.
+    destroyTempHealthIndicator(ATTACKER)
+  end
+
   showAttackerTeraButton(false)
   clearPokemonData(ATTACKER)
   clearTrainerData(ATTACKER)
@@ -3638,7 +3730,7 @@ end
 
 function recallGym()
   -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
-  -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+  -- I didn't feel like figuring out to fake allllll of the initialization process for GymData models that may 
   -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
   if Global.call("get_models_enabled") then
     -- Get the active model GUID. This prevents despawning the wrong model.
@@ -3730,6 +3822,12 @@ function recallGym()
     discardBooster(DEFENDER)
   end
 
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Destroy the temporary Health Indicator.
+    destroyTempHealthIndicator(DEFENDER)
+  end
+
   clearPokemonData(DEFENDER)
   clearTrainerData(DEFENDER)
 
@@ -3808,6 +3906,12 @@ function recallRival()
   if scriptingEnabled == false then
     hideConfirmButton(ATTACKER)
     showAutoRollButtons(false)
+  end
+
+  -- Check if HP Rule 2 is enabled.
+  if Global.call("getHpRule2Set") then
+    -- Destroy the temporary Health Indicator.
+    destroyTempHealthIndicator(ATTACKER)
   end
 
   clearPokemonData(ATTACKER)
@@ -4030,12 +4134,18 @@ function sendToArena(params)
           pokemonData.teraType = true
           local teraData = Global.call("GetTeraDataByGUID", itemCard.getGUID())
           if teraData ~= nil then
+            -- Create the Tera label.
+            local label = pokemonData.types[1]
+            if Global.call("getDualTypeEffectiveness") and pokemonData.types[2] then
+              label = label .. "/" .. pokemonData.types[2]
+            end
+            -- Determine which Tera buttons to show.
             if isAttacker then
               teraType = teraData.type
-              showAttackerTeraButton(true, pokemonData.types[1])
+              showAttackerTeraButton(true, label)
             else
               teraType = teraData.type
-              showDefenderTeraButton(true, pokemonData.types[1])
+              showDefenderTeraButton(true, label)
             end
           end
         elseif itemCard then
@@ -4088,7 +4198,6 @@ function sendToArena(params)
         showAtkButtons(true)
         attackerPokemon = pokemonData
         attackerPokemon.teraType = teraType
-        showAutoRollButtons(true)
     else
         showDefButtons(true)
         defenderPokemon = pokemonData
@@ -4116,6 +4225,31 @@ function sendToArena(params)
     elseif attackerPokemon ~= nil and defenderPokemon ~= nil and inBattle == false then
       inBattle = true
       Global.call("PlayTrainerBattleMusic",{})
+    end
+
+    -- Check if HP Rule 2 is enabled.
+    if Global.call("getHpRule2Set") and params.healthIndicatorGuid then
+      -- Get a handle on the health indicator object.
+      local health_indicator = getObjectFromGUID(params.healthIndicatorGuid)
+      if health_indicator then
+        -- Move the indicator.
+        health_indicator.setPosition(isAttacker and attackerPos.healthIndicator or defenderPos.healthIndicator)
+        health_indicator.setRotation({0, 180, 0})
+
+        -- Once the indicator is resting, lock it.
+        Wait.time(
+          function()
+            health_indicator.setLock(true)
+          end,
+          2
+        )
+
+        -- Save off the GUID.
+        local data = isAttacker and attackerData or defenderData
+        data.health_indicator_guid = health_indicator.guid
+      else
+        printToAll("Failed to get Health Indicator with GUID " .. tostring(params.healthIndicatorGuid))
+      end
     end
 end
 
@@ -4303,6 +4437,32 @@ function recall(params)
     local recallIndex = 4 + (params.index * 8) - 3
     rack.editButton({index=recallIndex, position={-1.47 + ((buttonParams.index - 1) * 0.59), 1000, buttonParams.zLoc}, rotation={0,0,0}, click_function="nothing", tooltip="" })
 
+    -- Check if we need to recall a health indicator.
+    if Global.call("getHpRule2Set") then
+      -- Make sure the pokemon has a health indicator.
+      local data = isAttacker and attackerData or defenderData
+      if data.health_indicator_guid then
+        -- Get the position of this health indicator.
+        local locations = rack.call("getHealthIndicatorsLocations")
+        if #locations > 0 then
+          -- Get a handle on the indicator.
+          local health_indicator = getObjectFromGUID(data.health_indicator_guid)
+          -- Move the indicator to the desired position.
+          health_indicator.setLock(false)
+          health_indicator.setPosition(locations[params.index].position)
+          health_indicator.setRotation(locations[params.index].rotation)
+
+          -- Once the indicator is resting, lock it.
+          Wait.time(
+            function()
+              health_indicator.setLock(true)
+            end,
+            2
+          )
+        end
+      end
+    end
+
     clearPokemonData(isAttacker)
 
     if isAttacker then
@@ -4416,15 +4576,21 @@ function updateTypeEffectiveness()
     return
   end
 
+  -- Determine if any teratypes are active.
+  local attackerTera = nil
+  if attackerPokemon.teraActive then attackerTera = attackerPokemon.teraType end
+  local defenderTera = nil
+  if defenderPokemon.teraActive then defenderTera = defenderPokemon.teraType end
+
   -- Attacker
-  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, defenderPokemon.types)
+  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, defenderPokemon.types, defenderTera)
 
   -- Defender
-  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, attackerPokemon.types)
+  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, attackerPokemon.types, attackerTera)
 end
 
 
-function calculateEffectiveness(isAttacker, moves, opponent_types)
+function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera_type)
   if isAttacker then
     moveText = atkMoveText
     textZPos = -8.65
@@ -4471,8 +4637,13 @@ function calculateEffectiveness(isAttacker, moves, opponent_types)
 
           -- Detrermine if we are doing dual type effectiveness.
           local type_length = 1
-          if Global.call("getDualTypeEffectiveness") then
+          if Global.call("getDualTypeEffectiveness") and (not opponent_tera_type) then
             type_length = 2
+          end
+
+          -- If the opponent is Teresteralized, only consider that type.
+          if opponent_tera_type then
+            opponent_types = { opponent_tera_type }
           end
 
           -- Intitialize the effectiveness score.
@@ -4966,15 +5137,14 @@ function evolvePoke(params)
           elseif arenaData.teraType then
             local teraData = Global.call("GetTeraDataByGUID", arenaData.itemCardGUID)
             if teraData ~= nil then
-              -- NOTE: If we ever do dual-type effectiveness this gets much more complicated.
               if params.isAttacker then
                 arenaData.teraType = teraData.type
                 showAttackerTeraButton(false)
-                showAttackerTeraButton(true, attackerPokemon.types[1])
+                showAttackerTeraButton(true, createAttackerTeraLabel())
               else
                 arenaData.teraType = teraData.type
                 showDefenderTeraButton(false)
-                showDefenderTeraButton(true, defenderPokemon.types[1])
+                showDefenderTeraButton(true, createDefenderTeraLabel())
               end
             end
           elseif item_card then
@@ -5830,22 +6000,6 @@ function showFlipRivalButton(visible)
   self.editButton({index=40, position={rivalFipButtonPos.x, yPos, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 end
 
-function showAttackerTeraButton(visible, type)
-  local yPos = visible and 0.5 or 1000
-  if type == nil then
-    type = ""
-  end
-  self.editButton({index=38, label="Current: " .. type, position={2.6, yPos, 0.6}})
-end
-
-function showDefenderTeraButton(visible, type)
-  local yPos = visible and 0.5 or 1000
-  if type == nil then
-    type = ""
-  end
-  self.editButton({index=39, label="Current: " .. type, position={2.6, yPos, -0.6}})
-end
-
 -- Helper function to despawn autoroller dice.
 function despawnAutoRollDice(isAttacker)
   if isAttacker then
@@ -6035,6 +6189,9 @@ end
 
 -- Helper function to auto roll some dice.
 function auto_roll_dice(isAttacker)
+  -- First, despawn the existing dice.
+  despawnAutoRollDice(isAttacker)
+
   -- Save off the autoroll counts.
   local auto_roll_counts = isAttacker and atkAutoRollCounts or defAutoRollCounts
 
@@ -6144,7 +6301,7 @@ function adjustAtkDiceBlue(obj, color, alt)
   end
 
   -- Update the buttons.
-  updateAutoRollButtons(true)
+  updateAutoRollButtons(ATTACKER)
 end
 
 function adjustAtkDiceWhite(obj, color, alt)
@@ -6164,7 +6321,7 @@ function adjustAtkDiceWhite(obj, color, alt)
   end
 
   -- Update the buttons.
-  updateAutoRollButtons(true)
+  updateAutoRollButtons(ATTACKER)
 end
 
 function adjustAtkDicePurple(obj, color, alt)
@@ -6184,27 +6341,24 @@ function adjustAtkDicePurple(obj, color, alt)
   end
 
   -- Update the buttons.
-  updateAutoRollButtons(true)
+  updateAutoRollButtons(ATTACKER)
 end
 
-function adjustAtkDiceRed(obj, color, alt)
+function rollAtkEffectDie(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(ATTACKER)
 
-  -- Adjust the button value.
-  if alt then
-    atkAutoRollCounts.red = atkAutoRollCounts.red - 1
-  else
-    atkAutoRollCounts.red = atkAutoRollCounts.red + 1
-  end
+  -- Track the previous dice counts.
+  local previousDiceCounts = atkAutoRollCounts
 
-  -- Prevent negative values.
-  if atkAutoRollCounts.red < 0 then
-    atkAutoRollCounts.red = 0
-  end
+  -- Adjust the die counts.
+  atkAutoRollCounts = {purple=0, white=0, blue=0, red=1}
 
-  -- Update the buttons.
-  updateAutoRollButtons(true)
+  -- Roll the dice.
+  autoRollAttacker(obj, color, alt)
+  
+  -- Fix the dice counts.
+  atkAutoRollCounts = previousDiceCounts
 end
 
 -- AutoRoll for the Defender.
@@ -6302,24 +6456,21 @@ function adjustDefDicePurple(obj, color, alt)
   updateAutoRollButtons(DEFENDER)
 end
 
-function adjustDefDiceRed(obj, color, alt)
+function rollDefEffectDie(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(DEFENDER)
 
-  -- Adjust the button value.
-  if alt then
-    defAutoRollCounts.red = defAutoRollCounts.red - 1
-  else
-    defAutoRollCounts.red = defAutoRollCounts.red + 1
-  end
+  -- Track the previous dice counts.
+  local previousDiceCounts = defAutoRollCounts
 
-  -- Prevent negative values.
-  if defAutoRollCounts.red < 0 then
-    defAutoRollCounts.red = 0
-  end
+  -- Adjust the die counts.
+  defAutoRollCounts = {purple=0, white=0, blue=0, red=1}
 
-  -- Update the buttons.
-  updateAutoRollButtons(DEFENDER)
+  -- Roll the dice.
+  autoRollDefender(obj, color, alt)
+  
+  -- Fix the dice counts.
+  defAutoRollCounts = previousDiceCounts
 end
 
 -- Updates the selected AutoRoll buttons. Pass nil to update all.
@@ -6329,25 +6480,21 @@ function updateAutoRollButtons(isAttacker)
     self.editButton({index=42, label=atkAutoRollCounts.blue})
     self.editButton({index=43, label=atkAutoRollCounts.white})
     self.editButton({index=44, label=atkAutoRollCounts.purple})
-    self.editButton({index=45, label=atkAutoRollCounts.red})
   elseif isAttacker == false then
     -- Update Defender only.
     self.editButton({index=47, label=defAutoRollCounts.blue})
     self.editButton({index=48, label=defAutoRollCounts.white})
     self.editButton({index=49, label=defAutoRollCounts.purple})
-    self.editButton({index=50, label=defAutoRollCounts.red})
   else
     -- Both. Used when no arguement is given.
     -- Attacker.
     self.editButton({index=42, label=atkAutoRollCounts.blue})
     self.editButton({index=43, label=atkAutoRollCounts.white})
     self.editButton({index=44, label=atkAutoRollCounts.purple})
-    self.editButton({index=45, label=atkAutoRollCounts.red})
     -- Defender.
     self.editButton({index=47, label=defAutoRollCounts.blue})
     self.editButton({index=48, label=defAutoRollCounts.white})
     self.editButton({index=49, label=atkAutoRollCounts.purple})
-    self.editButton({index=50, label=defAutoRollCounts.red})
   end
 end
 
@@ -7784,6 +7931,49 @@ function discardBooster(isAttacker)
   
   -- Reset the booster GUID.
   data.boosterGuid = nil
+end
+
+-- Helper function to send a Health Indicator to the arena.
+function cloneTempHpRuleHealthIndicatorToArena(isAttacker, healthValue)
+  -- Save a copy of the data to modify.
+  local data = isAttacker and attackerData or defenderData
+  local position = isAttacker and attackerPos.healthIndicator or defenderPos.healthIndicator
+
+  -- Take out the original health indicator object.
+  local original_health_indicator = getObjectFromGUID(BASE_HEALTH_OBJECT_GUID)
+
+  -- Get a handle on the health indicator object.
+  local cloned_health_indicator = original_health_indicator.clone()
+  if cloned_health_indicator then
+    -- Move the indicator.
+    cloned_health_indicator.setPosition(position)
+    cloned_health_indicator.setRotation({0, 180, 0})
+
+    -- Once the indicator is resting, lock it.
+    Wait.time(
+      function()
+        cloned_health_indicator.setLock(true)
+
+        -- Set the counter's health.
+        if healthValue then
+          cloned_health_indicator.call("setValue", healthValue)
+        end
+      end,
+      2
+    )
+
+    -- Save off the GUID.
+    data.health_indicator_guid = cloned_health_indicator.guid
+  end
+end
+
+-- Helper function to destroy a temporary Health Indicator.
+function destroyTempHealthIndicator(isAttacker)
+  local health_indicator = getObjectFromGUID(isAttacker and attackerData.health_indicator_guid or defenderData.health_indicator_guid)
+  if health_indicator then
+    -- Delete the health indicator.
+    destroyObject(health_indicator)
+  end
 end
 
 -- Helper function to print a table.

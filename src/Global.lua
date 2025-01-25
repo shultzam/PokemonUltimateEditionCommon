@@ -220,7 +220,7 @@ RACK = 2
 HR_dual_type_effectiveness = false
 HR_gym_leader_boosters = false
 HR_hard_gym_leaders = false             -- Not yet implemented.
-HR_hp_rule_2 = false                    -- Not yet implemented.
+HR_hp_rule_2 = false
 
 -- Dual Type Effectiveness related GUIDs.
 TYPE_TOKEN_GUID_TABLE =
@@ -246,10 +246,6 @@ TYPE_TOKEN_GUID_TABLE =
 }
 
 active_secondary_type_tokens = {}
-
--- Base Health Tracker object.
--- TODO: object.setColorTint()
-BASE_HEALTH_OBJECT_GUID = "5ab909"
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Custom data fields
@@ -424,7 +420,7 @@ customMoveData =
 customPokemonData =
 {
   { name = "Ash's Pikachu", level = 1, types = { "Electric" }, moves = { "Electroweb", "Leer" }, guids = { "77331c", "d7835d" }, model_GUID = "130d76" },
-  { name = "Meme Token", level = math.random(1,9), types = { "Rock", "Steel" }, moves = { "Mimic", "Dig" }, guids = { "c38ea6" }, model_GUID = "a96b7f" }
+  { name = "Meme Token", level = math.random(-5,9), types = { "Rock", "Steel" }, moves = { "Mimic", "Dig" }, guids = { "c38ea6" }, model_GUID = "a96b7f" }
 }
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -750,7 +746,7 @@ gen2PokemonData =
   { name = "Ledyba",     level = 1, types = { "Bug", "Flying" },     moves = { "Comet Punch", "Tackle" },         guids = { "83168b" },                     evoData = { { cost = 2, ball = BLUE, gen = 2, guids = { "0b2791" } } }, model_GUID = "3f5d68" },
   { name = "Ledian",     level = 3, types = { "Bug", "Flying" },     moves = { "Reflect", "Swift" },              guids = { "3d93ed", "0b2791" }, model_GUID = "fa91c6" },
   { name = "Spinarak",   level = 1, types = { "Bug", "Poison" },     moves = { "Spider Web", "Poison Sting" },    guids = { "4a74ab" },                     evoData = { { cost = 2, ball = BLUE, gen = 2, guids = { "f8e383" } } }, model_GUID = "726bd6" },
-  { name = "Ariados",    level = 3, types = { "Bug", "Poison" },     moves = { "Night Shade", "Leech Life" },     guids = { "6027c1", "f8e383" }, model_GUID = "67dd31" },
+  { name = "Ariados",    level = 3, types = { "Bug", "Poison" },     moves = { "Night Shade", "Leech Life" },     guids = { "6027c1", "f8e383" }, model_GUID = "3dd86d" },
   { name = "Crobat",     level = 5, types = { "Poison", "Flying" },  moves = { "Confuse Ray", "Wing Attack" },    guids = { "c8cb11", "79419e", "1d7367" }, model_GUID = "40d4cd" },
   { name = "Chinchou",   level = 3, types = { "Water", "Electric" }, moves = { "Thunder Wave", "Bubble" },        guids = { "5cd23a" },                     evoData = { { cost = 1, ball = YELLOW, gen = 2, guids = { "3bb655" } } }, model_GUID = "bb0ea1", spawn_effect="Physical Attack" },
   { name = "Lanturn",    level = 4, types = { "Water", "Electric" }, moves = { "Hydro Pump", "Spark" },           guids = { "ca2f7d", "3bb655" }, model_GUID = "0a7fe3" },
@@ -774,7 +770,7 @@ gen2PokemonData =
   { name = "Jumpluff",   level = 4, types = { "Grass", "Flying" },   moves = { "Sleep Powder", "Mega Drain" },    guids = { "766518", "18d441", "66e564" }, model_GUID = "08d23f", spawn_effect="Physical Attack" },
   { name = "Aipom",      level = 2, types = { "Normal" },            moves = { "Sand Attack", "Scratch" },        guids = { "7da245" },                     evoData = { { cost = 2, ball = BLUE, gen = 4, guids = { "06f1a9" } } }, model_GUID = "89ec0d" },
   { name = "Sunkern",    level = 2, types = { "Grass" },             moves = { "Absorb", "Pound" },               guids = { "2a0f37" },                     evoData = { { cost = 2, ball = BLUE, gen = 2, guids = { "da3544" } } }, model_GUID = "21d5b5" },
-  { name = "Sunflora",   level = 4, types = { "Grass" },             moves = { "Petal Dance", "Razor Leaf" },     guids = { "f43c37", "da3544" }, model_GUID = "912dc4" },
+  { name = "Sunflora",   level = 4, types = { "Grass" },             moves = { "Petal Dance", "Growth" },         guids = { "f43c37", "da3544" }, model_GUID = "912dc4" },
   { name = "Yanma",      level = 2, types = { "Bug", "Flying" },     moves = { "Quick Attack", "Hypnosis" },      guids = { "df3c90" },                     evoData = { { cost = 2, ball = YELLOW, gen = 4, guids = { "e093cb" } } }, model_GUID = "4b8bdf", spawn_effect="Physical Attack" },
   { name = "Wooper",     level = 1, types = { "Water", "Ground" },   moves = { "Water Gun", "Tail Whip" },        guids = { "3403ab" },                     evoData = { { cost = 2, ball = BLUE, gen = 2, guids = { "5281dd" } } }, model_GUID = "5a0e02" },
   { name = "Quagsire",   level = 3, types = { "Water", "Ground" },   moves = { "Earthquake", "Slam" },            guids = { "1813f8", "5281dd" }, model_GUID = "59c07d", custom_scale=0.9 },
@@ -1143,11 +1139,11 @@ gen4PokemonData =
   { name = "Dialga",     level = 7, types = { "Steel", "Dragon" }, moves = { "Flash Cannon", "Roar of Time" }, guids = { "99da0e" }, model_GUID = "776fdc", spawn_effect="Physical Attack", custom_scale=0.35, offset={x=0, y=0, z=-0.03}, ball = LEGENDARY },
   { name = "Origin Dialga", level = 7, types = { "Steel", "Dragon" }, moves = { "Dragon Claw", "Iron Tail" },  guids = { "d8b8d3" }, model_GUID = "239ed0", spawn_effect="Physical Attack", custom_scale=0.35, offset={x=0, y=0, z=-0.03}, ball = LEGENDARY },
   { name = "Palkia",     level = 7, types = { "Water", "Dragon" },    moves = { "Spacial Rend", "Aqua Tail" },  guids = { "99bbae" }, model_GUID = "42a6d1", custom_scale=0.35, offset={x=0, y=0, z=-0.03}, ball = LEGENDARY },
-  { name = "Origin Palkia", level = 7, types = { "Water", "Dragon" }, moves = { "Dragon Pulse", "Hydro Pump" }, guids = { "6a9a3d" }, model_GUID = "a4da49", custom_scale=0.35, offset={x=0, y=0, z=-0.03}, ball = LEGENDARY },
+  { name = "Origin Palkia", level = 7, types = { "Water", "Dragon" }, moves = { "Dragon Pulse", "Hydro Pump" }, guids = { "6a9a3d" }, model_GUID = "a4da49", custom_scale=0.35, offset={x=0, y=0, z=-0.08}, ball = LEGENDARY },
   { name = "Heatran",    level = 7, types = { "Fire", "Steel" }, moves = { "Magma Storm", "Earth Power" },    guids = { "d6bd2b" }, model_GUID = "7343d2", spawn_effect="Status Attack", custom_scale=0.4, offset={x=0, y=0, z=-0.06}  },
   { name = "Regigigas",  level = 7, types = { "Normal" }, moves = { "Dizzy Punch", "Revenge" },        guids = { "04ae8e" }, model_GUID = "0ddf47", spawn_effect="Status Attack", custom_scale=0.45, offset={x=0, y=0, z=-0.03} },
   { name = "Giratina",   level = 7, types = { "Dragon", "Ghost" }, moves = { "Shadow Claw", "Dragon Claw" }, guids = { "e1ea2d" }, model_GUID = "086e6b", custom_scale=0.3, ball = LEGENDARY },
-  { name = "Origin Giratina", level = 7, types = { "Ghost", "Dragon" }, moves = { "Dragon Breath", "Shadow Force" }, guids = { "e1ea2d" }, model_GUID = "4dd635", custom_scale=0.3, ball = LEGENDARY },
+  { name = "Origin Giratina", level = 7, types = { "Ghost", "Dragon" }, moves = { "Dragon Breath", "Shadow Force" }, guids = { "aece39" }, model_GUID = "4dd635", custom_scale=0.3, ball = LEGENDARY },
   { name = "Cresselia",  level = 7, types = { "Psychic" },  moves = { "Aurora Beam", "Psycho Cut" },     guids = { "d22af4" }, model_GUID = "a4dcf2" },
   { name = "Phione",     level = 5, types = { "Water" },    moves = { "Take Heart", "Dive" },            guids = { "3379b4" }, model_GUID = "b0bae4", spawn_effect="Physical Attack" },
   { name = "Manaphy",    level = 7, types = { "Water" },    moves = { "Water Pulse", "Tail Glow" },      guids = { "4eb57f" }, model_GUID = "5cc85d" },
@@ -1871,11 +1867,11 @@ gen9PokemonData =
   { name = "Clodsire",      level = 3, types = { "Poison", "Ground" }, moves = { "Poison Tail", "Mud Shot" }, guids = { "11f231", "9299e4" }, model_GUID = "ed4234", offset={x=0, y=0.65, z=0} },
   { name = "Farigiraf",     level = 3, types = { "Normal", "Psychic" }, moves = { "Twin Beam", "Stomp" }, guids = { "ec3c21", "f18198" }, model_GUID = "6135b5", offset={x=0, y=0.08, z=0} }, 
   { name = "Dudunsparce",   level = 3, types = { "Normal" }, moves = { "Drill Run", "Hyper Drill" }, guids = { "f840fc", "9c40ab" }, model_GUID = "881817", offset={x=0, y=0.13, z=0} },
-  { name = "Kingambit",     level = 6, types = { "Dark", "Steel" }, moves = { "Kowtow Cleave", "Iron Head" }, guids = { "97afd6", "d49464", "8625f7" }, model_GUID = "291920" },
+  { name = "Kingambit",     level = 6, types = { "Dark", "Steel" }, moves = { "Kowtow Cleave", "Iron Head" }, guids = { "97afd6", "d49464", "8625f7" }, model_GUID = "291920", custom_scale=0.85 },
   { name = "Great Tusk",    level = 5, types = { "Ground", "Fighting" }, moves = { "Brick Break", "Bulldoze" }, guids = { "00e061" }, model_GUID = "177723", custom_scale=0.35, offset={x=0, y=0.05, z=-0.08} },
   { name = "Scream Tail",   level = 3, types = { "Fairy", "Psychic" }, moves = { "Play Rough", "Psychic Fangs" }, guids = { "d2d1fc" }, model_GUID = "bba12d", offset={x=0, y=0.09, z=0} }, 
   { name = "Brute Bonnet",  level = 4, types = { "Grass", "Dark" }, moves = { "Sucker Punch", "Mega Drain" }, guids = { "d97f22" }, model_GUID = "dcbff5", offset={x=0, y=0.12, z=0} }, 
-  { name = "Flutter Mane",  level = 4, types = { "Ghost", "Fairy" }, moves = { "Phantom Force", "Moonblast" }, guids = { "60305f" }, model_GUID = "366287" },
+  { name = "Flutter Mane",  level = 4, types = { "Ghost", "Fairy" }, moves = { "Phantom Force", "Moonblast" }, guids = { "60305f" }, model_GUID = "366287", custom_scale=0.85 },
   { name = "Slither Wing",  level = 6, types = { "Bug", "Fighting" }, moves = { "Superpower", "Bug Bite" }, guids = { "163a86" }, model_GUID = "b0584a", offset={x=0, y=0.5, z=0} }, 
   { name = "Sandy Shocks",  level = 4, types = { "Electric", "Ground" }, moves = { "Earth Power", "Discharge" }, guids = { "c61a67" }, model_GUID = "6997f6", offset={x=0, y=0.07, z=0} }, 
   { name = "Iron Treads",   level = 5, types = { "Ground", "Steel" }, moves = { "Steel Roller", "Earthquake" }, guids = { "2bba66" }, model_GUID = "a95a53", offset={x=0, y=0.08, z=0} }, 
@@ -1989,7 +1985,7 @@ moveData =
     {name="Sucker Punch",   power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="Priority", target="Self"}}},
     {name="Ruination",      power="Enemy",type="Dark",      dice=6, STAB=true },
     {name="Taunt",          power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"}} },
-    {name="Thief",          power=3,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
+    {name="Thief",          power=2,      type="Dark",      dice=6, STAB=true,  effects={{name="Custom"}} },
     {name="Torment",        power=0,      type="Dark",      dice=6, STAB=false, effects={{name="Custom"}} },
     {name="Wicked Blow",    power=2,      type="Dark",      dice=8, STAB=true },
     {name="Wicked Torque",  power=2,      type="Dark",      dice=8, STAB=true,  effects={{name="Sleep", target="Enemy", chance=6}} },
@@ -2011,7 +2007,7 @@ moveData =
     {name="Dragon Energy",  power=3,      type="Dragon",    dice=6, STAB=true,  effects={{name="StatDown", target="Self"}} },
     {name="Dragon Hammer",  power=3,      type="Dragon",    dice=6, STAB=true   },
     {name="Dragon Pulse",   power=2,      type="Dragon",    dice=6, STAB=true   },
-    {name="Dragon Rage",    power=4,      type="Dragon",    dice=4, STAB=true,  effects={{name="Neutral", target="Self"}} },
+    {name="Dragon Rage",    power=3,      type="Dragon",    dice=4, STAB=true,  effects={{name="Neutral", target="Self"}} },
     {name="Dragon Rush",    power=2,      type="Dragon",    dice=4, STAB=true,  effects={{name="Disadvantage", target="Enemy", chance=5}} },
     {name="Dragon Tail",    power=2,      type="Dragon",    dice=6, STAB=true,  effects={{name="Switch", target="Enemy"}} },
     {name="Dual Chop",      power=1,      type="Dragon",    dice=4, STAB=true,  effects={{name="AddDice", target="Self"}} },
@@ -2470,7 +2466,7 @@ moveData =
     {name="Swift",          power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Advantage", target="Self"}} },
     {name="Swords Dance",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="DoubleAdvantage", target="Self"}} },
     {name="Tackle",         power=1,      type="Normal",  dice=6, STAB=true},
-    {name="Tail Slap",      power=2,      type="Normal",  dice=4, STAB=false,   effects={{name="AddDice", target="Self"}} },
+    {name="Tail Slap",      power=1,      type="Normal",  dice=4, STAB=false,   effects={{name="AddDice", target="Self", chance=4}} },
     {name="Tail Whip",      power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Advantage", target="Self"}} },
     {name="Take Down",      power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="KO", target="Self", chance=6}} },
     {name="Tearful Look",   power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="DoubleDisadvantage", target="Enemy"}} },
@@ -4904,7 +4900,7 @@ tmData =
   { guid = "ab0c34", move = "Giga Impact" },
   { guid = "078f19", move = "Grassy Terrain" },
   { guid = "94c66f", move = "Grass Pledge" },
-  { guid = "763873", move = "Gunk Shot" },
+  { guid = "c42b05", move = "Gunk Shot" },
   { guid = "8bf926", move = "Headbutt" },
   { guid = "10b389", move = "Heat Wave" },
   { guid = "a6457a", move = "Hidden Power" },
@@ -5312,7 +5308,7 @@ local shiny_guid_table = {
   ["Ledyba"] = "284a12",
   ["Ledian"] = "9330b8",
   ["Spinarak"] = "7b3b9a",
-  ["Ariados"] = "b95f6dw",
+  ["Ariados"] = "b95f6d",
   ["Crobat"] = "bb8170",
   ["Chinchou"] = "2b2fea",
   ["Lanturn"] = "4c90fa",
@@ -6921,6 +6917,8 @@ function onLoad(saved_data)
     -- Current map. Can only change at Setup.
     selected_map=save_table.selected_map
     leadersGen=save_table.leadersGen
+    -- Cloned pokemon data.
+    clonedPokemonData=clonedPokemonData
   end
 
   -- Do some safety checks.
@@ -7017,7 +7015,7 @@ function onLoad(saved_data)
       end
       for _, guid in pairs(pokemon_base.guids) do
         -- Check for the board pokemon, since they were already created set them to created_before=true.
-        if guid == "315879" or guid == "390ee2" then
+        if guid == "315879" or guid == "390ee2" or guid == "d1ee94" or guid == "d4b8d9" or guid == "315879" or guid == "6e4c5a" then
           pokemon_base.created_before = true
         end
 
@@ -7093,7 +7091,7 @@ function onLoad(saved_data)
   UI.setAttribute("setDualTypeEffectiveness", "isOn", HR_dual_type_effectiveness)
   UI.setAttribute("setGymLeaderBoosters", "isOn", HR_gym_leader_boosters)
   --UI.setAttribute("setHardGymLeaders", "isOn", HR_hard_gym_leaders)
-  --UI.setAttribute("setHpRule2", "isOn", HR_hp_rule_2)
+  UI.setAttribute("setHpRule2", "isOn", HR_hp_rule_2)
 
   -- Rebind the hotkeys.
   addHotkey("Battle Wild Pokemon",  function(player_color, hovered_object, point, key_up) battle_wild_pokemon(hovered_object) end)
@@ -7109,17 +7107,29 @@ function onLoad(saved_data)
   addHotkey("Pan Camera - Rack",    function(player_color, hovered_object, point, key_up) pan_camera(player_color, RACK) end)
 
   print_changelog()
+
+  -- See what optional rules are enabled and print them for the users.
+  if HR_hard_gym_leaders then
+    printHardGymLeadersRules()
+  end
+  if HR_hp_rule_2 then
+    printHpRule2Rules()
+  end
+  if HR_dual_type_effectiveness then
+    printDualTypeRules()
+  end
+  if HR_gym_leader_boosters then
+    printGymLeaderBoostersRules()
+  end
 end
 
 function print_changelog()
-  printToAll("Last update on 22 December 24 - v3.3.2 \
-  v3.3.2 \
-    - Added Black Flute to Shop and removed Shop Deck. See the Item Costs card for buttons. :) \
-    -- Shop Deck replaced with Legendary Item deck. \
-    - Added Paradox Ball for Paldea. You're welcome! \
-    - Added optional modifier to include/not include the reserve TM deck. \
-    - Bug fixes. \
-    \
+  printToAll("Last update on 25 January 2025 - v3.3.3 \
+  v3.3.3 \
+    - Scripted HP Rule 2 (you're welcome for the feature nobody asked for) \
+    - Tera Typing is much more accurate now \
+    - Improved auto-rollers \
+    - Many bug fixes \
   NOTE: there is a fairly common deployment problem causing an error when setting up the map. For now, just reload the mod and deploy again lol.",
   "Pink")
 end
@@ -7835,12 +7845,16 @@ function hardGymLeadersSet(player, isOn)
 
   -- If Hard Gym Leaders was just turned on, give a log statement explaining the rules.
   if HR_hard_gym_leaders then
-  --   printToAll("\nHard Gym Leaders: Enabled \
-  -- - TODO ",
-  --   "Pink")
+    printHardGymLeadersRules()
   else
     printToAll("Hard Gym Leaders: Disabled")
   end
+end
+
+function printHardGymLeadersRules()
+  --   printToAll("\nHard Gym Leaders: Enabled \
+  -- - TODO ",
+  --   "Pink")
 end
 
 function hpRule2Set(player, isOn)
@@ -7848,9 +7862,7 @@ function hpRule2Set(player, isOn)
 
   -- If HP Rule 2 was just turned on, give a log statement explaining the rules.
   if HR_hp_rule_2 then
-  --   printToAll("\nHP Rule 2: Enabled \
-  -- - TODO ",
-  --   "Pink")
+    printHpRule2Rules()
   else
     printToAll("HP Rule 2: Disabled")
   end
@@ -7860,16 +7872,22 @@ function getHpRule2Set()
   return HR_hp_rule_2
 end
 
+function printHpRule2Rules()
+  printToAll("\nHP Rule 2: Enabled \
+  - HP Rule 2 Rules: \
+    * Pokémon HP is equal to their level. \
+    * HP resets after each battle. \
+    * Pokémon receive one D4 of damage when swapping with a Pokémon already in battle. \
+    * Damage is dealt as the difference between total attack rolls.",
+    "Pink")
+end
+
 function dualTypeEffectivenessSet(player, isOn)
   HR_dual_type_effectiveness = stringToBoolean[isOn]
 
   -- If Dual Type Effectiveness was just turned on, give a log statement explaining the rules.
   if HR_dual_type_effectiveness then
-    printToAll("\nDual Type Effectiveness: Enabled \
-  - Dual Type Effectiveness Rules: \
-    * Secondary Pokémon types are considered for effectiveness. \
-    * Super-Weak (-3) / Weak (-2) / Neutral / Effective (+2) / Super-Effective (+3)", 
-    "Pink")
+    printDualTypeRules()
   else
     printToAll("Dual Type Effectiveness: Disabled")
   end
@@ -7879,18 +7897,30 @@ function getDualTypeEffectiveness()
   return HR_dual_type_effectiveness
 end
 
+function printDualTypeRules()
+  printToAll("\nDual Type Effectiveness: Enabled \
+  - Dual Type Effectiveness Rules: \
+    * Secondary Pokémon types are considered for effectiveness. \
+    * Super-Weak (-3) / Weak (-2) / Neutral / Effective (+2) / Super-Effective (+3)", 
+    "Pink")
+end
+
 function gymLeaderBoostersSet(player, isOn)
   HR_gym_leader_boosters = stringToBoolean[isOn]
 
   -- If Gym Leader Boosters was just turned on, give a log statement explaining the rules.
   if HR_gym_leader_boosters then
-    printToAll("\nGym Leader Boosters: Enabled \
-  - Gym Leader Boosters Rules: \
-    * When battling a Gym Leader, Elite 4, Team Rocket, etc. they have a 35% chance to get a random booster for the duration of the battle.", 
-    "Pink")
+    printGymLeaderBoostersRules()
   else
     printToAll("Gym Leader Boosters: Disabled")
   end
+end
+
+function printGymLeaderBoostersRules()
+  printToAll("\nGym Leader Boosters: Enabled \
+  - Gym Leader Boosters Rules: \
+    * When battling a Gym Leader, Elite 4, Team Rocket, etc. they have a 35% chance to get a random booster for the duration of the battle.", 
+    "Pink")
 end
 
 function getGymLeaderBoostersChance()
@@ -8540,9 +8570,11 @@ function spawn_model(pokemon)
         force_shiny = false
 
         -- Tell the Rival Event ball to remove the checkmark.
-        local rivalBall = getObjectFromGUID(RIVAL_EVENT_POKEBALL_GUID)
-        if rivalBall then
-          rivalBall.call("remove_forced_shiny")
+        if force_shiny then
+          local rivalBall = getObjectFromGUID(RIVAL_EVENT_POKEBALL_GUID)
+          if rivalBall then
+            rivalBall.call("remove_forced_shiny")
+          end
         end
       else
         -- Failed to spawn the shiny. Make sure this token is on the shiny check list.

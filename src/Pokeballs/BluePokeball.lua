@@ -63,7 +63,7 @@ function recall()
   })
 end
 
- function collect()
+function collect()
    local currentLocations = kantoLocations
    for i=1, #currentLocations do
      local param = {}
@@ -82,17 +82,17 @@ end
    end
  end
 
- function begin()
-   hasGameStarted = true
-   createButtons()
-   deal()
- end
+function begin()
+  hasGameStarted = true
+  createButtons()
+  deal()
+end
 
- function onSave()
-    local data_to_save = {gameStarted=hasGameStarted, kanto_locations=kantoLocations}
-    saved_data = JSON.encode(data_to_save)
-    --saved_data = "" --Remove -- at start & save to clear save data
-    return saved_data
+function onSave()
+  local data_to_save = {gameStarted=hasGameStarted, kanto_locations=kantoLocations}
+  saved_data = JSON.encode(data_to_save)
+  --saved_data = "" --Remove -- at start & save to clear save data
+  return saved_data
 end
 
 -- Runs when game is loaded

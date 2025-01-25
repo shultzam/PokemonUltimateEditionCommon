@@ -227,7 +227,7 @@ local map_data = {
       { guid = "4a4407", position = {-29.93, 0.97, 20.85}, rotation = {0, 180, 0} }    -- Item Costs table.
     },
     map_specific_items = {
-      { guid = "1605e9", position = {21.18, 0.97, 31.76}, rotation = {0, 180, 0} },    -- Grand Underground.
+      { guid = "1605e9", position = {23.20, 0.97, 30.47}, rotation = {0, 180, 0} },    -- Grand Underground.
       { guid = "13f836", position = {36.74, 0.97, 31.53}, rotation = {0, 180, 0} },    -- Grand Underground Rules.
     }
   },

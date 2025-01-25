@@ -18,7 +18,7 @@
     https://steamcommunity.com/sharedfiles/filedetails/?id=2352739177
 
     Changelog:
-    9/3/2024 - Modified by Allen S. for usage in Pokemon Master Trainer Ultimate Edition
+    - Modifications by Allen Degenerous to use as a health indicator
 
     License (MIT):
 
@@ -47,9 +47,9 @@
 --[[ ===== CONSTANTS ===== --]]
 FONT_COLOR_LIGHT = {1, 1, 1, 100}
 FONT_COLOR_DARK  = {0, 0, 0, 100}
-FONT_SIZE       = 1000
-FONT_SIZE_SMALL = 750
-VALUE_POS       = {0, 0.1, 0}
+FONT_SIZE       = 750
+FONT_SIZE_SMALL = 500
+VALUE_POS       = {0, 0.1, -0.45}
 VALUE_POS_SMALL = {0, 0.1, -0.2}
 TRANSPARENT     = {0, 0, 0, 0}
 
@@ -91,7 +91,7 @@ function createUserInterface()
         position = {0,0.1,-0.45},
         value = script_state.value,
         alignment = 3,
-        height = 600,
+        height = 800,
         width = 1500,
         color = TRANSPARENT,
     })    
@@ -100,7 +100,7 @@ function createUserInterface()
         click_function = "onIncrementDecrementClick",
         tooltip = "+/-",
         function_owner = self,
-        position = {0,0.1,1.55},
+        position = {0,0.1,1},
         height = 600,
         width = 1500,
         font_size = 250,
@@ -138,6 +138,34 @@ function onValueChanged(obj, color, input, stillEditing)
         
         Wait.frames(refreshTokenUI, 1)
     end
+end
+
+--[[
+    Added by Allen Degenerous.
+    Returns the current script value.
+]]
+function getValue()
+    return script_state.value
+end
+
+--[[
+    Added by Allen Degenerous.
+    Modifies value by amount.
+]]
+function adjustValue(adjustment)
+    script_state.value = script_state.value + adjustment
+
+    refreshTokenUI()
+end
+
+--[[
+    Added by Allen Degenerous.
+    Sets the value.
+]]
+function setValue(value)
+    script_state.value = value
+
+    refreshTokenUI()
 end
 
 --[[

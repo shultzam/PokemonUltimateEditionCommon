@@ -2,8 +2,8 @@ pokeballs = { "ec1e4b", "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f9
 evoPokeballs = { "757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0" }
 gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd30", "c9dd73" }
 
-genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "8c717e" }
-genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "2317bd" }
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
+genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326" }
 
 gen1Pokeballs = { "681d76", "d7d981", "818525", "30391b", "758036", "bb73fd", "78fdbb" }
 gen1EvoPokeballs = { "e9d043", "7de53d", "f30baf", "ceb9a5", "5293ec", "98bf25", "01efbd" }
@@ -79,6 +79,9 @@ atk_counter_guid = "73b431"
 
 -- Stupid Arena text GUID.
 arena_text_guid = "f0b393"
+
+-- Base Health Tracker object.
+BASE_HEALTH_OBJECT_GUID = "5ab909"
 
 function onSave()
     return JSON.encode({settings_done=setup_done})
@@ -838,6 +841,67 @@ function setup_map(selected_map_name, leadersGen)
                 )
             end
         end
+    end
+
+    -- Check if HP Rule 2 is enabled.
+    if Global.call("getHpRule2Set") then
+        -- Take out the original health indicator object.
+        local original_health_indicator = standard_items_pokeball.takeObject({guid=BASE_HEALTH_OBJECT_GUID})
+
+        -- If HP Rule 2 is on, loop through the new Rack GUIDs and give them cloned Health Indicators.
+        for rack_guid_index=1, #rack_guid_param do
+            -- Get a handle on the rack objects.
+            local rack = getObjectFromGUID(rack_guid_param[rack_guid_index])
+            if rack then
+                -- Wait until the rack loads.
+                Wait.condition(
+                    function() -- Conditional function.
+                        -- Get the Health Indicator Positions.
+                        local rack_indicator_positions = rack.call("getHealthIndicatorsLocations")
+                
+                        -- Clone the original Health Indicator object 6 times and place it into each Rack's locations.
+                        local health_indicator_guids = {}
+                        for i=1, 6 do
+                            -- Clone the health indicator object at position.
+                            local clone_coords = copyTable(rack_indicator_positions[i])
+                            local cloned_health_indicator = original_health_indicator.clone()
+                            cloned_health_indicator.setPosition(clone_coords.position)
+                            cloned_health_indicator.setRotation(clone_coords.rotation)
+
+                            -- Lock the indicators.
+                            Wait.condition(
+                                function()
+                                    cloned_health_indicator.setLock(true)
+                                end,
+                                function()
+                                    return cloned_health_indicator.resting
+                                end,
+                                5
+                            )
+                
+                            -- Add the cloned object GUID to the GUID list.
+                            table.insert(health_indicator_guids, cloned_health_indicator.guid)
+                        end
+                
+                        -- Call setHealthIndicatorsGuids on the rack.
+                        rack.call("setHealthIndicatorsGuids", health_indicator_guids)
+                    end,
+                    function() -- Condition function
+                        return (not rack.loading_custom)
+                    end,
+                    20,
+                    function() -- Timeout function.
+                        -- Failed.
+                        printToAll("Failed to find retrieve rack HP Health Indicator positions from rack with GUID " .. tostring(rack.guid), "Red")
+                    end
+                )
+            end
+        end
+
+        -- Move the original Health Indicator into the sky out of sight.
+        original_health_indicator.setPosition({97.46, 2.38, 70.17})
+        original_health_indicator.interactable = false
+        original_health_indicator.setLock(true)
     end
 
     -- Return the Gym Leaders already taken from the pool (if any).

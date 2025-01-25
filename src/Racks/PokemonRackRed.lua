@@ -43,7 +43,30 @@ local inArena = false
 local isAttacker = false
 local arenaIndex = 0
 
-function onLoad()
+--------------------------------------------------------------------------------
+-- HP Rule 2 House Rule Data
+--------------------------------------------------------------------------------
+
+HEALTH_INDICATORS = {
+    { position = {6.27,  0.43, -47.10}, rotation = {0, 180, 0} },
+    { position = {11.57, 0.43, -47.10}, rotation = {0, 180, 0} },
+    { position = {16.87, 0.43, -47.10}, rotation = {0, 180, 0} },
+    { position = {22.17, 0.43, -47.10}, rotation = {0, 180, 0} },
+    { position = {27.47, 0.43, -47.10}, rotation = {0, 180, 0} },
+    { position = {32.77, 0.43, -47.10}, rotation = {0, 180, 0} },
+}
+
+HEALTH_INDICATOR_GUIDS = { }
+
+function onSave()
+    -- Create the save table.
+  local save_table = {
+    health_indicators_guids=HEALTH_INDICATOR_GUIDS
+  }
+  return JSON.encode(save_table)
+end
+
+function onLoad(saved_data)
   self.tooltip = false
 
   self.createButton({label="REFRESH", click_function="rackRefreshPokemon", function_owner=self, tooltip="Refresh Pokémon", position={-0.80, yLoc, -0.92}, rotation={0,0,0}, height=60, width=150, font_size=30})
@@ -64,6 +87,15 @@ function onLoad()
       self.createButton({label="2", click_function="evolveTwo"..i, function_owner=self, tooltip="",position={pokemonXPos[7-i] + 0.24, 1000, pokemonZPos + 0.025}, rotation={0,0,0}, height=50, width=25, font_size=40}) -- Evolve2 Button
   end
   rackRefreshPokemon()
+
+  local save_table
+  if saved_data and saved_data ~= "" then
+    save_table = JSON.decode(saved_data)
+  end
+
+  if save_table then
+    HEALTH_INDICATOR_GUIDS = save_table.health_indicators_guids
+  end
 end
 
 
@@ -505,4 +537,28 @@ function getAvailablePokemonXPos()
         end
     end
     return temp_x_pos
+end
+
+function getHealthIndicatorsLocations()
+    return HEALTH_INDICATORS
+end
+
+function setHealthIndicatorsGuids(guid_table)
+    -- Update the GUIDs.
+    HEALTH_INDICATOR_GUIDS = guid_table
+
+    -- Loop through the GUID list and set the color tint to ours.
+    for guid_index=1, #guid_table do
+        -- Get a handle on the object.
+        local health_indicator = getObjectFromGUID(guid_table[guid_index])
+        if health_indicator then
+            health_indicator.setColorTint(playerColour)
+        else
+            printToAll(playerColour .. " rack is missing Health Indicator with GUID " .. tostring(guid_table[guid_index]))
+        end
+    end
+end
+
+function getHealthIndicatorsGuids()
+    return HEALTH_INDICATOR_GUIDS
 end
