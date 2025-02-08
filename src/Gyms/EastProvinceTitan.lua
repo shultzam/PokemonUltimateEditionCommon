@@ -147,6 +147,8 @@ function initGym(guid)
   titanData.types = copyTable(data.types)
   titanData.level = data.level
   titanData.effects = {}
+  titanData.teraType = data.teraType
+  titanData.teraActive = data.teraActive
 
   titanData.moves = copyTable(data.moves)
   local movesData = {}

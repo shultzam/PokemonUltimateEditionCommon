@@ -95,6 +95,7 @@ function onLoad(saved_data)
 
   if save_table then
     HEALTH_INDICATOR_GUIDS = save_table.health_indicators_guids
+    if not HEALTH_INDICATOR_GUIDS then HEALTH_INDICATOR_GUIDS = {} end
   end
 end
 

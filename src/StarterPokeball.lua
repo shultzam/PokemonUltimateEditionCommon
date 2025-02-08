@@ -245,7 +245,7 @@ function beginSetup2(params)
         local gen
 
         -- Initialize the Gym Leaders pokeballs list.
-        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1], genOrangeIslandsLeadersArr[1] }
+        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1] }
 
         for i = 1, 8 do
             -- Orange Islands only uses a scheme where gym 1 is tiers 1/2, gym 3 is tiers 3/4, etc.
@@ -323,7 +323,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Rivals pokeballs list and gym object.
-        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3], genOrangeIslandsLeadersArr[3] }
+        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3] }
         local rivalGym = getObjectFromGUID(rivalGymGuid)
         for i = 1, 3 do
             -- Check if we need to consider custom Rivals.
@@ -358,7 +358,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Team Rocket pokeballs list.
-        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4], genOrangeIslandsLeadersArr[4] }
+        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4] }
 
         -- Check if we need to consider custom Team Rockets.
         local custom_leaders_available = customs_available(customLeadersArr[4], 11, leadersRetrieved)

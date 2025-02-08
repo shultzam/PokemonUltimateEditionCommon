@@ -596,7 +596,6 @@ function flipGymLeader()
   Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
 
   -- Update pokemon and arena info
-  --defenderPokemon = defenderData.pokemon[2]
   setNewPokemon(defenderPokemon, defenderPokemon.pokemon2, defenderPokemon.pokemonGUID)
   updateMoves(DEFENDER, defenderPokemon)
   showFlipGymButton(false)
@@ -708,7 +707,7 @@ function flipGymLeader()
   )
 
   -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") then
+  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
     -- Reformat the data so that the secondary type token code can use it.
     local secondary_token_data = {
       chip_GUID = defenderData.trainerGUID,
@@ -2025,10 +2024,10 @@ function selectMove(index, isAttacker, isRandom)
   -- Check if the Pokemon is using a move with Attack power of Self, Enemy or Sleep.
   if type(pokemonData.attackValue.movePower) == "string" then 
     if pokemonData.attackValue.movePower == status_ids.the_self then
-      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2))
+      pokemonData.attackValue.movePower = math.floor(pokemonData.attackValue.level / 2)
     elseif pokemonData.attackValue.movePower == status_ids.enemy then
       local opponentData = isAttacker and defenderData or attackerData
-      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2))
+      pokemonData.attackValue.movePower = math.floor(opponentData.attackValue.level / 2)
     elseif pokemonData.attackValue.movePower == status_ids.sleep then
       -- Check if the opponent is asleep.
       local opponentPokemon = isAttacker and defenderPokemon or attackerPokemon
@@ -2075,12 +2074,18 @@ function selectMove(index, isAttacker, isRandom)
 
   -- Get the opponent types.
   local opponent_types = { "N/A" }
-  if oppenent_data ~= nil and oppenent_data.types ~= nil then
-    opponent_types[1] = oppenent_data.types[1]
-    if oppenent_data.types[2] ~= nil then
-      opponent_types[2] = oppenent_data.types[2]
-    else
-      opponent_types[2] = "N/A"
+  if oppenent_data.teraActive and oppenent_data.teraType ~= nil then
+    -- Tera is active.
+    opponent_types = { oppenent_data.teraType }
+  else
+    -- Tera is not active.
+    if oppenent_data ~= nil and oppenent_data.types ~= nil then
+      opponent_types[1] = oppenent_data.types[1]
+      if oppenent_data.types[2] ~= nil then
+        opponent_types[2] = oppenent_data.types[2]
+      else
+        opponent_types[2] = "N/A"
+      end
     end
   end
   
@@ -2139,6 +2144,11 @@ function selectMove(index, isAttacker, isRandom)
     pokemonData.attackValue.effectiveness = 3
   elseif pokemonData.attackValue.effectiveness <= -4 then
     pokemonData.attackValue.effectiveness = -3
+  end
+
+  -- Check for the self's tera type.
+  if pokemon.teraActive and pokemon.teraType == moveData.type then
+    pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1 
   end
 
   -- Update the counter.
@@ -2946,50 +2956,50 @@ end
 -- Move Camera Buttons
 
 function seeAttackerRack(obj, player_clicker_color)
-    viewTeam(obj, player_clicker_color, attackerData.playerColor)
+  viewTeam(obj, player_clicker_color, attackerData.playerColor)
 end
 
 function seeDefenderRack(obj, player_clicker_color)
-    viewTeam(obj, player_clicker_color, defenderData.playerColor)
+  viewTeam(obj, player_clicker_color, defenderData.playerColor)
 end
 
 function viewTeam(obj, playerClicker, team)
   if team == "Blue" then
-      showPosition = {x=-65,y=0.96,z=21.5}
-      camYaw = 90
+    showPosition = {x=-21.50,y=0.14,z=-48}
+    camYaw = 0
   elseif team == "Green" then
-      showPosition = {x=-65,y=0.96,z=-21.5}
-      camYaw = 90
+    showPosition = {x=-65,y=0.96,z=-21.5}
+    camYaw = 90
   elseif team == "Orange" then
-      showPosition = {x=65,y=0.96,z=21.5}
-      camYaw = 270
+    showPosition = {x=65,y=0.96,z=21.5}
+    camYaw = 270
   elseif team == "Purple" then
-      showPosition = {x=65,y=0.96,z=-21.5}
-      camYaw = 270
+    showPosition = {x=65,y=0.96,z=-21.5}
+    camYaw = 270
   elseif team == "Red" then
-      showPosition = {x=21.50,y=0.14,z=-48}
-      camYaw = 0
+    showPosition = {x=21.50,y=0.14,z=-48}
+    camYaw = 0
   elseif team == "Yellow" then
-      showPosition = {x=-21.50,y=0.14,z=-48}
-      camYaw = 0
+    showPosition = {x=-65,y=0.96,z=21.5}
+    camYaw = 90
   end
 
   Player[playerClicker].lookAt({
-      position = showPosition,
-      pitch    = 60,
-      yaw      = camYaw,
-      distance = 25
+    position = showPosition,
+    pitch    = 60,
+    yaw      = camYaw,
+    distance = 25
   })
 end
 
 function showArena(passParams)
-    local playerColour = passParams.player_clicker_color
-    Player[playerColour].lookAt({
-        position = {x=-34.89,y=0.96,z=0},
-        pitch    = 90,
-        yaw      = 0,
-        distance = 22
-    })
+  local playerColour = passParams.player_clicker_color
+  Player[playerColour].lookAt({
+    position = {x=-34.89,y=0.96,z=0},
+    pitch    = 90,
+    yaw      = 0,
+    distance = 22
+  })
 end
 
 function seeMoveRules(obj, player_clicker_color)
@@ -3150,8 +3160,8 @@ function sendToArenaTitan(params)
     2
   )
 
-  -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") then
+  -- Check if we spawn a secondary type token. Don't spawn a secondary type token if the Titan is Teratyped.
+  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
     -- Reformat the data so that the secondary type token code can use it.
     local secondary_token_data = {
       chip_GUID = params.titanGUID,
@@ -3368,8 +3378,8 @@ function sendToArenaGym(params)
     2
   )
 
-  -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") then
+  -- Check if we spawn a secondary type token. Don't spawn a secondary type token if the Gym Leader is Tera Typed.
+  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
     -- Reformat the data so that the secondary type token code can use it.
     local secondary_token_data = {
       chip_GUID = params.trainerGUID,
@@ -3634,7 +3644,7 @@ function sendToArenaRival(params)
   end
 
   -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") then
+  if Global.call("getDualTypeEffectiveness") and not attackerPokemon.teraActive then
     -- Reformat the data so that the secondary type token code can use it.
     local secondary_token_data = {
       chip_GUID = params.pokemonGUID,
@@ -4620,6 +4630,7 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
         moveData.status = DISABLED
       else
         -- If move had NEUTRAL effect, don't calculate Effectiveness
+        -- TODO: add this logic to the mathy part as well. :)
         local calculateEffectiveness = true
         if moveData.effects ~= nil then
           for i=1, #moveData.effects do
@@ -4688,7 +4699,6 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
             moveText.TextTool.setValue("Super-Weak")
             moveData.status = SUPER_WEAK
           end
-
         end
       end
     end
@@ -5334,6 +5344,10 @@ function setNewPokemon(data, newPokemonData, pokemonGUID)
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
   data.effects = {}
+
+  -- Tera info.
+  data.teraType = newPokemonData.teraType
+  data.teraActive = newPokemonData.teraActive
 
   -- Model info.
   data.model_GUID = newPokemonData.model_GUID

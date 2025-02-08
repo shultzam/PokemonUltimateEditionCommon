@@ -95,6 +95,7 @@ function onLoad(saved_data)
 
   if save_table then
     HEALTH_INDICATOR_GUIDS = save_table.health_indicators_guids
+    if not HEALTH_INDICATOR_GUIDS then HEALTH_INDICATOR_GUIDS = {} end
   end
 end
 
@@ -169,7 +170,12 @@ function rackSendToArena(params)
       autoCamera = autoCamera
   }
 
-    getObjectFromGUID(battleManager).call("sendToArena", arenaParams)
+  -- Determine if HP Rule 2 is in effect.
+  if #HEALTH_INDICATOR_GUIDS > 0 and Global.call("getHpRule2Set") then
+    arenaParams.healthIndicatorGuid = HEALTH_INDICATOR_GUIDS[params.index]
+  end
+
+  getObjectFromGUID(battleManager).call("sendToArena", arenaParams)
 end
 
 

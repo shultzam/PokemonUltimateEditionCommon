@@ -14,7 +14,7 @@ CARDS = {
   -- Left.
   poke_ball = { name = "Poke Ball", cost = 4, desc = "- Poké Ball: Before rolling to catch a Pokémon, play this card to add 1 to your catch roll." },
   great_ball = { name = "Great Ball", cost = 8, desc = "- Great Ball: Before rolling to catch a Pokémon, play this card to add 2 to your catch roll." },
-  ultra_ball = { name = "Ultra Ball", cost = 12, desc = "- Ultra Ball: Before rolling to catch a Pokémon, play this card to add 2 to your catch roll." },
+  ultra_ball = { name = "Ultra Ball", cost = 12, desc = "- Ultra Ball: Before rolling to catch a Pokémon, play this card to add 3 to your catch roll." },
   apricorn = { name = "Apricorn", cost = 8, desc = "- Apricorn: Draw 3 cards from the Poké Ball deck. Add 1 to your hand and place the rest on the bottom of the deck." },
   potion = { name = "Potion", cost = 4, desc = "- Potion: If Attached Pokémon is knocked out, discard this card and revive it immediately." },
   max_potion = { name = "Max Potion", cost = 8, desc = "- Max Potion: If Attached Pokémon is knocked out, discard this card and revive it immediately. You may also discard this card from your hand to revive a Pokémon at any time." },
@@ -564,6 +564,7 @@ function purchase_booster(player_color)
 end
 
 -- Helper function to deal the top card from the booster deck.
+-- TODO: clone this card instead?
 function get_card_from_booster_deck(player_color)
   -- Get a handle on the deck.
   local booster_deck = getObjectFromGUID(BOOSER_DECK_GUID)

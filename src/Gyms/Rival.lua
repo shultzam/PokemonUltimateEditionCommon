@@ -199,6 +199,8 @@ function setNewPokemon(data, newPokemonData)
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
   data.effects = {}
+  data.teraType = newPokemonData.teraType
+  data.teraActive = newPokemonData.teraActive
 
   data.moves = copyTable(newPokemonData.moves)
   local movesData = {}
