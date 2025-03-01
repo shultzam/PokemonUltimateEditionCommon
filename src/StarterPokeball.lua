@@ -83,6 +83,27 @@ arena_text_guid = "f0b393"
 -- Base Health Tracker object.
 BASE_HEALTH_OBJECT_GUID = "5ab909"
 
+-- GUIDs for removal. All will go in order, counterclockwise, starting with yellow.
+rack_guids = {}     -- Gets populated after racks are changed to the map-specific rack.
+dice_guids = { "2d0825", "abf34c", "c80faa", "806332", "6b0d57", "4334bb" }
+trainer_token_guids = { "f5f4be", "bdde77", "f99b44", "c036ba", "1d1174", "f86514" }
+city_token_guids = { "53b66d", "4cc429", "62de78", "f0f9dd", "60db28", "543e9e" }
+pokecoin_counter_guids = { "b08b0e", "fe0861", "92cb92", "252975", "b15f1b", "68de04" }
+stupid_thing_guids = { "1452fa", "81e2ef", "8805c0", "fff686", "03f8b7", "135ed9" }
+-- These are a bit different since they only get deleted if both of the associated colors are not occupied.
+yellow_green_level_dice_bag_guid = "1a64da"
+yellow_green_status_token_bag_guid = "824d3c"
+yellow_green_rule_book_guid = "1f9df8"
+red_blue_level_dice_bag_guid = "3c7dbc"
+red_blue_status_token_bag_guid = "8e3fe3"
+red_blue_rule_book_guid = "04c930"
+purple_orange_level_dice_bag_guid = "4229ac"
+purple_orange_status_token_bag_guid = "6c4bb9"
+purple_orange_rule_book_guid = "7d5565"
+
+-- Used for looping colors.
+colors_loop = { "Yellow", "Green", "Blue", "Red", "Purple", "Orange" }
+
 function onSave()
     return JSON.encode({settings_done=setup_done})
 end
@@ -432,6 +453,128 @@ function beginSetup2(params)
         -- Update the setup_done flag.
         setup_done = true
     end
+
+    -- If set, remove the unused player objects (racks, dice bags, tokens, etc.)
+    if params.remove_non_player_items then
+        for index=1, #colors_loop do
+            if Player[colors_loop[index]].steam_name == nil then
+                -- Remove this color's items.
+                -- Dice.
+                local dice_obj = getObjectFromGUID(dice_guids[index])
+                if dice_obj then 
+                    destroyObject(dice_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+                -- Trainer Token.
+                local trainer_token_obj = getObjectFromGUID(trainer_token_guids[index])
+                if trainer_token_obj then 
+                    destroyObject(trainer_token_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+                -- City Token.
+                local city_token_obj = getObjectFromGUID(city_token_guids[index])
+                if city_token_obj then 
+                    destroyObject(city_token_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+                -- Pokecoin Counter.
+                local pokecoin_counter_obj = getObjectFromGUID(pokecoin_counter_guids[index])
+                if pokecoin_counter_obj then 
+                    destroyObject(pokecoin_counter_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+                -- Stupid Things.
+                local stupid_thing_obj = getObjectFromGUID(stupid_thing_guids[index])
+                if stupid_thing_obj then 
+                    destroyObject(stupid_thing_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+                -- Racks.
+                local rack_obj = getObjectFromGUID(rack_guids[index])
+                if rack_obj then 
+                    destroyObject(rack_obj) 
+                else
+                    print("WARNING: failed to delete item for color: " .. tostring(colors_loop[index]))
+                end
+            end
+        end
+
+        -- Check for a few items that are only removed if two colors are both unoccupied.
+        if Player["Yellow"].steam_name == nil and Player["Green"].steam_name == nil then
+            -- Level Dice bag.
+            local obj = getObjectFromGUID(yellow_green_level_dice_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Yellow/Green Level Dice bag")
+            end
+            -- Status Token bag.
+            local obj = getObjectFromGUID(yellow_green_status_token_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Yellow/Green Status Token bag")
+            end
+            -- Rule Book.
+            local obj = getObjectFromGUID(yellow_green_rule_book_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Yellow/Green Rule Book")
+            end
+        end
+        if Player["Red"].steam_name == nil and Player["Blue"].steam_name == nil then
+            -- Level Dice bag.
+            local obj = getObjectFromGUID(red_blue_level_dice_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Red/Blue Level Dice bag")
+            end
+            -- Status Token bag.
+            local obj = getObjectFromGUID(red_blue_status_token_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Red/Blue Status Token bag")
+            end
+            -- Rule Book.
+            local obj = getObjectFromGUID(red_blue_rule_book_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Red/Blue Rule Book")
+            end
+        end
+        if Player["Purple"].steam_name == nil and Player["Orange"].steam_name == nil then
+            -- Level Dice bag.
+            local obj = getObjectFromGUID(purple_orange_level_dice_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Purple/Orange Level Dice bag")
+            end
+            -- Status Token bag.
+            local obj = getObjectFromGUID(purple_orange_status_token_bag_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Purple/Orange Status Token bag")
+            end
+            -- Rule Book.
+            local obj = getObjectFromGUID(purple_orange_rule_book_guid)
+            if obj then 
+                destroyObject(obj) 
+            else
+                print("WARNING: failed to delete the Purple/Orange Rule Book")
+            end
+        end
+    end
 end
 
 function moveBeastPokemon()
@@ -647,6 +790,9 @@ function setup_map(selected_map_name, leadersGen)
         -- Append the new GUID to the rack GUID param we are sending to the Battle Manager.
         table.insert(rack_guid_param, new_guid)
     end
+
+    -- Update rack_guids for removal (in case we are auto-removing items).
+    rack_guids = copyTable(rack_guid_param)
 
     -- Tell the BattleManager what the rack GUIDs are.
     local battle_manager = getObjectFromGUID("de7152")

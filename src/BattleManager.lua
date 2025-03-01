@@ -123,6 +123,15 @@ local atkEvolve2Pos = {x=8.90, z=5.07}
 local atkMoveZPos = 8.3
 local atkConfirmPos = {x=7.29, z=11.87}
 
+-- Status card buttons.
+local curseAtkPos = {x=10.9, z=3.9}
+local burnAtkPos =  {x=11.7, z=3.9}
+local poisonAtkPos = {x=12.5, z=3.9}
+local sleepAtkPos = {x=13.3, z=3.9}
+local paralysisAtkPos = {x=11.3, z=4.5}
+local frozenAtkPos = {x=12.1, z=4.5}
+local confusedAtkPos = {x=12.9, z=4.5}
+
 local incLevelDefPos = {x=8.14, z=-6.12}
 local decLevelDefPos = {x=6.53, z=-6.12}
 local incStatusDefPos = {x=12.98, z=-6.60}
@@ -134,6 +143,15 @@ local defEvolve1Pos = {x=5.69, z=-4.94}
 local defEvolve2Pos = {x=8.90, z=-4.94}
 local defMoveZPos = -8.85
 local defConfirmPos = {x=7.35, z=-11.74}
+
+-- Status card buttons.
+local curseDefPos = {x=10.9, z=-3.9}
+local burnDefPos = {x=11.7, z=-3.9}
+local poisonDefPos = {x=12.5, z=-3.9}
+local sleepDefPos = {x=13.3, z=-3.9}
+local paralysisDefPos = {x=11.3, z=-4.5}
+local frozenDefPos = {x=12.1, z=-4.5}
+local confusedDefPos = {x=12.9, z=-4.5}
 
 local rivalFipButtonPos = {x=7.33, z=6.28}
 
@@ -409,6 +427,22 @@ function onLoad(saved_data)
     self.createButton({label="0", click_function="adjustDefDicePurple", function_owner=self, tooltip="D4 Dice", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color="Purple"})
     self.createButton({label="Effect Roll", click_function="rollDefEffectDie", function_owner=self, tooltip="Roll One Effect Die", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200, color="Red"})
     self.createButton({label="Simulate", click_function="simulateRound", function_owner=self, tooltip="Simulate Battle Round", position={3.5, 1000, -0.6}, height=300, width=1200, font_size=200})
+    -- Attacker status buttons.
+    self.createButton({label="CRS", click_function="applyCursedAttacker", function_owner=self, tooltip="Apply Cursed Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={106/255, 102/255, 187/255}})
+    self.createButton({label="BRN", click_function="applyBurnedAttacker", function_owner=self, tooltip="Apply Burned Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={255/255, 68/255, 34/255}})
+    self.createButton({label="PSN", click_function="applyPoisonedAttacker", function_owner=self, tooltip="Apply Poisoned Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={170/255, 85/255, 153/255}})
+    self.createButton({label="SLP", click_function="applySleepAttacker", function_owner=self, tooltip="Apply Sleep Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={106/255, 102/255, 187/255}})
+    self.createButton({label="PAR", click_function="applyParalyzedAttacker", function_owner=self, tooltip="Apply Paralysis Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={255/255, 204/255, 51/255}})
+    self.createButton({label="FRZ", click_function="applyFrozenAttacker", function_owner=self, tooltip="Apply Frozen Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={102/255, 204/255, 255/255}})
+    self.createButton({label="CNF", click_function="applyConfusionAttacker", function_owner=self, tooltip="Apply Confusion Status to Attacker", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={187/255, 170/255, 102/255}})
+    -- Defender status buttons.
+    self.createButton({label="CRS", click_function="applyCursedDefender", function_owner=self, tooltip="Apply Cursed Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={106/255, 102/255, 187/255}})
+    self.createButton({label="BRN", click_function="applyBurnedDefender", function_owner=self, tooltip="Apply Burned Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={255/255, 68/255, 34/255}})
+    self.createButton({label="PSN", click_function="applyPoisonedDefender", function_owner=self, tooltip="Apply Poisoned Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={170/255, 85/255, 153/255}})
+    self.createButton({label="SLP", click_function="applySleepDefender", function_owner=self, tooltip="Apply Sleep Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={106/255, 102/255, 187/255}})
+    self.createButton({label="PAR", click_function="applyParalyzedDefender", function_owner=self, tooltip="Apply Paralysis Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={255/255, 204/255, 51/255}})
+    self.createButton({label="FRZ", click_function="applyFrozenDefender", function_owner=self, tooltip="Apply Frozen Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={102/255, 204/255, 255/255}})
+    self.createButton({label="CNF", click_function="applyConfusionDefender", function_owner=self, tooltip="Apply Confusion Status to Defender", position={3.5, 1000, -0.6}, height=300, width=400, font_size=200, color={187/255, 170/255, 102/255}})
 
     -- Check if we are in battle.
     if inBattle then
@@ -430,6 +464,7 @@ function onLoad(saved_data)
       showAtkButtons(false)
       showDefButtons(false)
       showAutoRollButtons(false)
+      moveStatusButtons(false)
 
       -- Clear data.
       clearPokemonData(DEFENDER)
@@ -1008,6 +1043,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
       end
       self.editButton({index=36, label="END BATTLE"})
       showAutoRollButtons(true)
+      moveStatusButtons(true)
     end
     
     -- Create a button that allows someone to click it to catch the wild Pokemon.
@@ -1056,7 +1092,8 @@ function battleWildPokemon(wild_battle_params, is_automated)
     text.setValue(" ")
     hideConfirmButton(DEFENDER)
 
-    showAutoRollButtons()
+    showAutoRollButtons(false)
+    moveStatusButtons(false)
 
     -- Check if HP Rule 2 is enabled.
     if Global.call("getHpRule2Set") then
@@ -2197,6 +2234,11 @@ function selectMove(index, isAttacker, isRandom)
   end
 
   if battleState ~= SELECT_MOVE then
+    -- Easter egg. 1% chance to change Pin Missile to Piss Missle.
+    if moveName == "Pin Missile" and math.random(100) == 1 then
+      moveName = "Piss Missile"
+    end
+
     local pokemonName = isAttacker and attackerPokemon.name or defenderPokemon.name
     if isRandom then
       printToAll(pokemonName .. " randomly used " .. string.upper(moveName) .. "!")
@@ -2264,7 +2306,6 @@ function setMoveData(isAttacker)
   moveIndex = data.selectedMoveIndex
 
   if move == nil then
-    printToAll("setting move data")
     move = copyTable(moves[moveIndex])
     local moveName = move.name
     if moveName == "Mirror Move" then
@@ -2444,7 +2485,7 @@ function addEffect(isAttacker, effect)
 
 end
 
-function addStatus(isAttacker, status)
+function addStatus(isAttacker, status, noSim)
 
   local pos
   local data
@@ -2455,6 +2496,9 @@ function addStatus(isAttacker, status)
     pos = defenderPos
     data = defenderPokemon
   end
+
+  -- Just return if there is no Pokemon here.
+  if not data then return end
 
   if data.status ~= nil then
     printToAll("Pokémon already has a status.")
@@ -2489,8 +2533,10 @@ function addStatus(isAttacker, status)
   --   spawnStatusDice(isAttacker)
   -- end
 
-  data.status = status
-  data.statusCardGUID = card.getGUID()
+  if not noSim then
+    data.status = status
+    data.statusCardGUID = card.getGUID()
+  end
 end
 
 function effectCanTrigger(isAttacker, effect)
@@ -3200,6 +3246,7 @@ function sendToArenaTitan(params)
     showAutoRollButtons(true)
     showFlipGymButton(false)
     showConfirmButton(DEFENDER, "RANDOM MOVE")
+    moveStatusButtons(true)
   end
 
   -- Check if HP Rule 2 is enabled.
@@ -3418,6 +3465,7 @@ function sendToArenaGym(params)
     showAutoRollButtons(true)
     showFlipGymButton(true)
     showConfirmButton(DEFENDER, "RANDOM MOVE")
+    moveStatusButtons(true)
   end
 
   -- Check if HP Rule 2 is enabled.
@@ -3459,6 +3507,7 @@ function recallGymLeader()
 
   -- Update a button.
   showAutoRollButtons(false)
+  moveStatusButtons(false)
 end
 
 function sendToArenaTrainer(params)
@@ -3516,6 +3565,7 @@ function sendToArenaTrainer(params)
       showConfirmButton(ATTACKER, "RANDOM MOVE")
     end
     showAutoRollButtons(true)
+    moveStatusButtons(true)
   end
 
   if Global.call("get_models_enabled") then
@@ -3685,6 +3735,7 @@ function sendToArenaRival(params)
   showAutoRollButtons(true)
   showFlipRivalButton(true)
   showConfirmButton(ATTACKER, "RANDOM MOVE")
+  moveStatusButtons(true)
 
   -- Check if HP Rule 2 is enabled.
   if Global.call("getHpRule2Set") then
@@ -3720,6 +3771,7 @@ function recallTrainer(params)
   if scriptingEnabled == false then
     hideConfirmButton(ATTACKER)
     showAutoRollButtons(false)
+    moveStatusButtons(false)
   end
 
   -- Remove status card if it is present.
@@ -3820,6 +3872,7 @@ function recallGym()
     showFlipGymButton(false)
     hideConfirmButton(DEFENDER)
     showAutoRollButtons(false)
+    moveStatusButtons(false)
   end
 
   -- Remove the status if it is present.
@@ -3916,6 +3969,7 @@ function recallRival()
   if scriptingEnabled == false then
     hideConfirmButton(ATTACKER)
     showAutoRollButtons(false)
+    moveStatusButtons(false)
   end
 
   -- Check if HP Rule 2 is enabled.
@@ -4219,8 +4273,9 @@ function sendToArena(params)
 
     updateMoves(params.isAttacker, pokemonData, cardMoveData)
     
-    -- Show the auto roller buttons.
+    -- Show the auto roller and status buttons.
     showAutoRollButtons(true)
+    moveStatusButtons(true)
 
     -- Update the appropriate value counter.
     if isAttacker then
@@ -4483,6 +4538,7 @@ function recall(params)
     
     -- Update the auto roller buttons.
     showAutoRollButtons(false)
+    moveStatusButtons(false)
 
     if battleState ~= NO_BATTLE then
       showConfirmButton(isAttacker, "FORFEIT")
@@ -5364,7 +5420,7 @@ function setNewPokemon(data, newPokemonData, pokemonGUID)
   data.moves = copyTable(newPokemonData.moves)
   local movesData = {}
   for i=1, #data.moves do
-    moveData = copyTable(Global.call("GetMoveDataByName", data.moves[i]))
+    local moveData = copyTable(Global.call("GetMoveDataByName", data.moves[i]))
     moveData.status = DEFAULT
     moveData.isTM = false
     table.insert(movesData, moveData)
@@ -5878,7 +5934,13 @@ function showMoveButtons(isAttacker, cardMoveData)
 
   for i=1, numMoves do
     local moveName = tostring(moves[i].name)
-    self.editButton{index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName}
+    local moveType = tostring(moves[i].type)
+    local button_color = copyTable(Global.call("type_to_color_lookup", moveType))
+    local font_color = "Black"
+    if moveType == "Dark" or moveType == "Ghost" or moveType == "Fighting" then
+      font_color = "White"
+    end
+    self.editButton({index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color})
   end
 end
 
@@ -5924,7 +5986,6 @@ function showAtkButtons(visible)
       hideArenaEvoButtons(true)
       hideArenaMoveButtons(true)
     end
-
 end
 
 function showDefButtons(visible)
@@ -6224,7 +6285,7 @@ function auto_roll_dice(isAttacker)
   for die_index=1, auto_roll_counts.blue do
     local auto_roller_position = auto_roller_positions[(#spawned_dice_table % #auto_roller_positions) + 1]
     local dice_position = {auto_roller_position[1], auto_roller_position[2], z_multiplier * auto_roller_position[3]}
-    local dice = d8Bag.takeObject({position=dice_position, rotation={0, 0, 180}})
+    local dice = d8Bag.takeObject({position=dice_position, rotation={math.random(180), math.random(180), 0}})
     table.insert(spawned_dice_table, dice)
   end
   
@@ -6234,7 +6295,7 @@ function auto_roll_dice(isAttacker)
   for die_index=1, auto_roll_counts.white do
     local auto_roller_position = auto_roller_positions[(#spawned_dice_table % #auto_roller_positions) + 1]
     local dice_position = {auto_roller_position[1], auto_roller_position[2], z_multiplier * auto_roller_position[3]}
-    local dice = d6Bag.takeObject({position=dice_position, rotation={0, 0, 180}})
+    local dice = d6Bag.takeObject({position=dice_position, rotation={math.random(180), math.random(180), 0}})
     table.insert(spawned_dice_table, dice)
   end
 
@@ -6244,7 +6305,7 @@ function auto_roll_dice(isAttacker)
   for die_index=1, auto_roll_counts.purple do
     local auto_roller_position = auto_roller_positions[(#spawned_dice_table % #auto_roller_positions) + 1]
     local dice_position = {auto_roller_position[1], auto_roller_position[2], z_multiplier * auto_roller_position[3]}
-    local dice = d4Bag.takeObject({position=dice_position, rotation={0, 0, 180}})
+    local dice = d4Bag.takeObject({position=dice_position, rotation={math.random(180), math.random(180), 0}})
     table.insert(spawned_dice_table, dice)
   end
 
@@ -6254,7 +6315,7 @@ function auto_roll_dice(isAttacker)
   for die_index=1, auto_roll_counts.red do
     local auto_roller_position = auto_roller_positions[(#spawned_dice_table % #auto_roller_positions) + 1]
     local dice_position = {auto_roller_position[1], auto_roller_position[2], z_multiplier * auto_roller_position[3]}
-    local dice = effectBag.takeObject({position=dice_position, rotation={0, 0, 180}})
+    local dice = effectBag.takeObject({position=dice_position, rotation={math.random(180), math.random(180), 0}})
     table.insert(spawned_dice_table, dice)
   end
 
@@ -7988,6 +8049,87 @@ function destroyTempHealthIndicator(isAttacker)
     -- Delete the health indicator.
     destroyObject(health_indicator)
   end
+end
+
+--[[ Status card helpers for arena. ]]
+
+function moveStatusButtons(visible)
+  -- Determine the elevation of the buttons based on the visible paramter.
+  local yStatusPos = visible and 0.3 or 1000
+
+  -- Show the status card buttons for the Attacker.
+  self.editButton({index=52, position={curseAtkPos.x, yStatusPos, curseAtkPos.z}})
+  self.editButton({index=53, position={burnAtkPos.x, yStatusPos, burnAtkPos.z}})
+  self.editButton({index=54, position={poisonAtkPos.x, yStatusPos, poisonAtkPos.z}})
+  self.editButton({index=55, position={sleepAtkPos.x, yStatusPos, sleepAtkPos.z}})
+  self.editButton({index=56, position={paralysisAtkPos.x, yStatusPos, paralysisAtkPos.z}})
+  self.editButton({index=57, position={frozenAtkPos.x, yStatusPos, frozenAtkPos.z}})
+  self.editButton({index=58, position={confusedAtkPos.x, yStatusPos, confusedAtkPos.z}})
+
+  -- Show the status card buttons for the Defender.
+  self.editButton({index=59, position={curseDefPos.x, yStatusPos, curseDefPos.z}})
+  self.editButton({index=60, position={burnDefPos.x, yStatusPos, burnDefPos.z}})
+  self.editButton({index=61, position={poisonDefPos.x, yStatusPos, poisonDefPos.z}})
+  self.editButton({index=62, position={sleepDefPos.x, yStatusPos, sleepDefPos.z}})
+  self.editButton({index=63, position={paralysisDefPos.x, yStatusPos, paralysisDefPos.z}})
+  self.editButton({index=64, position={frozenDefPos.x, yStatusPos, frozenDefPos.z}})
+  self.editButton({index=65, position={confusedDefPos.x, yStatusPos, confusedDefPos.z}})
+end
+
+function applyCursedAttacker()
+  addStatus(ATTACKER, status_ids.curse, true)
+end
+
+function applyBurnedAttacker()
+  addStatus(ATTACKER, status_ids.burn, true)
+end
+
+function applyPoisonedAttacker()
+  addStatus(ATTACKER, status_ids.poison, true)
+end
+
+function applySleepAttacker()
+  addStatus(ATTACKER, status_ids.sleep, true)
+end
+
+function applyParalyzedAttacker()
+  addStatus(ATTACKER, status_ids.paralyze, true)
+end
+
+function applyFrozenAttacker()
+  addStatus(ATTACKER, status_ids.freeze, true)
+end
+
+function applyConfusionAttacker()
+  addStatus(ATTACKER, status_ids.confuse, true)
+end
+
+function applyCursedDefender()
+  addStatus(DEFENDER, status_ids.curse, true)
+end
+
+function applyBurnedDefender()
+  addStatus(DEFENDER, status_ids.burn, true)
+end
+
+function applyPoisonedDefender()
+  addStatus(DEFENDER, status_ids.poison, true)
+end
+
+function applySleepDefender()
+  addStatus(DEFENDER, status_ids.sleep, true)
+end
+
+function applyParalyzedDefender()
+  addStatus(DEFENDER, status_ids.paralyze, true)
+end
+
+function applyFrozenDefender()
+  addStatus(DEFENDER, status_ids.freeze, true)
+end
+
+function applyConfusionDefender()
+  addStatus(DEFENDER, status_ids.confuse, true)
 end
 
 -- Helper function to print a table.

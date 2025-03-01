@@ -1,18 +1,19 @@
 <Defaults>
     <Text class="UIText" fontSize="18" fontStyle="Bold" Color="#FFFFFF"/>
 </Defaults>
-<Panel id="WelcomeMessage" width="564" height="335" returnToOriginalPositionWhenReleased="false" color="#DDDDDD">
+<Panel id="WelcomeMessage" width="564" height="375" returnToOriginalPositionWhenReleased="false" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <Text text="Join the Discord Channel" fontSize="20" fontStyle="Bold"/>
         <Text fontSize="16" text="500+ Members. Discuss the game, suggest new features, arrange sessions to play with other members and browse additional content. https://discord.gg/hkVrKar"/>
         <Text fontSize="16" text=""/>
         <Text text="Notice" fontSize="20" fontStyle="Bold"/>
         <Text fontSize="16" alignment="MiddleLeft" text="Don't forget to setup your hotkeys in Options > Game Keys for a faster game. :)"/>
+        <Text fontSize="16" alignment="MiddleLeft" text="Don't delete racks, etc. until after you finish the setup process."/>
         <Text fontSize="16" alignment="MiddleLeft" text="See change log in the logger for latest update information."/>
         <Button text="Close" preferredHeight="40" width="300" onClick="start"/>
     </VerticalLayout>
 </Panel>
-<Panel id="Settings" visibility="false" width="660" height="775" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
+<Panel id="Settings" visibility="false" width="660" height="850" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <VerticalLayout>
             <Text fontSize="18" text="Select Region" alignment="MiddleLeft" fontStyle="Bold"/>
@@ -98,9 +99,15 @@
             <Text fontSize="18" text="Scripted House Rules (Optional)" alignment="MiddleLeft" fontStyle="Bold"/>
             <HorizontalLayout spacing="15" childForceExpandHeight="false">
                 <Toggle id="setDualTypeEffectiveness" onValueChanged="dualTypeEffectivenessSet" interactable="true" >Dual Type Effectiveness</Toggle>
-                <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leaders Get Boosters (35% chance)</Toggle>
+                <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leader Boosters (35% chance)</Toggle>
                 <!--<Toggle id="setHardGymLeaders" onValueChanged="hardGymLeadersSet" interactable="true" >Hard Gym Leaders</Toggle>-->
                 <Toggle id="setHpRule2" onValueChanged="hpRule2Set" interactable="true" >HP Rule 2</Toggle>
+            </HorizontalLayout>
+        </VerticalLayout>
+        <VerticalLayout>
+            <Text fontSize="18" text="Helpers (Optional)" alignment="MiddleLeft" fontStyle="Bold"/>
+            <HorizontalLayout spacing="15" childForceExpandHeight="false">
+                <Toggle id="setRemoveNonUsedItems" onValueChanged="removeNonUsedItemsSet" interactable="true" tooltip="Removes non-used racks, Pokecoins, etc. for non-player controlled player slots.">Remove Non-Used Racks</Toggle>
             </HorizontalLayout>
         </VerticalLayout>
         <Text minHeight="65" fontSize="16" text="Modifiers" alignment="LowerLeft" fontStyle="Bold"/>

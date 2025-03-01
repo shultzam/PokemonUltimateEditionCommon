@@ -275,7 +275,8 @@ local map_data = {
     },
     map_specific_items = {
       { guid = "9f86a0", position = {7.61, 0.96, -2.09},  rotation = {0, 180, 0} },    -- Subway Pass
-      { guid = "e035db", position = {43.03, 0.96, -8.11}, rotation = {0, 270, 0} }     -- Subway Pass
+      { guid = "e035db", position = {43.03, 0.96, -8.11}, rotation = {0, 270, 0} },    -- Subway Pass
+      { guid = "65791a", position = {-14.37, 0.96, 6.09}, rotation = {0, 270, 0} }     -- Master Ball
     }
   },
   Kalos = {
