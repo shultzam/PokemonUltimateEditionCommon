@@ -292,8 +292,8 @@ function beginSetup2(params)
                     gymsPokeball = getObjectFromGUID(pokeballsList[random_leader_params.leader_gen])
                     leader = gymsPokeball.takeObject({ guid = random_leader_params.guid })
                 else
-                    local cardIndex = 8 - i
-                    leader = gymsPokeball.takeObject({ index = cardIndex })
+                    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=i, retrievedList=leadersRetrieved})
+                    leader = gymsPokeball.takeObject({ guid = random_leader_params.guid })
                 end
 
                 -- Put the retrieved gym leader into the gym.

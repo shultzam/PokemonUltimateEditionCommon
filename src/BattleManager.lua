@@ -40,7 +40,8 @@ local debug = false
 
 -- GUIDS
 local gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd30", "c9dd73", "a0f650", "c970ca", "19db0d" }
-local deploy_pokeballs = { "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f90" }
+-- Pink, Green, Blue, Yellow, Red, Legendary, Beast.
+local deploy_pokeballs = { "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f90", "1feef7" }
 local wildPokeZone = "f10ab0"
 
 local blueRack = nil
@@ -776,6 +777,21 @@ function flipGymLeader()
     end
   end
 
+  -- Detect status cards and tokens. Gym Leaders can delete them.
+  local status_table = detectStatusCardAndTokens(DEFENDER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
+  end
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
+    end
+  end
+
   -- Clear texts.
   clearMoveText(ATTACKER)
   clearMoveText(DEFENDER)
@@ -1261,7 +1277,8 @@ function wildPokemonCatch(obj, player_color)
   end
 
   -- Wait for the token to come to a rest, then wait 0.3 seconds longer and deal a new token.
-  if pokeball ~= nil then
+  -- Only call this function if it is not the Legendary ball.
+  if pokeball ~= nil and color_index ~= 6 then
     Wait.condition(
       function()
         -- Deal a new Pokemon chip of the appropriate color.
@@ -1280,23 +1297,18 @@ function wildPokemonFlee()
   local wild_chip_guid = wildPokemonGUID
   local kanto_location = wildPokemonKanto
 
-  -- Remove status
-  if defenderPokemon.status ~= nil then
-    removeStatus(defenderPokemon)
+  -- Detect status cards and tokens. Trainers can delete them.
+  local status_table = detectStatusCardAndTokens(DEFENDER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
   end
-
-  -- Remove status counters
-  local castParam = {}
-  castParam.origin = {defenderPos.statusCounters[1], 2, defenderPos.statusCounters[2]}
-  castParam.direction = {0,-1,0}
-  castParam.type = 1
-  castParam.max_distance = 2
-  castParam.debug = debug
-  local hits = Physics.cast(castParam)
-  if #hits ~= 0 then
-    local counters = hits[1].hit_object
-    if counters.hasTag("Status Counter") then
-      counters.destruct()
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
     end
   end
 
@@ -1345,25 +1357,18 @@ function wildPokemonFaint()
   local wild_chip_guid = wildPokemonGUID
   local color_index = wildPokemonColorIndex
 
-  -- Remove status
-  if defenderPokemon.status ~= nil then
-    local card = getObjectFromGUID(defenderPokemon.statusCardGUID)
-    destroyObject(card)
-    defenderPokemon.status = nil
+  -- Detect status cards and tokens. Trainers can delete them.
+  local status_table = detectStatusCardAndTokens(DEFENDER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
   end
-
-  -- Remove status counters
-  local castParam = {}
-  castParam.origin = {defenderPos.statusCounters[1], 2, defenderPos.statusCounters[2]}
-  castParam.direction = {0,-1,0}
-  castParam.type = 1
-  castParam.max_distance = 2
-  castParam.debug = debug
-  local hits = Physics.cast(castParam)
-  if #hits ~= 0 then
-    local counters = hits[1].hit_object
-    if counters.hasTag("Status Counter") then
-      counters.destruct()
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
     end
   end
 
@@ -1397,16 +1402,19 @@ function wildPokemonFaint()
   pokeball.putObject(chip)
 
   -- Wait for the token to come to a rest, then wait 0.3 seconds longer and deal a new token.
-  Wait.condition(
-    function()
-      -- Deal a new Pokemon chip of the appropriate color.
-      Wait.time(function() pokeball.call("deal") end, 0.3)
-    end,
-    function() -- Condition function
-      return getObjectFromGUID(wildPokemonGUID) == nil
-    end,
-    2
-  )
+  -- Only call this function if it is not the Legendary ball.
+  if color_index ~= 6 then
+    Wait.condition(
+      function()
+        -- Deal a new Pokemon chip of the appropriate color.
+        Wait.time(function() pokeball.call("deal") end, 0.3)
+      end,
+      function() -- Condition function
+        return getObjectFromGUID(wildPokemonGUID) == nil
+      end,
+      2
+    )
+  end
 end
 
 --------------------------
@@ -3785,6 +3793,21 @@ function recallTrainer(params)
     destroyTempHealthIndicator(ATTACKER)
   end
 
+  -- Detect status cards and tokens. Trainers can delete them.
+  local status_table = detectStatusCardAndTokens(ATTACKER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
+  end
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
+    end
+  end
+
   showAttackerTeraButton(false)
   clearPokemonData(ATTACKER)
   clearTrainerData(ATTACKER)
@@ -3891,6 +3914,21 @@ function recallGym()
     destroyTempHealthIndicator(DEFENDER)
   end
 
+  -- Detect status cards and tokens. Gym Leaders can delete them.
+  local status_table = detectStatusCardAndTokens(DEFENDER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
+  end
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
+    end
+  end
+
   clearPokemonData(DEFENDER)
   clearTrainerData(DEFENDER)
 
@@ -3976,6 +4014,21 @@ function recallRival()
   if Global.call("getHpRule2Set") then
     -- Destroy the temporary Health Indicator.
     destroyTempHealthIndicator(ATTACKER)
+  end
+
+  -- Detect status cards and tokens. Gym Leaders can delete them.
+  local status_table = detectStatusCardAndTokens(ATTACKER)
+  if status_table.status_guid then
+    local status_card = getObjectFromGUID(status_table.status_guid)
+    if status_card then
+      destroyObject(status_card)
+    end
+  end
+  if status_table.tokens_guid then
+    local tokens = getObjectFromGUID(status_table.tokens_guid)
+    if tokens then
+      destroyObject(tokens)
+    end
   end
 
   clearPokemonData(ATTACKER)
@@ -4316,6 +4369,10 @@ function sendToArena(params)
         printToAll("Failed to get Health Indicator with GUID " .. tostring(params.healthIndicatorGuid))
       end
     end
+
+    -- Clear move texts.
+    clearMoveText(ATTACKER)
+    clearMoveText(DEFENDER)
 end
 
 function setTrainerType(isAttacker, type, params)
@@ -4446,34 +4503,40 @@ function recall(params)
       dice.setLock(false)
     end
 
+    -- Detect status cards and tokens. Gym Leaders can delete them.
+    local status_table = detectStatusCardAndTokens(isAttacker)
+    if status_table.persist ~= nil then
+      if status_table.status_guid then
+        local status_card = getObjectFromGUID(status_table.status_guid)
+        if status_card then
+          if not status_table.persist then
+            destroyObject(status_card)
+          else
+            position = {params.pokemonXPos[params.index], 0.5, params.statusZPos}
+            status_card.setPosition(rack.positionToWorld(position))
+            status_card.setRotation({status_card.getRotation().x + params.xRotRecall, status_card.getRotation().y + params.yRotRecall, status_card.getRotation().z + params.zRotRecall})
+          end
+        end
+      end
+      if status_table.tokens_guid then
+        local tokens = getObjectFromGUID(status_table.tokens_guid)
+        if tokens then
+          if not status_table.persist then
+            destroyObject(tokens)
+          else
+            position = {params.pokemonXPos[params.index] + 0.206, 0.5, params.pokemonZPos - 0.137}
+            tokens.setPosition(rack.positionToWorld(position))
+            tokens.setRotation({tokens.getRotation().x + params.xRotRecall, tokens.getRotation().y + params.yRotRecall, tokens.getRotation().z + params.zRotRecall})
+          end
+        end
+      end
+    end
+
     local castParams = {}
     castParams.direction = {0,-1,0}
     castParams.type = 1
     castParams.max_distance = 1
     castParams.debug = debug
-
-    -- Status
-    castParams.origin = {arenaPos.status[1], 1, arenaPos.status[2]}
-    local statusHits = Physics.cast(castParams)
-    if #statusHits ~= 0 then
-        local hit = statusHits[1].hit_object
-        if hit.name ~= "Table_Custom" and hit.hasTag("Status") then
-          local status = getObjectFromGUID(hit.guid)
-          position = {params.pokemonXPos[params.index], 0.5, params.statusZPos}
-          status.setPosition(rack.positionToWorld(position))
-          status.setRotation({status.getRotation().x + params.xRotRecall, status.getRotation().y + params.yRotRecall, status.getRotation().z + params.zRotRecall})
-        end
-    end
-
-    -- Status Tokens
-    castParams.origin = {arenaPos.statusCounters[1], 2, arenaPos.statusCounters[2]}
-    local tokenHits = Physics.cast(castParams)
-    if #tokenHits ~= 0 then
-        obj = getObjectFromGUID(tokenHits[1].hit_object.guid)
-        position = {params.pokemonXPos[params.index] + 0.206, 0.5, params.pokemonZPos - 0.137}
-        obj.setPosition(rack.positionToWorld(position))
-        obj.setRotation({obj.getRotation().x + params.xRotRecall, obj.getRotation().y + params.yRotRecall, obj.getRotation().z + params.zRotRecall})
-    end
 
     -- Item
     castParams.origin = {arenaPos.item[1], 1, arenaPos.item[2]}
@@ -4546,9 +4609,61 @@ function recall(params)
       hideConfirmButton(isAttacker)
     end
 
+    -- Clear move texts.
+    clearMoveText(ATTACKER)
+    clearMoveText(DEFENDER)
+
     rack.call("rackRefreshPokemon")
 end
 
+-- Helper function that detects status cards and tokens. Returning the GUIDs of each, if they exist 
+-- and whether they are a status that gets kept on recall (for tokens).
+function detectStatusCardAndTokens(isAttacker)
+  -- Init return table.
+  local status_table = { persist = nil, status_guid = nil, tokens_guid = nil }
+  
+  -- Init params.
+  local castParams = {}
+  castParams.direction = {0,-1,0}
+  castParams.type = 1
+  castParams.max_distance = 1
+  castParams.debug = debug
+
+  -- Status
+  local arenaPos = isAttacker and attackerPos or defenderPos
+  castParams.origin = {arenaPos.status[1], 1, arenaPos.status[2]}
+  local statusHits = Physics.cast(castParams)
+  if #statusHits ~= 0 then
+    local hit = statusHits[1].hit_object
+    if hit.name ~= "Table_Custom" and hit.hasTag("Status") then
+      local status = getObjectFromGUID(hit.guid)
+      if status then
+        -- Update the status card GUID.
+        status_table.status_guid = status.guid
+
+        -- Determine if this is a persistent status.
+        local status = getObjectFromGUID(hit.guid)
+        if status.getName() == status_ids.curse or status.getName() == status_ids.confuse then
+          status_table.persist = false
+        else
+          status_table.persist = true
+        end
+      end
+    end
+  end
+
+  -- Status Tokens
+  castParams.origin = {arenaPos.statusCounters[1], 2, arenaPos.statusCounters[2]}
+  local tokenHits = Physics.cast(castParams)
+  if #tokenHits ~= 0 then
+    local counters = tokenHits[1].hit_object
+    if counters.hasTag("Status Counter") then
+      status_table.tokens_guid = tokenHits[1].hit_object.guid
+    end
+  end
+  
+  return status_table
+end
 
 function clearPokemonData(isAttacker)
 
