@@ -2588,7 +2588,7 @@ moveData =
     {name="Calm Mind",      power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Advantage", target="Self"}, {name="Disadvantage", target="Enemy"}} },
     {name="Confusion",      power=1,      type="Psychic", dice=6, STAB=true,    effects={{name="Confuse", target="Enemy", chance=6}} },
     {name="Cosmic Power",   power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="DoubleDisadvantage", target="Enemy"}} },
-    {name="Dream Eater",    power=0,      type="Psychic", dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=4}, {name="LifeRecovery", target="Self", chance="Sleep"}} },
+    {name="Dream Eater",    power=1,      type="Psychic", dice=6, STAB=false,   effects={{name="Sleep", target="Enemy", chance=4}, {name="LifeRecovery", target="Self", chance="Sleep"}} },
     {name="Eerie Spell",    power=3,      type="Psychic", dice=6, STAB=true     },
     {name="Esper Wing",     power=2,      type="Psychic", dice=8, STAB=true     },
     {name="Extrasensory",   power=2,      type="Psychic", dice=6, STAB=true,    effects={{name="Disadvantage", target="Enemy", chance=6}} },
