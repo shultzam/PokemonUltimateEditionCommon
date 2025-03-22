@@ -508,6 +508,9 @@ function get_card_from_shop_deck(player_color, item_info)
     
                 -- Log the purchase and adjust the Pokecoin counter value.
                 printToAll(get_player_name(player_color) .. " purchased a " .. item_info.name .. " for " .. item_info.cost .. " Pokécoins.")
+                if item_info.name == CARDS.vitamin.name then
+                  printToAll("Purchasing a Vitamin is for cowards. ;)", "Pink")
+                end
                 local player_pokecoin_counter = get_player_pokecoin_counter(player_color)
                 player_pokecoin_counter.call("adjustValue", -item_info.cost)
 
