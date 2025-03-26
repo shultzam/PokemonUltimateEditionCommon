@@ -156,16 +156,13 @@ function beginSetup2(params)
     local leadersRetrieved = {}
 
     -- Load the required map shenanigans. If this map has multiple Gyms (like Alola, some Gym Leaders will get taken during this step).
-    leadersRetrieved = setup_map(params.selected_map, params.leadersGen)
+    leadersRetrieved = setup_map(params.selected_map, params.leadersGen, params.selectedGens)
 
     -- Check if we need to merge the TMs. setup_map() moves the filtered TM deck onto the table so this should be a save merge.
     if not params.filterTMs then
         -- Get a handle on both TM decks
         local filtered_tm_deck = getObjectFromGUID("b779ed")
         local bad_tm_deck = getObjectFromGUID("558862")
-
-        -- Get the position of the filtered TM deck.
-        --local filtered_position = filtered_tm_deck.getPosition()
 
         -- Put the poopy deck into the filtered deck and shuffle.
         filtered_tm_deck.putObject(bad_tm_deck)
@@ -261,13 +258,25 @@ function beginSetup2(params)
         setupGyms(gen9LeadersArr, 9, params.customGymLeaderOption, leadersRetrieved)
     elseif params.leadersGen == 10 then
         setupGyms(genOrangeIslandsLeadersArr, 10, params.customGymLeaderOption, leadersRetrieved)
-    elseif params.leadersGen == -1 then
-        -- Random Leaders.
+    elseif params.leadersGen == -1 or params.leadersGen == -3 then
+        -- Random Leaders or Gen Match.
         local gen
 
-        -- Initialize the Gym Leaders pokeballs list.
+        -- Initialize the Gym Leaders pokeballs list. This assumes we are doing random.
         local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1] }
 
+        -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
+        local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+        if params.leadersGen == -3 then
+            -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
+            for gen_i = #params.selectedGens, 1, -1 do
+                if not params.selectedGens[gen_i] then
+                    table.remove(gen_options, gen_i)
+                end
+            end
+        end
+
+        -- Collect Gym Leaders.
         for i = 1, 8 do
             -- Orange Islands only uses a scheme where gym 1 is tiers 1/2, gym 3 is tiers 3/4, etc.
             if params.selected_map ~= "Orange Islands" or i % 2 == 1 then
@@ -280,21 +289,36 @@ function beginSetup2(params)
                     pokeballsList = { customLeadersArr[1] }
                 end
 
-                -- Pick a random Gym Leader's pokeball from the list we have.
-                gen = math.random(1, #pokeballsList)
+                -- Determine the gen.
+                if params.leadersGen == -3 then
+                    gen = gen_options[math.random(1, #gen_options)]
+                else
+                    gen = math.random(1, #pokeballsList)
+                end
+
                 local gymsPokeball = getObjectFromGUID(pokeballsList[gen])
                 if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[1]) or gen == 10 then
                     gen = "custom"
                 end
                 local leader = nil
-                if gymsPokeball.hasTag("MultipleGymLeaders") then
-                    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=i, retrievedList=leadersRetrieved})
-                    gymsPokeball = getObjectFromGUID(pokeballsList[random_leader_params.leader_gen])
-                    leader = gymsPokeball.takeObject({ guid = random_leader_params.guid })
-                else
-                    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=i, retrievedList=leadersRetrieved})
-                    leader = gymsPokeball.takeObject({ guid = random_leader_params.guid })
+                local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=i, retrievedList=leadersRetrieved})
+                
+                -- There is a chance we already grabbed all the Gym Leaders at the selected gen for this tier.
+                if random_leader_params.leader_gen ~= gen then
+                    local checks = 0
+                    repeat
+                        gen = gen_options[math.random(1, #gen_options)]
+                        random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=i, retrievedList=leadersRetrieved})
+                        checks = checks + 1
+                        gymsPokeball = getObjectFromGUID(pokeballsList[random_leader_params.leader_gen])
+                    until (random_leader_params.leader_gen == gen) or (checks >= 5)
                 end
+
+                if random_leader_params.leader_gen ~= gen then
+                    printToAll("ERROR: Failed to get a Gym Leader for the specific scenario - likely due to Gen Match on a Map with a lot of Gym Leaders and not a lot of Gens enabled; Reload and try a new scenario.", "Red")
+                    return
+                end
+                leader = gymsPokeball.takeObject({ guid = random_leader_params.guid })
 
                 -- Put the retrieved gym leader into the gym.
                 local gym = getObjectFromGUID(gyms[i])
@@ -321,7 +345,13 @@ function beginSetup2(params)
                     pokeballsList = { customLeadersArr[2] }
                 end
 
-                gen = math.random(1, #pokeballsList)
+                -- Determine the gen.
+                if params.leadersGen == -3 then
+                    gen = gen_options[math.random(1, #gen_options)]
+                else
+                    gen = math.random(1, #pokeballsList)
+                end
+
                 local elite4Pokeball = getObjectFromGUID(pokeballsList[gen])
                 if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[2]) or gen == 10 then
                     gen = "custom"
@@ -357,7 +387,12 @@ function beginSetup2(params)
             end
 
             -- Determine the gen.
-            gen = math.random(1, #pokeballsList)
+            if params.leadersGen == -3 then
+                gen = gen_options[math.random(1, #gen_options)]
+            else
+                gen = math.random(1, #pokeballsList)
+            end
+
             local rivalPokeball = getObjectFromGUID(pokeballsList[gen])
             if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[3]) or gen == 10 then
                 gen = "custom"
@@ -390,21 +425,21 @@ function beginSetup2(params)
         end
         
         -- Determine the gen.
-        gen = math.random(1, #teamRocketPokeballs)
+        if params.leadersGen == -3 then
+            gen = gen_options[math.random(1, #gen_options)]
+        else
+            gen = math.random(1, #teamRocketPokeballs)
+        end
+
+        -- Get the Team Rocket card.
         local teamRocketGym = getObjectFromGUID(teamRocketGymGuid)
         local teamRocketPokeball = getObjectFromGUID(teamRocketPokeballs[gen])
         if (#teamRocketPokeballs == 1 and teamRocketPokeballs[1] == customLeadersArr[4]) or gen == 10 then
             gen = "custom"
         end
-        local teamRocketLeader
-        if teamRocketPokeball.hasTag("MultipleGymLeaders") then
-            local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=11, retrievedList=leadersRetrieved})       -- 11 signifes Team Rocket.
-            teamRocketPokeball = getObjectFromGUID(teamRocketPokeballs[random_leader_params.leader_gen])
-            teamRocketLeader = teamRocketPokeball.takeObject({ guid = random_leader_params.guid })
-        else
-            teamRocketPokeball.shuffle()
-            teamRocketLeader = teamRocketPokeball.takeObject({})
-        end
+        local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=11, retrievedList=leadersRetrieved})       -- 11 signifes Team Rocket.
+        teamRocketPokeball = getObjectFromGUID(teamRocketPokeballs[random_leader_params.leader_gen])
+        local teamRocketLeader = teamRocketPokeball.takeObject({ guid = random_leader_params.guid })
         teamRocketGym.putObject(teamRocketLeader)
         teamRocketGym.call("setLeaderGUID", { teamRocketLeader.guid })
 
@@ -653,7 +688,7 @@ local regionToGenNumberLookupTable = {
     ["Orange Islands"] = 10
   }
 
-function setup_map(selected_map_name, leadersGen)
+function setup_map(selected_map_name, leadersGen, pokemonGens)
     -- Get a handle on the Map Manager.
     local map_manager = getObjectFromGUID("026857")
     if not map_manager then
@@ -867,7 +902,7 @@ function setup_map(selected_map_name, leadersGen)
     end
 
     -- Initialize a list of Gym Leaders retrieved (typically 0, but Alola is weird).
-    local leaders_retrieved = {}
+    local leaders_retrieved = {}    
 
     -- Move the Map Specific Items.
     for map_sepecfic_index=1, #map_data.map_specific_items do
@@ -911,7 +946,7 @@ function setup_map(selected_map_name, leadersGen)
                 elseif params.guid == "6adbc2" then
                     -- Asado Desert.
                     local guid_options = { "ad1ecd", "a48265" }
-                    leader_guid = guid_options[math.random(1,2)]
+                    leader_guid = guid_options[math.random(#guid_options)]
                 elseif params.guid == "35cbfe" then
                     -- Casseroya Lake.
                     leader_guid = "3795a8"
@@ -943,10 +978,22 @@ function setup_map(selected_map_name, leadersGen)
             else
                 -- Init the gen.
                 local gen_to_use = nil
+                local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
 
-                -- Random.
-                if leadersGen == -1 then
-                    gen_to_use = math.random(1,9)
+                -- If the gen is -3 this means to Gen Match the Gym Leaders with the chosen Pokemon Generations.
+                -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
+                if leadersGen == -3 then
+                    -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
+                    for gen_i = #pokemonGens, 1, -1 do
+                        if not pokemonGens[gen_i] then
+                            table.remove(gen_options, gen_i)
+                        end
+                    end
+                end
+
+                -- Random or Gen Match.
+                if leadersGen == -1 or leadersGen == -3 then
+                    gen_to_use = gen_options[math.random(1, #gen_options)]
                 else
                     gen_to_use = leadersGen
                 end
@@ -963,7 +1010,7 @@ function setup_map(selected_map_name, leadersGen)
                     -- Unhandled
                     print("ERROR unhandled map specific gym_tier parameter in Starter Pokeball: " .. tostring(params.gym_tier))
                     return
-                end 
+                end
 
                 -- Get a GUID for a random leader of this gen.
                 local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=params.gym_tier, retrievedList=leaders_retrieved})
@@ -1326,15 +1373,15 @@ function shallowCopy(orig_table)
         copy = orig_table
     end
     return copy
-  end
+end
 
-  function copyTable(original)
+function copyTable(original)
     local copy = {}
-      for k, v in pairs(original) do
-          if type(v) == "table" then
-              v = copyTable(v)
-          end
-          copy[k] = v
-      end
-      return copy
-  end
+    for k, v in pairs(original) do
+        if type(v) == "table" then
+            v = copyTable(v)
+        end
+        copy[k] = v
+    end
+    return copy
+end

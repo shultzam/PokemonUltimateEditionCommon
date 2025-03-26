@@ -1081,7 +1081,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
       
       -- Check if we can give a Faint button.
       if wild_battle_params.color_index then
-        if wild_battle_params.color_index > 0 and wild_battle_params.color_index < 7 then
+        if wild_battle_params.color_index > 0 and wild_battle_params.color_index < 8 then
           -- Valid color_index received.
           wildPokemonColorIndex = wild_battle_params.color_index
           self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="wildPokemonFaint", label="FAINT", tooltip="Wild Pokemon Faints"})
@@ -2069,10 +2069,10 @@ function selectMove(index, isAttacker, isRandom)
   -- Check if the Pokemon is using a move with Attack power of Self, Enemy or Sleep.
   if type(pokemonData.attackValue.movePower) == "string" then 
     if pokemonData.attackValue.movePower == status_ids.the_self then
-      pokemonData.attackValue.movePower = math.floor(pokemonData.attackValue.level / 2)
+      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2) + 0.5)
     elseif pokemonData.attackValue.movePower == status_ids.enemy then
       local opponentData = isAttacker and defenderData or attackerData
-      pokemonData.attackValue.movePower = math.floor(opponentData.attackValue.level / 2)
+      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2) + 0.5)
     elseif pokemonData.attackValue.movePower == status_ids.sleep then
       -- Check if the opponent is asleep.
       local opponentPokemon = isAttacker and defenderPokemon or attackerPokemon
@@ -2214,26 +2214,46 @@ function selectMove(index, isAttacker, isRandom)
     end
   end
 
-  -- Call animations.
+  -- Call attack animations.
   if model_guid ~= nil and Global.call("get_models_enabled") then
     local model = getObjectFromGUID(model_guid)
     if model ~= nil then
       local triggerList = model.AssetBundle.getTriggerEffects()
       if triggerList ~= nil then
         local triggerListLength = #triggerList
-        -- If triggerListLength is greater than x, we need to prevent choosing all the rubbish animations.
-        -- 109, 110 and 111 are the attack indexes.
+        
+        -- We have a lot of attack animation scenarios to consider based on the amount of animations available.
         if triggerListLength == 1 then
-          local animationName = triggerList[1].name
-          Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
-        elseif triggerListLength == 3 or triggerListLength == 4 then
-          -- Stupid, slow motion Gen 9 models.
-          local animationName = triggerList[1].name
-          Global.call("try_activate_effect", {model=model, effectName=animationName})
+          Global.call("try_activate_effect", {model=model, effectName=triggerList[1].name or "Physical Attack"})
+        elseif triggerListLength >= 3 and triggerListLength <= 5 then
+          -- If there is a 5th animation and it matches the selected move then always use that.
+          if triggerListLength == 5 and moveData.name == triggerList[5].name then
+            Global.call("try_activate_effect", {model=model, effectName=triggerList[5].name or "Physical Attack"})
+          else
+            -- Gen 9 and Hisuian Models fall under this category. Unfortunately, some of these models suck and only have one
+            -- relevant animation. Some are cool with three (Physical Attack, Special Attack and Status Attack).
+            -- Some have a cool signature attack animation. We have to deal with all of that cool/lame stuff.
+            local animations_table = {}
+            for animation_index=1, triggerListLength do
+              if string.find(triggerList[animation_index].name, "Attack") then
+                table.insert(animations_table, triggerList[animation_index].name)
+              end
+            end
+            
+            -- We also want to consider the signature animation.
+            if triggerListLength == 5 and animations_table[#animations_table] ~= triggerList[5].name then
+              table.insert(animations_table, triggerList[5].name)
+            end
+
+            -- Call a random animation from our list.
+            local animationName = animations_table[math.random(#animations_table)]
+            Global.call("try_activate_effect", {model=model, effectName=animationName})
+          end
         elseif triggerListLength < 100 then
           local animationName = triggerList[math.random(triggerListLength - 1)].name
           Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
         else
+          -- We need to prevent choosing all the rubbish animations. 109, 110 and 111 are the attack indexes.
           local animationName = triggerList[math.random(109, 111)].name
           Global.call("try_activate_effect", {model=model, effectName=animationName or "Physical Attack"})
         end
