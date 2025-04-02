@@ -114,7 +114,8 @@
         <Text minHeight="65" fontSize="16" text="Modifiers" alignment="LowerLeft" fontStyle="Bold"/>
         <HorizontalLayout spacing="15" childForceExpandHeight="false">
             <Toggle isOn="false" tooltipOffset="-400" onValueChanged="randomStartersToggle" tooltip="Each player is dealt a random starter at the beginning of the game">Random Starters</Toggle>
-            <Toggle isOn="true" tooltipOffset="-400" onValueChanged="filterTechnicalMachines" tooltip="Filter and balance the Technical Machine cards so that the average TM drawn is much better">Filtered TMs</Toggle>
+            <Toggle isOn="true"  tooltipOffset="-400" onValueChanged="filterTechnicalMachines" tooltip="Filter and balance the Technical Machine cards so that the average TM drawn is much better">Filtered TMs</Toggle>
+            <Toggle isOn="false" tooltipOffset="-400" onValueChanged="pokeBackgroundToggle" tooltip="Enable a random Pokemon-themed background">Pokemon Background</Toggle>
         </HorizontalLayout>
         <!--Toggle isOn="false" tooltipOffset="-400" onValueChanged="battleScriptingToggle" interactable="false">Battle Scripting (Experimental)</Toggle-->
         <HorizontalLayout spacing="15" childForceExpandHeight="false">

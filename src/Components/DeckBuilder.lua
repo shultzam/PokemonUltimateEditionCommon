@@ -107,7 +107,6 @@ STANDARD_ITEM_DECK = {
   { card=CARD_INFO.x_accuracy, count=3 },
   { card=CARD_INFO.dire_hit, count=3 },
   { card=CARD_INFO.guard_spec, count=3 },
-  { card=CARD_INFO.guard_spec, count=3 },
 
   -- Card Draw.
   { card=CARD_INFO.apricorn, count=3 },
@@ -236,16 +235,6 @@ EVENT_MAP_ADD_ONS = {
 -- Format: { card_info, count }
 CUSTOM_EVENT_CARDS = {}
 
--- Booster deck used across all maps.
-STANDARD_BOOSTER_DECK = {
-  { card=CARD_INFO.x_attack, count=6 },
-  { card=CARD_INFO.x_defense, count=6 },
-  { card=CARD_INFO.x_accuracy, count=6 },
-  { card=CARD_INFO.dire_hit, count=6 },
-  { card=CARD_INFO.guard_spec, count=6 },
-  { card=CARD_INFO.guard_spec, count=6 },
-}
-
 -- Pokeballs deck used across all maps.
 POKEBALLS_DECK = {}
 
@@ -303,7 +292,7 @@ end
 -- Helper function to build a standard item card deck.
 -- Arguments:
 --  map
---  type (Item, Event, Booster, Shop, ...)
+--  type (Item, Event ...)
 --  position
 --  rotation
 function build_card_deck(params)
@@ -319,8 +308,6 @@ function build_card_deck(params)
     deck = STANDARD_EVENT_DECK
     add_ons = EVENT_MAP_ADD_ONS
     custom_cards = CUSTOM_EVENT_CARDS
-  elseif params.type == "Booster" then
-    deck = STANDARD_BOOSTER_DECK
   else
     print("Unrecognized deck type: " .. tostring(params.type))
     return
@@ -368,11 +355,6 @@ end
 -- Helper function to get the standard event card config.
 function get_event_card_config()
   return STANDARD_EVENT_DECK
-end
-
--- Helper function to get the standard booster card config.
-function get_booster_card_config()
-  return BOOSTER_DECK
 end
 
 -- Helper function to print a table.

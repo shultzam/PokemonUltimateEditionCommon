@@ -111,6 +111,18 @@ force_shiny = false
 tokens_checked_for_shiny = {}               -- Track tokens and their Shiny status.
 shiny_pokemon_that_exist_table = {}         -- Track Pokemon and their shiny status.
 
+-- Backgrounds. Base URL from https://steamcommunity.com/sharedfiles/filedetails/?id=2225275460 by eggdropsoap. Thanks!
+BASE_BACKGROUND_URL = "https://steamusercontent-a.akamaihd.net/ugc/1616185612499157727/8ACD61011D09D6CEB62840F8D96DC96FD0000B0C/"
+CUSTOM_BACKGROUND_URLS = {
+  "https://steamusercontent-a.akamaihd.net/ugc/41201780382888048/33DF4F86351188C08DB0761A08BDBCAE357DD29F/",
+  "https://steamusercontent-a.akamaihd.net/ugc/41201780382887428/4A8D6EC1C48FEBE54F2F1EA86A2E489C9995BC79/",
+  "https://steamusercontent-a.akamaihd.net/ugc/41201780382886849/1F770CBA2C012C7106921266233897CFC2DDFF2F/",
+  "https://steamusercontent-a.akamaihd.net/ugc/41201780382886369/4A962DE1769F5DD1862C2F8FE0CA4D689A3375E5/"
+}
+
+-- Determines if we use a random Pokemon themed background.
+pokeBackground = false
+
 -- Pokemon effects variables and constants. Looping Effects are instant and Trigger Effects take some time.
 EFFECTS_POKEBALL_GUID = "5ce1b1"
 SHINY_TRIGGER_INDEX = 11
@@ -275,15 +287,6 @@ TYPE_TOKEN_GUID_TABLE =
 }
 
 active_secondary_type_tokens = {}
-
--- Backgrounds.
-BASE_BACKGROUND_URL = ""
-CUSTOM_BACKGROUND_URLS = {
-  "https://steamusercontent-a.akamaihd.net/ugc/41201780382888048/33DF4F86351188C08DB0761A08BDBCAE357DD29F/",
-  "https://steamusercontent-a.akamaihd.net/ugc/41201780382887428/4A8D6EC1C48FEBE54F2F1EA86A2E489C9995BC79/",
-  "https://steamusercontent-a.akamaihd.net/ugc/41201780382886849/1F770CBA2C012C7106921266233897CFC2DDFF2F/",
-  "https://steamusercontent-a.akamaihd.net/ugc/41201780382886369/4A962DE1769F5DD1862C2F8FE0CA4D689A3375E5/"
-}
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Custom data fields
@@ -6998,6 +7001,8 @@ function onLoad(saved_data)
     -- Current map. Can only change at Setup.
     selected_map=save_table.selected_map
     leadersGen=save_table.leadersGen
+    -- Background.
+    pokeBackground=save_table.pokeBackground
   end
 
   -- Do some safety checks.
@@ -7030,6 +7035,9 @@ function onLoad(saved_data)
   end
   if leadersGen == nil then
     leadersGen = 1
+  end
+  if pokeBackground == nil then
+    pokeBackground = false
   end
   if HELPER_remove_non_player_items == nil then
     HELPER_remove_non_player_items = false
@@ -7208,10 +7216,9 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on XX April 25 - v3.4.3 \
+  printToAll("Last update on 02 April 25 - v3.4.3 \
     - Refreshed Gen III Gym Leaders (secondary type tokens will remain until all Gym Leaders are refreshed) \
-    - Added Gen Match Gym Leader option \
-      * Matches Gym Leader options to the selected Pokemon Generations \
+    - Added the ability to enable random Pokémon-themed backgrounds \
     - Added the Deck Builder for easier deck creation \
       * Includes easy custom card creation (see DeckBuilder.lua) \
       * Currently supports Item Cards, Event Cards and Boosters \
@@ -7292,7 +7299,9 @@ function onSave()
     -- Current map. Can only change at Setup.
     selected_map=selected_map,
     -- Leaders gen.
-    leadersGen=leadersGen
+    leadersGen=leadersGen,
+    -- Background.
+    pokeBackground=pokeBackground
   }
   return JSON.encode(save_table)
 end
@@ -8104,6 +8113,25 @@ function printRemoveNonUsedItemsWarning()
   printToAll("\nRemove Non-Player Racks: Enabled \
   - After setup the mod will auto-remove all racks, etc. not used by players for you.", 
     "Pink")
+end
+
+-----------------
+-- Region Selection.
+-----------------
+
+-- This function does nothing except set the URL of the map as a preview for players as well
+-- as setting the Global reference to the current map.
+function pokeBackgroundToggle(player, option, id)
+  -- Toggle the feature.
+  pokeBackground = not pokeBackground
+
+  -- Update the background.
+  if pokeBackground then
+    Backgrounds.setCustomURL(CUSTOM_BACKGROUND_URLS[math.random(#CUSTOM_BACKGROUND_URLS)])
+  else
+    printToAll("Loading Forest Cave by eggdropsoap")
+    Backgrounds.setCustomURL(BASE_BACKGROUND_URL)
+  end
 end
 
 -----------------

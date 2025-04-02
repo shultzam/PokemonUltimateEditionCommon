@@ -1,5 +1,5 @@
 SHOP_DECK_GUID = "272b2d"
-BOOSER_DECK_GUID = "acfa1d"
+BOOSER_DECK_GUID = "b66e98"
 
 PLAYER_COIN_GUIDS = {
   Yellow = "b08b0e",
