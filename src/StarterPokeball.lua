@@ -61,6 +61,8 @@ ALWAYS_SELECT = 2
 elite4GymGuid = "a0f650"
 rivalGymGuid = "c970ca"
 teamRocketGymGuid = "19db0d"
+mapManagerGuid = "026857"
+deckBuilderGuid = "9f7796"
 
 -- Initial badge GUIDs.
 original_badge_guids = { "bce8e0", "a83bf0", "286901", "cbbade", "c81eab", "23b4f1", "e53b76", "9b0053" }
@@ -170,9 +172,15 @@ function beginSetup2(params)
     end
 
     -- Get a handle on the Map Manager and delete it.
-    local map_manager = getObjectFromGUID("026857")
+    local map_manager = getObjectFromGUID(mapManagerGuid)
     if map_manager then
         destroyObject(map_manager)
+    end
+
+    -- Get a handle on the Map Manager and delete it.
+    local deck_builder = getObjectFromGUID(deckBuilderGuid)
+    if deck_builder then
+        destroyObject(deck_builder)
     end
 
     -- Check if we need to collect Beast Pokemon.
@@ -690,7 +698,7 @@ local regionToGenNumberLookupTable = {
 
 function setup_map(selected_map_name, leadersGen, pokemonGens)
     -- Get a handle on the Map Manager.
-    local map_manager = getObjectFromGUID("026857")
+    local map_manager = getObjectFromGUID(mapManagerGuid)
     if not map_manager then
         printToAll("Cannot find the Map Manager :(. Reload the mod.", "Red")
         return
@@ -833,20 +841,33 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
     local battle_manager = getObjectFromGUID("de7152")
     battle_manager.call("initialize", rack_guid_param)
 
+    -- Loop through the decks that we are building.
+    local deckBuilder = getObjectFromGUID(deckBuilderGuid)
+    if deckBuilder then
+        for build_deck_index=1, #map_data.created_decks do
+            -- Build the card decks.
+            local params = copyTable(map_data.created_decks[build_deck_index])
+            deckBuilder.call(
+                "build_card_deck",
+                {
+                    map = selected_map_name,
+                    type = params.type,
+                    position = params.position,
+                    rotation = params.rotation
+                }
+            )
+        end
+    else
+        printToAll("Error: cannot find DeckBuilder object")
+    end
+
     -- Loop through the decks.
     -- Deck order: Pokeballs, Shop Items, Boost Items, Item Cards, Event Cards, Z-Crystals, Type Boosters, Tera Types, TM Cards
     for deck_index=1, #map_data.deck_locations do
-        -- Move the deck.
+        -- Get the params.
         local params = copyTable(map_data.deck_locations[deck_index])
+        -- Move the deck.
         local deck_obj = standard_items_pokeball.takeObject({guid=params.guid})
-
-        -- The Item Cards and Event Cards need some extra work since they change depending on the map.
-        if deck_index == 4 or deck_index == 5 then
-            -- Set the deck's state and shuffle it after .5 seconds.
-            if deck_obj.getStateId() ~= new_state_id then
-                deck_obj = deck_obj.setState(new_state_id)
-            end
-        end
 
         -- Shuffle the deck. The shop items don't really need to be shuffled but oh well.
         deck_obj.shuffle()

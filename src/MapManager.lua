@@ -1,4 +1,4 @@
--- The Map Manager object should live at {11.98, 1.40, 31.50}.
+-- The Map Manager object should live at {12.00, 1.40, 31.50}.
 -- exec chat_tab_game; chat_copy
 -- Regex to find all engineering notation values: [\s=]+([+-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+))
 
@@ -10,6 +10,14 @@ PBALDECK = "e12530"
 TERADECK = "0b44ce"
 TENHDECK = "2f2ce0"
 ZCRYDECK = "81cc95"
+
+function onLoad()
+  -- Make this object not interactable.
+  self.interactable = false
+  self.setLock(true)
+  self.setPosition({12.0, 1.5, 31.5})
+  self.setRotation({0, 180, 0})
+end
 
 -- Hand information for each player color.
 local hand_zone_params = {
@@ -68,11 +76,13 @@ local map_data = {
                   { position = {-22.65, 0.96, 22.12}, rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {20.57, 0.96, 6.27},   rotation = {0, 270, 0}, button_pos = {0, 0, 6.4}, name = "Silph Co." }             -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {23.46, 1.56, -22.11},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} },
+      { type = "Booster", position = {-21.08, 1.10, -21.83}, rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-27.30, 1.21, -21.73}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-21.08, 1.10, -21.83}, rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {23.46, 1.56, -22.11},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {-13.60, 1.07, 22.68},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-7.59, 1.07, 22.68},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-1.69, 1.07, 22.68},   rotation = {0, 180, 180} }, -- Tera Types
@@ -116,11 +126,13 @@ local map_data = {
                   { position = {35.78, 0.96, 9.63},   rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {16.79, 0.96, 22.61},  rotation = {0, 180, 0}, button_pos = {0, 0, 2.3}, name = "Rocket HQ" }             -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {13.51, 1.56, -21.48},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {25.53, 1.40, -21.62},  rotation = {0, 180, 180} },
+      { type = "Booster", position = {-23.07, 1.10, -21.38}, rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-35.01, 1.21, -21.42}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-29.06, 1.69, -21.37}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-23.07, 1.10, -21.38}, rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {13.51, 1.56, -21.48},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {25.53, 1.40, -21.62},  rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {-13.58, 1.07, 21.97},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-7.63, 1.07, 22.06},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-1.65, 1.07, 22.04},   rotation = {0, 180, 180} }, -- Tera Types
@@ -163,11 +175,13 @@ local map_data = {
                   { position = {38.55, 0.96, 5.39},    rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {16.47, 0.96, 10.58},   rotation = {0, 180, 0}, button_pos = {-2.6, 0, 4.4}, name = "Mount Pyre" }         -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {23.29, 1.56, -20.02},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {35.19, 1.40, -20.12},  rotation = {0, 180, 180} },
+      { type = "Booster", position = {10.16, 1.10, -21.36},  rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {3.87, 1.21, -21.36},   rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-33.03, 1.69, -21.36}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {10.16, 1.10, -21.36},  rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {23.29, 1.56, -20.02},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {35.19, 1.40, -20.12},  rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {23.47, 1.07, 22.61},   rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {29.52, 1.07, 22.58},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {35.46, 1.07, 22.61},   rotation = {0, 180, 180} }, -- Tera Types
@@ -213,11 +227,13 @@ local map_data = {
                   { position = {36.35, 0.96, 8.92},   rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {29.59, 0.96, -0.37},  rotation = {0, 180, 0}, button_pos = {-1.3, 0, -4.3}, name = "Team Galactic HQ" }  -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {-2.46, 1.56, -21.40},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {33.56, 1.43, -21.57},  rotation = {0, 180, 180} },
+      { type = "Booster", position = {-23.07, 1.10, -21.37}, rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-35.06, 1.21, -21.28}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-29.08, 1.69, -21.34}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-23.07, 1.10, -21.37}, rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {-2.46, 1.56, -21.40},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {33.56, 1.43, -21.57},  rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {-21.74, 1.07, 22.09},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-15.78, 1.07, 22.09},  rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-9.78, 1.07, 22.09},   rotation = {0, 180, 180} }, -- Tera Types
@@ -260,11 +276,13 @@ local map_data = {
                   { position = {4.14, 0.96, 23.86},    rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {-18.5, 0, 5.4} }, -- Rival.
                   { position = {40.47, 0.96, -21.31},  rotation = {0, 270, 0}, button_pos = {-1.1, 0, 3.7}, name = "Team Plasma" }             -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {14.37, 1.56, -21.83},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {26.37, 1.40, -21.99},  rotation = {0, 180, 180} },
+      { type = "Booster", position = {-16.39, 1.10, -21.83}, rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-6.69, 1.21, -21.87},  rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-36.85, 1.69, -21.92}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-16.39, 1.10, -21.83}, rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {14.37, 1.56, -21.83},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {26.37, 1.40, -21.99},  rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {17.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {23.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {29.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Tera Types
@@ -308,11 +326,13 @@ local map_data = {
                   { position = {23.79, 0.96, 4.00},   rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {12.08, 0.96, 21.34},  rotation = {0, 270, 0}, button_pos = {0.2, 0, 2.2}, name = "Team Flare" }          -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {-12.87, 1.54, -21.83}, rotation = {0, 180, 180} },
+      { type = "Event",   position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} },
+      { type = "Booster", position = {-37.95, 1.7, -21.83},  rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-32.28, 1.21, -21.83}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-37.95, 1.7, -21.83},  rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {-12.87, 1.54, -21.83}, rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {-29, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-23, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-17, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Tera Types
@@ -358,11 +378,13 @@ local map_data = {
                   { position = {27.26, 0.96, -6.00},  rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} },     -- Rival.
                   { position = {3.68, 0.96, 0.57},    rotation = {0, 180, 0}, button_pos = {-6.3, 0, 10.3}, name = "Team Skull & Aether Foundation" } -- Team Rocket.
     },
+    created_decks = {
+      { type = "Item",    position = {-12.87, 1.54, -21.83}, rotation = {0, 180, 180} },
+      { type = "Event",   position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} },
+      { type = "Booster", position = {-37.95, 1.7, -21.83},  rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-32.28, 1.21, -21.83}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-37.95, 1.7, -21.83},  rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {-12.87, 1.54, -21.83}, rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {-29, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-23, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-17, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Tera Types
@@ -460,11 +482,13 @@ local map_data = {
                   { position = {-3.15, 0.96, 0.51},   rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {-11.15, 0.96, 0.11},  rotation = {0, 180, 0}, button_pos = {-7.1, 0, 4.45}, name = "Team Star" }         -- Team Rocket. (Segin Squad Base)
     },
+    created_decks = {
+      { type = "Item",    position = {23.46, 1.56, -22.11},  rotation = {0, 180, 180} },
+      { type = "Event",   position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} },
+      { type = "Booster", position = {-21.08, 1.10, -21.83}, rotation = {0, 180, 180} }
+    },
     deck_locations = { { guid = PBALDECK, position = {-27.30, 1.21, -21.73}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
-                       { guid = "acfa1d", position = {-21.08, 1.10, -21.83}, rotation = {0, 180, 180} }, -- Boost Items
-                       { guid = "30f8c1", position = {23.46, 1.56, -22.11},  rotation = {0, 180, 180} }, -- Item Cards
-                       { guid = "656d8c", position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} }, -- Event Cards
                        { guid = ZCRYDECK, position = {28.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {34.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {40.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Tera Types
@@ -516,6 +540,11 @@ local map_data = {
                   { false }, -- Elite 4.
                   { position = {-19.43, 0.96, 19.84}, rotation = {0, 180, 0}, button_pos = {0, 0, 2}, victory_button_pos = {1, 0, -6} }, -- Rival.
                   { position = {16.00, 0.96, -15.17}, rotation = {0, 180, 0}, button_pos = {-1.2, 0, 3.75}, name = "Team Rocket HQ" }    -- Team Rocket.
+    },
+    created_decks = {
+      { type = "Item",    position = {-17.85, 1.56, -22.00}, rotation = {0, 180, 180} },
+      { type = "Event",   position = {35.40, 1.40, -22.16},  rotation = {0, 180, 180} },
+      { type = "Booster", position = {-32.00, 1.10, -22.00}, rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-37.70, 1.21, -22.00}, rotation = {0, 180, 180} }, -- Pokeballs
                        { guid = "fdf0f6", position = {-26.30, 1.69, -22.00}, rotation = {0, 180, 180} }, -- Legendary Items
@@ -593,23 +622,4 @@ end
 
 function get_map_data_for_region(map_name)
   return map_data[map_name]
-end
-
-function onLoad()
-  -- Make this object not interactable.
-  self.interactable = false
-end
-
--- Helper function to print a table.
-function dump_table(o)
-  if type(o) == 'table' then
-      local s = '{ '
-      for k,v in pairs(o) do
-        if type(k) ~= 'number' then k = '"'..k..'"' end
-        s = s .. '['..k..'] = ' .. dump_table(v) .. ','
-      end
-      return s .. '} '
-  else
-      return tostring(o)
-  end
 end
