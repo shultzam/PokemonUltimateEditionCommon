@@ -16,7 +16,7 @@ CARD_SCALE = {2.12, 1.00, 2.11}
 
 -- A table of card backs.
 CARD_BACK_URLS = {
-  default = "https://steamusercontent-a.akamaihd.net/ugc/41201955293156728/A6F430EEBBDBC1B5FEF77B0D0134D6A7C5FFA6BA/",
+  default = "https://steamusercontent-a.akamaihd.net/ugc/41202414673555291/A6F430EEBBDBC1B5FEF77B0D0134D6A7C5FFA6BA/",
   event = "https://steamusercontent-a.akamaihd.net/ugc/41201955293156641/5D47086C919A98CB7785AEB1DD56C1B2504BAC61/",
   pokeballs = "https://steamusercontent-a.akamaihd.net/ugc/41201327654156520/872ED53E811F0EC9E667DC4C30B7232C1C419F77/",
   tera_type = "https://steamusercontent-a.akamaihd.net/ugc/41201327654156477/6095A2918358D17AA36770E6FAF9AE3EDAB06BB0/",

@@ -5,6 +5,7 @@ local playerColour = "Yellow"
 
 local diceBagGUID = "1a64da"
 local figureGUID = "f5f4be"
+RECORD_KEEPER_GUID = "ab319d"
 
 local evolveRotation = 270
 
@@ -87,6 +88,9 @@ function onLoad(saved_data)
       self.createButton({label="2", click_function="evolveTwo"..i, function_owner=self, tooltip="",position={pokemonXPos[7-i] + 0.24, 1000, pokemonZPos + 0.025}, rotation={0,0,0}, height=50, width=25, font_size=40}) -- Evolve2 Button
   end
   rackRefreshPokemon()
+
+  -- Stats button.
+  self.createButton({label="STATS", click_function="handleStatsRequest", function_owner=self, tooltip="Print Stats (right-click to only print to self)", position={-0.50, yLoc, -0.92}, rotation={0,0,0}, height=60, width=150, font_size=30})
 
   local save_table
   if saved_data and saved_data ~= "" then
@@ -565,4 +569,17 @@ end
 
 function getHealthIndicatorsGuids()
     return HEALTH_INDICATOR_GUIDS
+end
+
+--------------------------------------------------------------------------------
+-- STATS
+--------------------------------------------------------------------------------
+
+function handleStatsRequest(obj, color, alt)
+    local record_keeper = getObjectFromGUID(RECORD_KEEPER_GUID)
+    if record_keeper then
+        record_keeper.call("handle_roll_stats_request", {obj=nil, color=playerColour, alt=alt})
+    else
+        print("Failed to find Record Keeper")
+    end
 end

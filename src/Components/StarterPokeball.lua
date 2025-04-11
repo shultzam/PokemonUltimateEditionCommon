@@ -64,12 +64,120 @@ teamRocketGymGuid = "19db0d"
 mapManagerGuid = "026857"
 deckBuilderGuid = "9f7796"
 
+-- Map lookup table.
+local map_lookup_table = {
+    [1] = "Kanto",
+    [2] = "Johto",
+    [3] = "Hoenn",
+    [4] = "Sinnoh",
+    [5] = "Unova",
+    [6] = "Kalos",
+    [7] = "Alola",
+    [8] = "Galar",
+    [9] = "Paldea",
+    [10] = "Orange Islands",
+  }
+
 -- Initial badge GUIDs.
 original_badge_guids = { "bce8e0", "a83bf0", "286901", "cbbade", "c81eab", "23b4f1", "e53b76", "9b0053" }
+badge_urls = {
+    ["Kanto"] = {  },
+    ["Johto"] = {  },
+    ["Hoenn"] = {  },
+    ["Sinnoh"] = {  },
+    ["Unova"] = {  },
+    ["Kalos"] = {  },
+    ["Alola"] = {  },
+    ["Galar"] = {  },
+    ["Paldea"] = {  },
+    ["Orange Islands"] = {  }
+}
 
 -- Iniital Rack GUIDs. These are based on the Johto GUIDs, since that is the initial state of the racks.
 -- Order: Yellow, Green, Blue, Red, Purple, Orange.
 initial_rack_guids = { "fa15d1", "4530dd", "8d5116", "88f43b", "2971d2", "7b8860" }
+rack_urls = {
+    Kanto = {
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564367522/62486D9D445F8D97B83E31714951794380A4F90D/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564367824/0AEA12BF0CD767188686A93CCC01C926A308F5EA/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564368625/1C84806D05F20E7F919E1A2095DA37030B3FB463/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564368221/2A006544F5BE9CCC70B9CA5FB402D7021183B863/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564367189/7DBCE90055D93019827F3E36BE7D7BE71AD6021D/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2468621052564366548/76CC4CA4EC054D579E645C05AADE147915751554/"
+    },
+    Johto = {
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989256155/E1D2C5038E001E2E83BEA4A8921A024B797995FC/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989260044/D8E9818836B7037FB36BE7D9A9855973F9D91ED3/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989260786/F3C58442C8806439BE0B4A3DC11339667F8D248B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989257038/21B93BA6D59C2D76AA282E9538B4666DC1182787/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989257852/2955D0FA4838C9E3C1DBDE183E8D8CAD65BC04FF/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2471992409989258669/37F66A1F06735921AD13AD61C72E338FD98169F1/"
+    },
+    Hoenn = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401327/E5C912EEDF221B17936283F646115B411EFE8C2B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401561/D39F601F935A57A109F533A70DE3FD9DD89D6273/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747402071/568EB18F7EFD1D814F8DF352994B6ABAF23EE751/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401816/2EA4A4E9CB4CA1A203925EFB67BFFD29F6AED20B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401055/7A87F7479DEFF7B2435F49DC9AD6A1F179F20FC4/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2452852831747400830/2E36C789DAD25149087A619E2657E5D18F9F9E1F/"
+     },
+    Sinnoh = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591681/83C2A89956FD23A2145D148A5D22B9468B025EE1/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591473/5970BBC767375CF38EBCF3B8D707D65304C39C5C/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591043/F90C643B7198B9368DD6A9C5A3C54AB3F51E949D/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591258/29AB0A8B9AAA0FE8EBF64DE1B467301323C2DBB6/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454592149/94B2A1E1795CDEB841E68E031FB2E973FF39B27D/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591944/095E1FB6EA14990762DBD31C9504B4C1FAC0B3BB/"
+     },
+    Unova = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192006709/C0C0CD1DB14B08A430482ED1DC2CAB4239D65F70/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192005979/6160BAAC6F8A23A0627281A6AC5D6BBFE41DC151/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192004413/5690F4F4AD4557B52FE5A21203A6F5197118CFA2/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192004881/491548F1AA03DDF413DABDD4B66B553B22299B95/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192007211/52BB225A772190BDC20972080D9CF39A616252E2/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2376299162192007452/D5571D32C553B7DB862A9A7D124A02B687E4727A/"
+     },
+    Kalos = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094401101/B25D53CE272B750F071BB4CAED1CEAC9E085A1C3/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094401308/6DDE7DE682E703EF3DC1BC3D726D4DE5BF2EE41C/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094401740/1EE53A6F2F72924D5EA7C5094D7F24AFF47DEFBB/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094401516/D5F00B7D9A9E68FA7BC9672EF0A50A5E4820FAE6/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400844/6041242C1D5443BE356BDCF961F8948343AA01C1/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400595/F80CF5D35CEDF74BFF112E81A9F17282CA02153B/"
+     },
+    Alola = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407259/8ADD0154FC5782959F960CC58D51C34D4207D310/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407355/63795DE52ED4E878D6B0F4F8FE0228FE2815B1C9/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407590/2A0533D45EF286D50E724702ECA105AB81D22F66/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407450/48E53326A6AED3E794AC18A0F47118D422C9774F/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407194/9B38F45CA958904E18EB113232BA11C55A11CD7E/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407076/32F83176FDFC84AE94A27B43FC59FEDF012B83CE/"
+     },
+    Galar = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094410855/011D6E69E118F873A9DD59A1BB1F2EC9C4BB0D14/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094410660/DF464D47738EF02BE30DACF45B4EBBD8BC4117C3/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094410420/56BDB82CC2EBEBFAE84827AE860F43D462468D06/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094410548/B44F6F190EBBC1F93B2D5DDD29289FDA8289BCAF/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094410973/C081E361958159944E9B1A217BD5C8F51644DB2B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094411105/1B109D2A51CF6F50A0C2ECF9C80C6D1CEF8D7D8A/"
+     },
+    Paldea = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404147/2464E3F9FE7D8A559E3B612A44C37EE921F5A6D6/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404257/4535DD8447ABD09F9E6B8BD46054A3C44CF18550/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404499/09667228887F0BEDE4EE03FA43CB451E40E3E572/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404369/FC6D151460A411B5F0B04FB7E2C5EAE8E1932548/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404005/4E2AB9A8893E305B809AAC2F47FD54D96B1A8F2B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094403885/ADAE8EE866C0C3B671C2E450AA8995A1C6B4112A/"
+     },
+    ["Orange Islands"] = { 
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452154/5DE45931305977EDB788C867921FF5E49F06391D/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452039/FA7968A10BF8AE7BD08B29F2E0538C41A07A5D2B/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094451690/66F3BAE8170B8BE0866DD9C5199766A0F8E66546/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094451858/9A8D966F666685EFEC5B77C1AB23068BF5828A90/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452246/06194951A834DE1E0D98E781A7057B7023317816/",
+        "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452300/B2B5D20E5CE7DAEE736DF0B421475AA789197837/"
+    }
+}
 
 -- The standard and extras pokeball GUIDs.
 standard_guid = "35950f"
@@ -817,21 +925,21 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
         -- Get the rack by its initial GUID.
         local rack = getObjectFromGUID(initial_rack_guids[rack_index])
 
-        -- If there is no rack the user's may have deleted them already. Charge forward!
-        local new_guid = nil
-        if rack then
-            if rack.getStateId() ~= new_state_id then
-                rack = rack.setState(new_state_id)
-            end
-
-            rack.setLock(true)
-            new_guid = rack.getGUID()
-        else
-            new_guid = nil
-        end
+        -- Set the correct URL on the rack.
+        local image_url = rack_urls[selected_map_name][rack_index]
+        rack.setCustomObject(
+            {
+                type = 0,   -- Square
+                image = image_url,
+                image_bottom = image_url,
+                thickness = 0.20,
+                stackable = false
+            }
+        )
+        local new_obj = rack.reload()
 
         -- Append the new GUID to the rack GUID param we are sending to the Battle Manager.
-        table.insert(rack_guid_param, new_guid)
+        table.insert(rack_guid_param, new_obj.getGUID())
     end
 
     -- Update rack_guids for removal (in case we are auto-removing items).

@@ -59,6 +59,7 @@ local d6Dice="15df3c"
 local statusGUID = {burned="3b8a3d", poisoned="26c816", sleep="00dbc5", paralyzed="040f66", frozen="d8769a", confused="d2fe3e", cursed="5333b9"}
 boosterDeckGUID = "acfa1d"
 BASE_HEALTH_OBJECT_GUID = "5ab909"
+RECORD_KEEPER_GUID = "ab319d"
 
 local levelDiceXOffset = 0.205
 local levelDiceZOffset = 0.13
@@ -4289,7 +4290,7 @@ function sendToArena(params)
           local card_name = itemCard.getName()
           if (card_name == "Vitamin" or card_name == "Shiny Charm") then
             pokemonData.vitamin = true
-          elseif card_name == "Alpha" then
+          elseif card_name == "Alpha Pokémon" then
             pokemonData.alpha = true
           elseif card_name then
             pokemonData.type_enhancer = typeBoosterLookupTable[itemCard.getName()]
@@ -5352,7 +5353,7 @@ function evolvePoke(params)
             local card_name = item_card.getName()
             if (card_name == "Vitamin" or card_name == "Shiny Charm") then
               arenaData.vitamin = true
-            elseif card_name == "Alpha" then
+            elseif card_name == "Alpha Pokémon" then
               arenaData.alpha = true
             elseif card_name then
               arenaData.type_enhancer = typeBoosterLookupTable[card_name]
@@ -6323,12 +6324,15 @@ end
 
 -- Helper function to roll some dice in the logs.
 -- Returns the dice attack dice that were rolled. Only the highest count attack dice.
-function auto_roll_logs(isAttacker)
+function auto_roll_logs(isAttacker, color)
   -- Save off the autoroll counts.
   local auto_roll_counts = isAttacker and atkAutoRollCounts or defAutoRollCounts
 
   -- Basic check.
   if auto_roll_counts.blue < 1 and auto_roll_counts.white < 1 and auto_roll_counts.purple < 1 and auto_roll_counts.red < 1 then return end
+
+  -- Get a reference to the Record Keeper.
+  local record_keeper = getObjectFromGUID(RECORD_KEEPER_GUID)
 
   -- Gather the blue D8 dice rolls.
   local blue_rolls = {}
@@ -6337,6 +6341,11 @@ function auto_roll_logs(isAttacker)
     if value == 8 then value = 6 end
     if value == 7 then value = 5 end
     table.insert(blue_rolls, value)
+
+    -- Send the roll to the record keeper.
+    if record_keeper and color ~= nil then
+      record_keeper.call("record_dice_roll", { dice_type = "d8", value = value, player_name = Player[color].steam_name })
+    end
   end
   if #blue_rolls > 0 then
     local roll_string = ""
@@ -6349,7 +6358,13 @@ function auto_roll_logs(isAttacker)
   -- Gather the white D6 rolls.
   local white_rolls = {}
   for roll=1, auto_roll_counts.white do
-    table.insert(white_rolls, math.random(1,6))
+    local value = math.random(1,6)
+    table.insert(white_rolls, value)
+
+    -- Send the roll to the record keeper.
+    if record_keeper and color ~= nil then
+      record_keeper.call("record_dice_roll", { dice_type = "whited6", value = value, player_name = Player[color].steam_name })
+    end
   end
   if #white_rolls > 0 then
     local roll_string = ""
@@ -6362,7 +6377,13 @@ function auto_roll_logs(isAttacker)
   -- Gather the purple D4 rolls.
   local purple_rolls = {}
   for roll=1, auto_roll_counts.purple do
-    table.insert(purple_rolls, math.random(1,4))
+    local value = math.random(1,4)
+    table.insert(purple_rolls, value)
+
+    -- Send the roll to the record keeper.
+    if record_keeper and color ~= nil then
+      record_keeper.call("record_dice_roll", { dice_type = "d4", value = value, player_name = Player[color].steam_name })
+    end
   end
   if #purple_rolls > 0 then
     local roll_string = ""
@@ -6375,7 +6396,13 @@ function auto_roll_logs(isAttacker)
   -- Gather the red D6 rolls.
   local red_rolls = {}
   for roll=1, auto_roll_counts.red do
-    table.insert(red_rolls, math.random(1,6))
+    local value = math.random(1,6)
+    table.insert(red_rolls, value)
+
+    -- Send the roll to the record keeper.
+    if record_keeper and color ~= nil then
+      record_keeper.call("record_dice_roll", { dice_type = "redd6", value = value, player_name = Player[color].steam_name })
+    end
   end
   if #red_rolls > 0 then
     local roll_string = ""
@@ -6398,7 +6425,7 @@ function auto_roll_logs(isAttacker)
 end
 
 -- Helper function to auto roll some dice.
-function auto_roll_dice(isAttacker)
+function auto_roll_dice(isAttacker, color)
   -- First, despawn the existing dice.
   despawnAutoRollDice(isAttacker)
 
@@ -6456,7 +6483,46 @@ function auto_roll_dice(isAttacker)
 
   -- Roll all the dice a few times.
   for i, dice in pairs(spawned_dice_table) do
-    for temp_i=0, 4 do Wait.time(function() dice.roll() end, 1.5 + (temp_i * 0.25)) end
+    for temp_i=0, 4 do 
+      Wait.time(
+        function()
+          if not dice.isDestroyed() then dice.roll() end
+        end, 
+        1.5 + (temp_i * 0.25)
+      )
+    end
+  end
+
+  -- Get a reference to the Record Keeper.
+  local record_keeper = getObjectFromGUID(RECORD_KEEPER_GUID)
+
+  -- Report the dice rolls to the Record Keeper.
+  if record_keeper and color ~= nil then
+    for i, dice in pairs(spawned_dice_table) do
+      -- Wait until the die is idle.
+      Wait.condition(
+        function() -- Conditional function.
+          local dice_type = dice.getDescription()
+          local value = dice.getRotationValue()
+          -- Adjust D8 values for crit dice.
+          if dice_type == "d8" then
+            if value == 6 then
+              value = 5
+            elseif value == 7 or value == 8 then
+              value = 6
+            end
+          end
+          record_keeper.call("record_dice_roll", { dice_type = dice_type, value = value, player_name = Player[color].steam_name })
+        end,
+        function() -- Condition function
+          return dice.resting
+        end,
+        30,
+        function() -- Timeout function.
+          print("Timeout exceeded waiting for dice to come to a stop.")
+        end
+      )
+    end
   end
 end
 
@@ -6486,17 +6552,22 @@ function autoRollAttacker(obj, color, alt)
 
     -- Print the results.
     printToAll("Attacker " .. player_name .. " rolled: ")
-    auto_roll_logs(ATTACKER)
+    auto_roll_logs(ATTACKER, color)
   -- Dice AutoRoller.
   elseif auto_roller == 2 then
     -- Roll physical dice.
-    auto_roll_dice(ATTACKER)
+    auto_roll_dice(ATTACKER, color)
   end
 end
 
 function adjustAtkDiceBlue(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(ATTACKER)
+
+  -- Set all other attacker colors to 0.
+  atkAutoRollCounts.white = 0
+  atkAutoRollCounts.red = 0
+  atkAutoRollCounts.purple = 0
 
   -- Adjust the button value.
   if alt then
@@ -6518,6 +6589,11 @@ function adjustAtkDiceWhite(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(ATTACKER)
 
+  -- Set all other attacker colors to 0.
+  atkAutoRollCounts.blue = 0
+  atkAutoRollCounts.red = 0
+  atkAutoRollCounts.purple = 0
+
   -- Adjust the button value.
   if alt then
     atkAutoRollCounts.white = atkAutoRollCounts.white - 1
@@ -6537,6 +6613,11 @@ end
 function adjustAtkDicePurple(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(ATTACKER)
+
+  -- Set all other attacker colors to 0.
+  atkAutoRollCounts.blue = 0
+  atkAutoRollCounts.white = 0
+  atkAutoRollCounts.red = 0
 
   -- Adjust the button value.
   if alt then
@@ -6598,17 +6679,22 @@ function autoRollDefender(obj, color, alt)
 
     -- Print the results.
     printToAll("Defender " .. player_name .. " rolled: ")
-    auto_roll_logs(DEFENDER)
+    auto_roll_logs(DEFENDER, color)
   -- Dice AutoRoller.
   elseif auto_roller == 2 then
     -- Roll physical dice.
-    auto_roll_dice(DEFENDER)
+    auto_roll_dice(DEFENDER, color)
   end
 end
 
 function adjustDefDiceBlue(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(DEFENDER)
+
+  -- Set all other attacker colors to 0.
+  defAutoRollCounts.white = 0
+  defAutoRollCounts.red = 0
+  defAutoRollCounts.purple = 0
 
   -- Adjust the button value.
   if alt then
@@ -6630,6 +6716,11 @@ function adjustDefDiceWhite(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(DEFENDER)
 
+  -- Set all other attacker colors to 0.
+  defAutoRollCounts.blue = 0
+  defAutoRollCounts.red = 0
+  defAutoRollCounts.purple = 0
+
   -- Adjust the button value.
   if alt then
     defAutoRollCounts.white = defAutoRollCounts.white - 1
@@ -6649,6 +6740,11 @@ end
 function adjustDefDicePurple(obj, color, alt)
   -- Despawn existing dice.
   despawnAutoRollDice(DEFENDER)
+
+  -- Set all other attacker colors to 0.
+  defAutoRollCounts.blue = 0
+  defAutoRollCounts.white = 0
+  defAutoRollCounts.red = 0
 
   -- Adjust the button value.
   if alt then
