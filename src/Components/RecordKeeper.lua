@@ -7,7 +7,7 @@ KEY_MOVEMENT = "movement"
 
 -- Lookup table for nice printouts.
 SANITIZED_ROLL_TYPES = {
-  [KEY_D4] = "Effect",
+  [KEY_D4] = "D4",
   [KEY_D6] = "Attack",
   [KEY_EFFECT] = "Effect",
   [KEY_D8] = "Crit",
@@ -67,7 +67,7 @@ function onLoad(saved_data)
     label="Print Roll Data",
     click_function="print_dice_rolls",
     function_owner=self,
-    tooltip="Click to see roll data (right-click to only print to yourself)",
+    tooltip="Click to see roll your data",
     position={0, 0.5, 0},
     height=300,
     width=1350,
@@ -130,21 +130,15 @@ end
 -- Fucntion to handle external requests for data.
 function handle_roll_stats_request(params)
   -- Check for params.
-  if params == nil then return end
-  if params.color == nil or params.alt == nil then return end
+  if params == nil or params.color == nil then return end
 
-  print_dice_rolls(nil, params.color, params.alt)
+  print_dice_rolls(nil, params.color, nil)
 end
 
 -- Function called when clicking the button above the Record Keeper.
 function print_dice_rolls(obj, color, alt)
-  -- Determine which function to use.
-  -- TODO: print only prints to host. Change to printToColor.
-  local print_func = printToAll
-  if alt then print_func = print end
-
   -- Get the roll data for the player.
-  local data = get_roll_data(print_func, color, nil)
+  local data = get_roll_data(color, nil, alt)
 
   -- Check for data.
   if data == nil or data.roll_data == nil then
@@ -153,7 +147,7 @@ function print_dice_rolls(obj, color, alt)
   end
 
   -- Print the data.
-  print_func(data.player .. "'s roll data:")
+  printToAll(data.player .. "'s roll data:", color)
   for data_key, roll_table in pairs(data.roll_data) do
     local roll_type = data_key
     if SANITIZED_ROLL_TYPES[roll_type] ~= nil then
@@ -161,22 +155,22 @@ function print_dice_rolls(obj, color, alt)
     end
 
     -- Print the roll type.
-    print_func("  " .. tostring(roll_type) .. " (" .. tostring(roll_table.total) .. "):")
+    printToAll(print_string)
     
     -- Loop through metrics.
     for metric_key, value in pairs(roll_table) do
       if metric_key ~= "total" then
         if type(value) ~= "number" then value = 0 end
-        print_func("    " .. metric_key .. ": " .. tostring(value):sub(1,4))
+        printToAll("    " .. metric_key .. ": " .. tostring(value):sub(1,4))
       end
     end
   end
 end
 
 -- Returns a table with the player name and all recorded roll data in roll_data.
-function get_roll_data(print_func, player, type)
-  -- Try to get the proper player name.
-  local original_player = player
+function get_roll_data(player, type, alt)
+  -- Try to get the proper player name. player should just be the color.
+  local color = player
   if roll_data[player] == nil then
     if Player[player] ~= nil then
       player = Player[player].steam_name
@@ -185,17 +179,17 @@ function get_roll_data(print_func, player, type)
 
   -- If player is still nil then just return.
   if player == nil then
-    print_func("Failed to find player: " .. tostring(original_player))
+    printToAll("Failed to find player: " .. tostring(color))
     return { player = player }
   end
 
   -- Check if there is data.
   if roll_data[player] == nil then
-    print_func("No roll data found for " .. player)
+    printToAll("No roll data found for " .. player)
     return { player = player }
   end
   if type ~= nil and roll_data[player][type] == nil then
-    print_func("No " .. tostring(type) .. " roll data found for " .. player)
+    printToAll("No " .. tostring(type) .. " roll data found for " .. player)
     return { player = player }
   end
 
@@ -227,26 +221,18 @@ function mean(input_table)
     return
   end
 
-  -- Deep copy table so that when we sort it, the original is unchanged
-  -- also weed out any non numbers.
-  local temp = {}
-  for k, v in pairs(input_table) do
+  -- Init some variables.
+  local sum = 0
+  local count= 0
+
+  for k,v in pairs(input_table) do
     if type(v) == 'number' then
-      table.insert(temp, v)
+      sum = sum + v
+      count = count + 1
     end
   end
 
-  -- Sort the data.
-  table.sort(temp)
-
-  -- If we have an even number of table elements or odd.
-  if math.fmod(#temp, 2) == 0 then
-    -- Return mean value of middle two elements
-    return (temp[#temp/2] + temp[(#temp/2)+1]) / 2
-  else
-    -- return middle element
-    return temp[math.ceil(#temp/2)]
-  end
+  return (sum / count)
 end
 
 -- Helper function to get the standard deviation of a table of values.

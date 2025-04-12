@@ -57,7 +57,7 @@ local critDice="229313"
 local d4Dice="7c6144"
 local d6Dice="15df3c"
 local statusGUID = {burned="3b8a3d", poisoned="26c816", sleep="00dbc5", paralyzed="040f66", frozen="d8769a", confused="d2fe3e", cursed="5333b9"}
-boosterDeckGUID = "acfa1d"
+boosterDeckGUID = "b66e98"
 BASE_HEALTH_OBJECT_GUID = "5ab909"
 RECORD_KEEPER_GUID = "ab319d"
 

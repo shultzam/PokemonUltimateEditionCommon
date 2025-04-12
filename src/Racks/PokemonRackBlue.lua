@@ -90,7 +90,7 @@ function onLoad(saved_data)
   rackRefreshPokemon()
 
   -- Stats button.
-  self.createButton({label="STATS", click_function="handleStatsRequest", function_owner=self, tooltip="Print Stats (right-click to only print to self)", position={-0.50, yLoc, -0.92}, rotation={0,0,0}, height=60, width=150, font_size=30})
+  self.createButton({label="STATS", click_function="handleStatsRequest", function_owner=self, tooltip="Print Stats", position={-0.50, yLoc, -0.92}, rotation={0,0,0}, height=60, width=150, font_size=30})
 
   local save_table
   if saved_data and saved_data ~= "" then

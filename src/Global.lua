@@ -7,6 +7,7 @@ TYPES_BAG_GUID = "98d9a7"
 MAP_MANAGER_GUID = "026857"
 STARTER_POKEBALL_GUID = "ec1e4b"
 RIVAL_EVENT_POKEBALL_GUID = "432e69"
+ROLLING_TABLE_GUIDS = { "aac333", "ea0e09" }
 
 -- Current track reference.
 currentTrack = 1
@@ -1921,7 +1922,7 @@ gen9PokemonData =
   { name = "Sandy Shocks",  level = 4, types = { "Electric", "Ground" }, moves = { "Earth Power", "Discharge" }, guids = { "c61a67" }, model_GUID = "08d57d", offset={x=0, y=0.03, z=0} }, 
   { name = "Iron Treads",   level = 5, types = { "Ground", "Steel" }, moves = { "Steel Roller", "Earthquake" }, guids = { "2bba66" }, model_GUID = "128a66", offset={x=0, y=0.03, z=0} }, 
   { name = "Iron Bundle",   level = 3, types = { "Ice", "Water" }, moves = { "Freeze-Dry", "Flip Turn" }, guids = { "90d798" }, model_GUID = "8bb12e" },
-  { name = "Iron Hands",    level = 4, types = { "Fighting", "Electric" }, moves = { "Thunder Punch", "Arm Thrust" }, guids = { "7b45a3" }, model_GUID = "59126c" }, 
+  { name = "Iron Hands",    level = 4, types = { "Fighting", "Electric" }, moves = { "Thunder Punch", "Arm Thrust" }, guids = { "7b45a3" }, model_GUID = "59126c", custom_scale=0.85 }, 
   { name = "Iron Jugulis",  level = 7, types = { "Dark", "Flying" }, moves = { "Dark Pulse", "Air Slash" }, guids = { "ff30bd" }, model_GUID = "25aa1c" },
   { name = "Iron Moth",     level = 6, types = { "Fire", "Poison" }, moves = { "Sludge Wave", "Overheat" }, guids = { "68bff5" }, model_GUID = "70cd78" }, 
   { name = "Iron Thorns",   level = 7, types = { "Rock", "Electric" }, moves = { "Thunder Fang", "Stone Edge" }, guids = { "38c0c7" }, model_GUID = "52eb2e", custom_scale=0.75 }, 
@@ -6969,6 +6970,15 @@ function onLoad(saved_data)
   --   base_effects_pokeball.setPosition({0, 100, 0})
   --   base_effects_pokeball.setLock(true)
   -- end
+
+  -- Set the rolling tables to invisible to all colors except black.
+  for index=1, #ROLLING_TABLE_GUIDS do
+    local rolling_table = getObjectFromGUID(ROLLING_TABLE_GUIDS[index])
+    if rolling_table then
+      rolling_table.interactable = false
+      rolling_table.setInvisibleTo({"Yellow", "Green", "Blue", "Red", "Purple", "Orange", "White"})
+    end
+  end
 
   local save_table
   if saved_data and saved_data ~= "" then
