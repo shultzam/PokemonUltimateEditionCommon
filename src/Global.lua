@@ -7320,7 +7320,7 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on xx yy 2025 - v3.4.4 \
+  printToAll("Last update on 15 April 2025 - v3.4.4 \
     - Added dice roll recording (so you nerds can prove to your friends that they are *so* lucky) \
     -- accessible via the Stats button on the racks \
     - Query Hot Key automatically goes to the correct Pokédex page for you :) \
