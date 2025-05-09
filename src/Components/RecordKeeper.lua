@@ -14,6 +14,15 @@ SANITIZED_ROLL_TYPES = {
   [KEY_MOVEMENT] = "Movement"
 }
 
+-- Lookkup table for color prints per roll type.
+ROLL_TYPES_TO_COLOR = {
+  [KEY_D4] = "Purple",
+  [KEY_D6] = "White",
+  [KEY_EFFECT] = {219/255, 26/255, 24/255},
+  [KEY_D8] = {31/255, 136/255, 255/255},
+  [KEY_MOVEMENT] = "White"
+}
+
 -- Table consisting of average rolls and std deviation for each die.
 PERCENTILE_HELPER_TABLE = {
   [KEY_D4] = { avg = 2.5, std_dev = 1.118 },
@@ -763,13 +772,17 @@ function print_dice_rolls(obj, color, alt)
   -- Print the data.
   printToAll(data.player .. "'s roll data:", color)
   for data_key, roll_table in pairs(data.roll_data) do
+    local print_color = "White"
+    if ROLL_TYPES_TO_COLOR[data_key] ~= nil then
+      print_color = ROLL_TYPES_TO_COLOR[data_key]
+    end
     local roll_type = data_key
     if SANITIZED_ROLL_TYPES[roll_type] ~= nil then
       roll_type = SANITIZED_ROLL_TYPES[roll_type]
     end
 
     -- Print the roll type.
-    printToAll("  " .. tostring(roll_type) .. " (" .. tostring(roll_table.total) .. "):")
+    printToAll("  " .. tostring(roll_type) .. " (" .. tostring(roll_table.total) .. "):", print_color)
     
     -- Loop through metrics.
     for metric_key, value in pairs(roll_table) do
@@ -778,8 +791,7 @@ function print_dice_rolls(obj, color, alt)
         printToAll("    " .. metric_key .. ": " .. tostring(value):sub(1,4))
       end
     end
-    local percentile = get_percentile(data_key, roll_table)
-    printToAll("    percentile: " .. tostring(percentile) .. "%")
+    print_percentile(data_key, roll_table)
   end
 end
 
@@ -808,6 +820,9 @@ function get_roll_data(player, type, alt)
     printToAll("No " .. tostring(type) .. " roll data found for " .. player)
     return { player = player }
   end
+
+  -- Unneeded code to print all the data.
+  printToAll(dump_table(roll_data[player]))
 
   -- Print the roll data.
   if type ~= nil then
@@ -880,7 +895,7 @@ function get_std_deviation(input_table)
 end
 
 -- Helper function to get the percentile for a dice roll average.
-function get_percentile(roll_type, roll_table)
+function print_percentile(roll_type, roll_table)
   -- Ensure the data is a table.
   if type(roll_table) ~= "table" then
     print("Cannot get percentiles for input parameter: not a table")
@@ -897,8 +912,26 @@ function get_percentile(roll_type, roll_table)
   local z_score = (roll_table.mean - constants.avg) / average_std_dev
   z_score = tonumber(string.format("%.2f", z_score))
 
-  -- Get the percentile.
-  return tonumber(string.format("%.0f", Z_SCORES[z_score] * 100))
+  -- Build the percentile string.
+  local qualifier = "middle"
+  local color = "White"
+  local percentile = 0
+  if Z_SCORES[z_score] then
+    percentile = tonumber(string.format("%.0f", Z_SCORES[z_score] * 100))
+  else
+    if z_score > 0 then percentile = 100 else percentile = 0 end
+  end
+  if percentile > 50 then
+    qualifier = "top"
+    color = "Green"
+    percentile = 100 - percentile
+  elseif percentile < 50 then
+    qualifier = "bottom"
+    color = "Red"
+  end
+
+  -- Print the percentile string.
+  printToAll("    " .. tostring(qualifier) .. " " .. tostring(percentile) .. "%", color)
 end
 
 -- Helper function to get average of the average roll.

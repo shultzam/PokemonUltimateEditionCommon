@@ -45,7 +45,7 @@ function battle()
 
   if chaos then
     -- Get a GUID for a random gen.
-    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 10), tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 9), tier=tier, retrievedList={}})
     leaderGuid = random_leader_params.guid
     currentGen = random_leader_params.leader_gen
 
