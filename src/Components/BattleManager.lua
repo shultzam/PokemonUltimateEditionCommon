@@ -3901,10 +3901,10 @@ function recallGym()
   local param = {}
   param.direction = {0,-1,0}
   param.type = 1
-  param.max_distance = 1
+  param.max_distance = 1.5
   param.debug = debug
-  param.origin = {defenderPos.pokemon[1], 1.1, defenderPos.pokemon[2]}
-  hits = Physics.cast(param)
+  param.origin = {defenderPos.pokemon[1], 1.6, defenderPos.pokemon[2]}
+  local hits = Physics.cast(param)
   if #hits ~= 0 then
     local badge = hits[1].hit_object
     if badge.hasTag("Badge") then

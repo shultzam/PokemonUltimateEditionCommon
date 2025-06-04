@@ -29,6 +29,7 @@
                 <Option>Alola</Option>
                 <Option>Galar</Option>
                 <Option>Paldea</Option>
+                <Option>Ransei</Option>
                 <Option>Orange Islands</Option>
                 <Option>Random</Option>
             </Dropdown>
@@ -66,6 +67,7 @@
                     <Option>Gen VII</Option>
                     <Option>Gen VIII</Option>
                     <Option>Gen IX</Option>
+                    <Option>Ransei</Option>
                     <Option>Orange Islands</Option>
                     <Option>Gen Match</Option>
                     <Option>Random</Option>
@@ -84,6 +86,7 @@
                     <Option>Alola</Option>
                     <Option>Galar</Option>
                     <Option>Paldea</Option>
+                    <!-- <Option>Ransei</Option> -->
                     <Option>Orange Islands</Option>
                     <Option>Random</Option>
                 </Dropdown>

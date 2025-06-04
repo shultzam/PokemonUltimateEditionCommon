@@ -2,8 +2,8 @@ pokeballs = { "ec1e4b", "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f9
 evoPokeballs = { "757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0" }
 gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd30", "c9dd73" }
 
-genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
-genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326" }
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "c4a729" }
+genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "3675ab" }
 
 gen1Pokeballs = { "681d76", "d7d981", "818525", "30391b", "758036", "bb73fd", "78fdbb" }
 gen1EvoPokeballs = { "e9d043", "7de53d", "f30baf", "ceb9a5", "5293ec", "98bf25", "01efbd" }
@@ -41,6 +41,8 @@ gen9Pokeballs = { "3168f8", "de981e", "7ced83", "345260", "d63e7c", "3fcea5", "7
 gen9EvoPokeballs = { "9c010b", "03ea82", "4217d6", "6ae5c4", "8963b5", "0dc3f5", "4e3f1d" }
 gen9LeadersArr = { "e4988b", "7269d7", "80f567", "6f3326" }
 
+genRanseiLeadersArr = { "c4a729", "d8fcd7", "8e77e6", "3675ab" }
+
 genOrangeIslandsLeadersArr = { "8c717e", false, "163374", "2317bd" }
 
 customPokeballs = { "a927cf", "acd90d", "63bb92", "88b157", "8aaeef", "915bb4", "47780a" }
@@ -77,21 +79,6 @@ local map_lookup_table = {
     [9] = "Paldea",
     [10] = "Orange Islands",
   }
-
--- Initial badge GUIDs.
-original_badge_guids = { "bce8e0", "a83bf0", "286901", "cbbade", "c81eab", "23b4f1", "e53b76", "9b0053" }
-badge_urls = {
-    ["Kanto"] = {  },
-    ["Johto"] = {  },
-    ["Hoenn"] = {  },
-    ["Sinnoh"] = {  },
-    ["Unova"] = {  },
-    ["Kalos"] = {  },
-    ["Alola"] = {  },
-    ["Galar"] = {  },
-    ["Paldea"] = {  },
-    ["Orange Islands"] = {  }
-}
 
 -- Iniital Rack GUIDs. These are based on the Johto GUIDs, since that is the initial state of the racks.
 -- Order: Yellow, Green, Blue, Red, Purple, Orange.
@@ -169,6 +156,14 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404005/4E2AB9A8893E305B809AAC2F47FD54D96B1A8F2B/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094403885/ADAE8EE866C0C3B671C2E450AA8995A1C6B4112A/"
      },
+    Ransei = {
+        "https://steamusercontent-a.akamaihd.net/ugc/11681184585746199209/7DB1150BE742AFDD55CFCE36B779FB1702B1ED74/",
+        "https://steamusercontent-a.akamaihd.net/ugc/13292676122160554964/B75CFC3C4118C2B9BDA00F904184F92B0EC597C6/",
+        "https://steamusercontent-a.akamaihd.net/ugc/10903823168933928504/D04F2271DE7B64F96394F6EF603F0ED2C720FE41/",
+        "https://steamusercontent-a.akamaihd.net/ugc/12761050576176918382/D946B2AC16217C00C643A5C3E4AC26E9BC689BFF/",
+        "https://steamusercontent-a.akamaihd.net/ugc/16981722704382916548/0480C8340B52C4EBDD66B6FFDF4C43F7C111AE61/",
+        "https://steamusercontent-a.akamaihd.net/ugc/17673876893395695121/AE5F778956E77CC3A890487B5B11F81047DE3985/"
+    },
     ["Orange Islands"] = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452154/5DE45931305977EDB788C867921FF5E49F06391D/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452039/FA7968A10BF8AE7BD08B29F2E0538C41A07A5D2B/",
@@ -373,16 +368,18 @@ function beginSetup2(params)
     elseif params.leadersGen == 9 then
         setupGyms(gen9LeadersArr, 9, params.customGymLeaderOption, leadersRetrieved)
     elseif params.leadersGen == 10 then
-        setupGyms(genOrangeIslandsLeadersArr, 10, params.customGymLeaderOption, leadersRetrieved)
+        setupGyms(genRanseiLeadersArr, 10, params.customGymLeaderOption, leadersRetrieved)
+    elseif params.leadersGen == 11 then
+        setupGyms(genOrangeIslandsLeadersArr, 11, params.customGymLeaderOption, leadersRetrieved)
     elseif params.leadersGen == -1 or params.leadersGen == -3 then
         -- Random Leaders or Gen Match.
         local gen
 
         -- Initialize the Gym Leaders pokeballs list. This assumes we are doing random.
-        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1] }
+        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1], genRanseiLeadersArr[1] }
 
         -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
-        local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+        local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
         if params.leadersGen == -3 then
             -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
             for gen_i = #params.selectedGens, 1, -1 do
@@ -413,7 +410,7 @@ function beginSetup2(params)
                 end
 
                 local gymsPokeball = getObjectFromGUID(pokeballsList[gen])
-                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[1]) or gen == 10 then
+                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[1]) or gen == 11 then
                     gen = "custom"
                 end
                 local leader = nil
@@ -449,7 +446,7 @@ function beginSetup2(params)
         -- Orange Islands does not have an Elite 4.
         if params.selected_map ~= "Orange Islands" then
             -- Initialize the Elite 4 pokeballs list and gym object.
-            local eliteFourPokeballs = { gen1LeadersArr[2], gen2LeadersArr[2], gen3LeadersArr[2], gen4LeadersArr[2], gen5LeadersArr[2], gen6LeadersArr[2], gen7LeadersArr[2], gen8LeadersArr[2], gen9LeadersArr[2] --[[Orange Islands does not have an Elite 4.]] }
+            local eliteFourPokeballs = { gen1LeadersArr[2], gen2LeadersArr[2], gen3LeadersArr[2], gen4LeadersArr[2], gen5LeadersArr[2], gen6LeadersArr[2], gen7LeadersArr[2], gen8LeadersArr[2], gen9LeadersArr[2], genRanseiLeadersArr[2] }
             local elite4Gym = getObjectFromGUID(elite4GymGuid)
             for i = 1, 4 do
                 -- Check if we need to consider custom Elite 4s.
@@ -469,7 +466,7 @@ function beginSetup2(params)
                 end
 
                 local elite4Pokeball = getObjectFromGUID(pokeballsList[gen])
-                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[2]) or gen == 10 then
+                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[2]) or gen == 11 then
                     gen = "custom"
                 end
                 local leader = nil
@@ -490,7 +487,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Rivals pokeballs list and gym object.
-        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3] }
+        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3], genRanseiLeadersArr[3] }
         local rivalGym = getObjectFromGUID(rivalGymGuid)
         for i = 1, 3 do
             -- Check if we need to consider custom Rivals.
@@ -510,7 +507,7 @@ function beginSetup2(params)
             end
 
             local rivalPokeball = getObjectFromGUID(pokeballsList[gen])
-            if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[3]) or gen == 10 then
+            if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[3]) or gen == 11 then
                 gen = "custom"
             end
             local leader = nil
@@ -530,7 +527,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Team Rocket pokeballs list.
-        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4] }
+        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4], genRanseiLeadersArr[4] }
 
         -- Check if we need to consider custom Team Rockets.
         local custom_leaders_available = customs_available(customLeadersArr[4], 11, leadersRetrieved)
@@ -845,38 +842,248 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
 
     -- Get a handle on the pokeball with the standard items that are common to every map.
     local standard_items_pokeball = getObjectFromGUID(standard_guid)
+
+    -- Get the badge info for this gen. The format is {name, url}.
+    local badge_info = map_data.badge_info
+
+    -- Initialize a list of Gym Leaders retrieved (typically 0, but Alola is weird).
+    local leaders_retrieved = {}
+
+    -- Get a reference to the map specific pokeball.
+    local map_specific_pokeball = getObjectFromGUID(map_specific_guid)
+    if not map_specific_pokeball then
+        print("Could not find the Map Specific Pokéball")
+        return
+    end
+
+    -- Move the Map Specific Items.
+    for map_sepecfic_index=1, #map_data.map_specific_items do
+        local params = copyTable(map_data.map_specific_items[map_sepecfic_index])
+        local object_reference = map_specific_pokeball.takeObject({guid = params.guid, position = params.position, rotation = params.rotation})
+        object_reference.setLock(true)
+
+        -- TODO: This functionality does not consider customs.
+        -- Check if this map specific item is a secondary gym.
+        if params.is_gym then
+            if leadersGen == -2 then
+                -- Initialize the Gym once it is stationary. Chaos.
+                Wait.condition(
+                    function() -- Conditional function.
+                        local gym_object = getObjectFromGUID(params.guid)
+                        if params.gym_tier == 12 then
+                            gym_object.call("setTitanGUID", { "CHAOS" })
+                        else
+                            gym_object.call("setLeaderGUID", { "CHAOS" })
+                        end
+                    end,
+                    function() -- Condition function
+                        local gym_object = getObjectFromGUID(params.guid)
+                        return gym_object ~= nil and gym_object.resting
+                    end,
+                    8
+                )
+            elseif params.gym_tier == 12 then
+                --------------
+                -- Titan.
+                --------------
+
+                -- Init some variables.
+                local leader_guid = nil
+                local gymPokeball = getObjectFromGUID("101621")
+
+                -- Each Titan has a home. The Asado Desert area has two Titans so we will just grab one of the two.
+                if params.guid == "6cf441" then
+                    -- West Province.
+                    leader_guid = "07a6ab"
+                elseif params.guid == "6adbc2" then
+                    -- Asado Desert.
+                    local guid_options = { "ad1ecd", "a48265" }
+                    leader_guid = guid_options[math.random(#guid_options)]
+                elseif params.guid == "35cbfe" then
+                    -- Casseroya Lake.
+                    leader_guid = "3795a8"
+                elseif params.guid == "81f7a4" then
+                    -- South Province.
+                    leader_guid = "7564fb"
+                elseif params.guid == "d49f3a" then
+                    -- East Province.
+                    leader_guid = "68b218"
+                end
+
+                object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))
     
-    -- TTS does not like setting the state of something to its current state ID for some reason. 
-    -- So keep track of the new state for future checks.
-    local new_state_id = regionToGenNumberLookupTable[selected_map_name]
+                -- Add this to the leaders we have already retrieved list.
+                table.insert(leaders_retrieved, leader_guid)
+
+                -- Initialize the Gym once it is stationary.
+                Wait.condition(
+                    function() -- Conditional function.
+                        local gym_object = getObjectFromGUID(params.guid)
+                        gym_object.call("setTitanGUID", { leader_guid })
+                    end,
+                    function() -- Condition function
+                        local gym_object = getObjectFromGUID(params.guid)
+                        return gym_object ~= nil and gym_object.resting
+                    end,
+                    8
+                )
+            elseif selected_map_name == "Ransei" and leadersGen == 10 then
+                --------------
+                -- Special Ransei Gym Leaders.
+                --------------
+
+                -- Init some variables.
+                local leader_guid = nil
+                local gymPokeball = getObjectFromGUID("c4a729")
+
+                -- There are three tier-1 gyms in Ransei. Make sure they all get the correct home.
+                if params.guid == "40bf4b" then
+                    -- Fontaine.
+                    leader_guid = "a49a60"
+                elseif params.guid == "67ac73" then
+                    -- Ignis.
+                    leader_guid = "68b3fc"
+                end
+
+                object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))
+
+                -- Add this to the leaders we have already retrieved list.
+                table.insert(leaders_retrieved, leader_guid)
+
+                -- Initialize the Gym once it is stationary.
+                Wait.condition(
+                    function() -- Conditional function.
+                        local gym_object = getObjectFromGUID(params.guid)
+                        gym_object.call("setLeaderGUID", { leader_guid })
+                    end,
+                    function() -- Condition function
+                        local gym_object = getObjectFromGUID(params.guid)
+                        return gym_object ~= nil and gym_object.resting
+                    end,
+                    8
+                )
+            else
+                -- Init the gen.
+                local gen_to_use = nil
+                local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+                -- If the gen is -3 this means to Gen Match the Gym Leaders with the chosen Pokemon Generations.
+                -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
+                if leadersGen == -3 then
+                    -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
+                    for gen_i = #pokemonGens, 1, -1 do
+                        if not pokemonGens[gen_i] then
+                            table.remove(gen_options, gen_i)
+                        end
+                    end
+                end
+
+                -- Random or Gen Match.
+                if leadersGen == -1 or leadersGen == -3 then
+                    gen_to_use = gen_options[math.random(1, #gen_options)]
+                else
+                    gen_to_use = leadersGen
+                end
+
+                -- Determine which pokeballs list to use.
+                local leader_pokeballs = nil
+                if params.gym_tier >= 1 and params.gym_tier <= 8 then
+                    -- Normal gym.
+                    leader_pokeballs = genLeadersPokeballGuids
+                elseif params.gym_tier == 11 then
+                    -- Team Rocket.
+                    leader_pokeballs = genTeamRocketPokeballGuids
+                else
+                    -- Unhandled
+                    print("ERROR unhandled map specific gym_tier parameter in Starter Pokeball: " .. tostring(params.gym_tier))
+                    return
+                end
+
+                -- Get a GUID for a random leader of this gen.
+                local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=params.gym_tier, retrievedList=leaders_retrieved})
+                local gymPokeball = getObjectFromGUID(leader_pokeballs[random_leader_params.leader_gen])
+                object_reference.putObject(gymPokeball.takeObject({ guid = random_leader_params.guid }))
+    
+                -- Add this to the leaders we have already retrieved list.
+                table.insert(leaders_retrieved, random_leader_params.guid)
+
+                -- Initialize the Gym once it is stationary.
+                Wait.condition(
+                    function() -- Conditional function.
+                        local gym_object = getObjectFromGUID(params.guid)
+                        gym_object.call("setLeaderGUID", { random_leader_params.guid })
+                    end,
+                    function() -- Condition function
+                        local gym_object = getObjectFromGUID(params.guid)
+                        return gym_object ~= nil and gym_object.resting
+                    end,
+                    8
+                )
+            end
+        end
+    end
 
     -- Initialize and move the tier 1-8 gyms.
     for gym_index=1, #gyms do
         local gym_info = copyTable(map_data.gyms_info[gym_index])
         local gym = getObjectFromGUID(gyms[gym_index])
         -- gym_info == false indicates to skip this Gym. This only applies to Orange Islands.
-        if gym and gym_info[1] ~= false then
-            -- Get the badge of this gym tier.
-            local original_badge_guid = original_badge_guids[gym_index]
-            local original_badge = standard_items_pokeball.takeObject({guid=original_badge_guid})
-            if original_badge then
-                -- Change this badge to the state of this region number.
-                -- TTS does not like setting the state of something to its current state ID for some reason.
-                if original_badge.getStateId() ~= new_state_id then
-                    original_badge = original_badge.setState(new_state_id)
-                end
-                
-                -- Clone the badge 5 times and put all clones into the gym.
-                for badge_index = 1, 5 do
-                    local cloned_badge = original_badge.clone()
-                    gym.putObject(cloned_badge)
-                end
-    
-                -- Put the original badge into the gym.
-                gym.putObject(original_badge)
-            else
-                print("Failed to get the original badge for tier " .. tostring(gym_index))
+        if gym and gym_info[1] ~= false and badge_info[1] ~= false then
+            -- Determine what custom object to spawn based on the map chosen. Figurines are scaled to {1.13, ...}.
+            local custom_type = "Custom_Tile"
+            local custom_scale = {1.0, 1.0, 1.0}
+            if selected_map_name == "Ransei" then
+                custom_type = "Figurine_Custom"
+                custom_scale = {1.13, 1.13, 1.13}
             end
+
+            -- Spawn a base object.
+            local badge = spawnObject(
+                {
+                    type = custom_type,
+                    position = {0, 10, 0},
+                    rotation = {0, 180, 0},
+                    scale = custom_scale,
+                    sound = false
+                }
+            )
+
+            -- Give the base card its custom parameters.
+            if selected_map_name ~= "Ransei" then
+                -- Custom Tile.
+                badge.setCustomObject(
+                    {
+                        type = 2,  -- Circle.
+                        image = badge_info[gym_index].url,
+                        image_bottom = badge_info[gym_index].url,
+                        thickness = 0.1,
+                        stackable = false,
+                    }
+                )
+            else
+                -- Custome Figurine.
+                badge.setCustomObject(
+                    {
+                        image = badge_info[gym_index].url,
+                        image_secondary = badge_info[gym_index].url,
+                    }
+                )
+            end
+
+            -- Name the badge.
+            badge.setName(badge_info[gym_index].name)
+
+            -- Apply the "Badge" tag to the original.
+            badge.addTag("Badge")
+            
+            -- Clone the badge 5 times and put all clones into the gym.
+            for badge_index = 1, 5 do
+                local cloned_badge = badge.clone()
+                gym.putObject(cloned_badge)
+            end
+
+            -- Put the original badge into the gym.
+            gym.putObject(badge)
             
             -- Move the gym to its destination.
             move_gym_and_set_name({obj = gym, name = gym_info.name, position = gym_info.position, rotation = gym_info.rotation})
@@ -1005,9 +1212,9 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
     end
 
     -- Move counters.
-    local def_counter = standard_items_pokeball.takeObject({guid=def_counter_guid, position={-30, 0.6, 10.72}, rotation={0,0,0}})
+    local def_counter = standard_items_pokeball.takeObject({guid=def_counter_guid, position={-30, 0.4, 10.72}, rotation={0,0,0}})
     def_counter.setLock(true)
-    local atk_counter = standard_items_pokeball.takeObject({guid=atk_counter_guid, position={-30, 0.6, -10.72}, rotation={0,0,0}})
+    local atk_counter = standard_items_pokeball.takeObject({guid=atk_counter_guid, position={-30, 0.4, -10.72}, rotation={0,0,0}})
     atk_counter.setLock(true)
 
     -- Populate the "Arena" text.
@@ -1021,148 +1228,6 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
         local params = copyTable(map_data.standard_items[standard_index])
         local object_reference = standard_items_pokeball.takeObject(params)
         object_reference.setLock(true)
-    end
-
-    -- Get a reference to the map specific pokeball.
-    local map_specific_pokeball = getObjectFromGUID(map_specific_guid)
-    if not map_specific_pokeball then
-        print("Could not find the Map Specific Pokéball")
-        return
-    end
-
-    -- Initialize a list of Gym Leaders retrieved (typically 0, but Alola is weird).
-    local leaders_retrieved = {}    
-
-    -- Move the Map Specific Items.
-    for map_sepecfic_index=1, #map_data.map_specific_items do
-        local params = copyTable(map_data.map_specific_items[map_sepecfic_index])
-        local object_reference = map_specific_pokeball.takeObject({guid = params.guid, position = params.position, rotation = params.rotation})
-        object_reference.setLock(true)
-
-        -- TODO: This functionality does not consider customs.
-        -- Check if this map specific item is a secondary gym.
-        if params.is_gym then
-            if leadersGen == -2 then
-                -- Initialize the Gym once it is stationary. Chaos.
-                Wait.condition(
-                    function() -- Conditional function.
-                        local gym_object = getObjectFromGUID(params.guid)
-                        if params.gym_tier == 12 then
-                            gym_object.call("setTitanGUID", { "CHAOS" })
-                        else
-                            gym_object.call("setLeaderGUID", { "CHAOS" })
-                        end
-                    end,
-                    function() -- Condition function
-                        local gym_object = getObjectFromGUID(params.guid)
-                        return gym_object ~= nil and gym_object.resting
-                    end,
-                    8
-                )
-            elseif params.gym_tier == 12 then
-                --------------
-                -- Titan.
-                --------------
-
-                -- Init some variables.
-                local leader_guid = nil
-                local gymPokeball = getObjectFromGUID("101621")
-
-                -- Each Titan has a home. The Asado Desert area has two Titans so we will just grab one of the two.
-                if params.guid == "6cf441" then
-                    -- West Province.
-                    leader_guid = "07a6ab"
-                elseif params.guid == "6adbc2" then
-                    -- Asado Desert.
-                    local guid_options = { "ad1ecd", "a48265" }
-                    leader_guid = guid_options[math.random(#guid_options)]
-                elseif params.guid == "35cbfe" then
-                    -- Casseroya Lake.
-                    leader_guid = "3795a8"
-                elseif params.guid == "81f7a4" then
-                    -- South Province.
-                    leader_guid = "7564fb"
-                elseif params.guid == "d49f3a" then
-                    -- East Province.
-                    leader_guid = "68b218"
-                end
-
-                object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))
-    
-                -- Add this to the leaders we have already retrieved list.
-                table.insert(leaders_retrieved, leader_guid)
-
-                -- Initialize the Gym once it is stationary.
-                Wait.condition(
-                    function() -- Conditional function.
-                        local gym_object = getObjectFromGUID(params.guid)
-                        gym_object.call("setTitanGUID", { leader_guid })
-                    end,
-                    function() -- Condition function
-                        local gym_object = getObjectFromGUID(params.guid)
-                        return gym_object ~= nil and gym_object.resting
-                    end,
-                    8
-                )
-            else
-                -- Init the gen.
-                local gen_to_use = nil
-                local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9}
-
-                -- If the gen is -3 this means to Gen Match the Gym Leaders with the chosen Pokemon Generations.
-                -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
-                if leadersGen == -3 then
-                    -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
-                    for gen_i = #pokemonGens, 1, -1 do
-                        if not pokemonGens[gen_i] then
-                            table.remove(gen_options, gen_i)
-                        end
-                    end
-                end
-
-                -- Random or Gen Match.
-                if leadersGen == -1 or leadersGen == -3 then
-                    gen_to_use = gen_options[math.random(1, #gen_options)]
-                else
-                    gen_to_use = leadersGen
-                end
-
-                -- Determine which pokeballs list to use.
-                local leader_pokeballs = nil
-                if params.gym_tier >= 1 and params.gym_tier <= 8 then
-                    -- Normal gym.
-                    leader_pokeballs = genLeadersPokeballGuids
-                elseif params.gym_tier == 11 then
-                    -- Team Rocket.
-                    leader_pokeballs = genTeamRocketPokeballGuids
-                else
-                    -- Unhandled
-                    print("ERROR unhandled map specific gym_tier parameter in Starter Pokeball: " .. tostring(params.gym_tier))
-                    return
-                end
-
-                -- Get a GUID for a random leader of this gen.
-                local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=params.gym_tier, retrievedList=leaders_retrieved})
-                local gymPokeball = getObjectFromGUID(leader_pokeballs[random_leader_params.leader_gen])
-                object_reference.putObject(gymPokeball.takeObject({ guid = random_leader_params.guid }))
-    
-                -- Add this to the leaders we have already retrieved list.
-                table.insert(leaders_retrieved, random_leader_params.guid)
-
-                -- Initialize the Gym once it is stationary.
-                Wait.condition(
-                    function() -- Conditional function.
-                        local gym_object = getObjectFromGUID(params.guid)
-                        gym_object.call("setLeaderGUID", { random_leader_params.guid })
-                    end,
-                    function() -- Condition function
-                        local gym_object = getObjectFromGUID(params.guid)
-                        return gym_object ~= nil and gym_object.resting
-                    end,
-                    8
-                )
-            end
-        end
     end
 
     -- Check if HP Rule 2 is enabled.
@@ -1280,7 +1345,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption, leadersRetrieved)
     -- Loop through each gym.
     for i = 1, 8 do
         -- Orange Islands only uses a scheme where gym 1 is tiers 1/2, gym 3 is tiers 3/4, etc.
-        if gen ~= 10 or i % 2 == 1 then
+        if gen ~= 11 or i % 2 == 1 then
             -- Check if we need to consider custom Gym Leaders.
             local gymsPokeballs = { leadersArr[1] }
             local custom_leaders_available = customs_available(customLeadersArr[1], i, leadersRetrieved)

@@ -7,7 +7,7 @@ battleManager = "de7152"
 -- Chaos related fields.
 chaos = false
 tier = 11
-genLeadersPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "2317bd" }
+genLeadersPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "3675ab" }
 customLeadersPokeballGuid = "94584c"
 leaderGuid = nil
 currentGen = nil
@@ -45,7 +45,7 @@ function battle()
 
   if chaos then
     -- Get a GUID for a random gen.
-    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 9), tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 10), tier=tier, retrievedList={}})
     leaderGuid = random_leader_params.guid
     currentGen = random_leader_params.leader_gen
 

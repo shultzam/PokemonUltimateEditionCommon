@@ -156,6 +156,7 @@ ITEM_DECK_MAP_ADD_ONS = {
   Alola = {},
   Galar = {},
   Paldea = {},
+  Ransei = {},
   ["Orange Islands"] = {}
 }
 
@@ -228,6 +229,7 @@ EVENT_MAP_ADD_ONS = {
   Paldea = {
     { card=EVEN_CARD_INFO.area_zero, count=4}
   },
+  Ransei = {},
   ["Orange Islands"] = {}
 }
 

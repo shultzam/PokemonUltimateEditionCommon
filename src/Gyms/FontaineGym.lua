@@ -1,75 +1,43 @@
-gymButtonPos = {}
-victoryButtonPos = {}
+gymButtonPos = {-7.3, 0, 13.7}
 
+gymData = nil
+pokemonData = nil
 battleManager = "de7152"
-leadersData = {}
 
 -- Chaos related fields.
 chaos = false
-tier = 10
-genLeadersPokeballGuids = { "3ddf5f", "ec20b2", "2a9746", "537124", "3869d0", "ba0a27", "eeba9c", "8e8fd2", "80f567", "8e77e6" }
-customLeadersPokeballGuid = "be2f56"
+tier = 1
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
+customLeadersPokeballGuid = "ab33b9"
 leaderGuid = nil
 currentGen = nil
-initialized = false
-
-function initialize(params)
-  gymButtonPos = params.gym_button_position
-  victoryButtonPos = params.victory_button_pos
-  initialized = true
-
-  self.createButton({ --Apply settings button
-      label="+", click_function="battle",
-      function_owner=self, tooltip="Start Rival Battle",
-      position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
-
-  self.createButton({ --Apply settings button
-      label="+", click_function="victory",
-      function_owner=self, tooltip="Play Victory Music",
-      position=victoryButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-  })
-end
 
 function onSave()
-    saved_data = JSON.encode({saveLeadersData=leadersData, chaos=chaos, gym_button_position=gymButtonPos, victory_button_pos=victoryButtonPos, initialized=initialized})
-    return saved_data
+  saved_data = JSON.encode({saveGymData=gymData, savePokemonData=pokemonData, chaos=chaos})
+  return saved_data
 end
 
 function onLoad(saved_data)
   if saved_data ~= "" then
-      local loaded_data = JSON.decode(saved_data)
-      if loaded_data.saveLeadersData ~= nil then
-          leadersData = copyTable(loaded_data.saveLeadersData)
-          chaos = loaded_data.chaos
-      end
-      
-      gymButtonPos = loaded_data.gym_button_position
-      victoryButtonPos = loaded_data.victory_button_pos
-      initialized = loaded_data.initialized
+    local loaded_data = JSON.decode(saved_data)
+    if loaded_data.saveGymData ~= nil and loaded_data.savePokemonData ~= nil then
+      gymData = copyTable(loaded_data.saveGymData)
+      pokemonData = copyTable(loaded_data.savePokemonData)
+    end
+    
+    chaos = loaded_data.chaos
   end
 
-  if initialized then
-    self.createButton({ --Apply settings button
-        label="+", click_function="battle",
-        function_owner=self, tooltip="Start Rival Battle",
-        position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-    })
-
-    self.createButton({ --Apply settings button
-        label="+", click_function="victory",
-        function_owner=self, tooltip="Play Victory Music",
-        position=victoryButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
-    })
-  end
-end
-
-function deleteSave() 
-  leadersData = {}
+  self.createButton({ --Apply settings button
+    label="+", click_function="battle",
+    function_owner=self, tooltip="Start Gym Battle",
+    position=gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
+  })
 end
 
 function battle()
-  if #leadersData == 0 and not chaos then return end
+  -- Ensure we have gym data OR we are in chaos mode.
+  if gymData == nil and not chaos then return end
 
   -- Get a handle on the Battle Manager.
   local battleManager = getObjectFromGUID(battleManager)
@@ -77,7 +45,7 @@ function battle()
 
   if chaos then
     -- Get a GUID for a random gen.
-    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 10), tier=tier, retrievedList={}})
+    local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=math.random(1, 9), tier=tier, retrievedList={}})
     leaderGuid = random_leader_params.guid
     currentGen = random_leader_params.leader_gen
 
@@ -90,34 +58,33 @@ function battle()
     initGym(leaderGuid)
   end
 
-  -- Randomly get a leader data index.
-  local leaderData = leadersData[math.random(1, #leadersData)]
-
   -- Create the params.
   local params = {
-    trainerName = leaderData.trainerName,
-    trainerGUID = leaderData.guid,
+    trainerName = gymData.trainerName,
+    trainerGUID = gymData.guid,
     gymGUID = self.getGUID(),
-    isGymLeader = false,
+    pokemon = pokemonData,
+    isGymLeader = true,
     isSilphCo = false,
-    isRival = true,
-    isElite4 = false,
-    pokemon = leaderData.pokemon
+    isRival = false,
+    isElite4 = false
   }
 
-  -- Send the Rival card to the arena.
+  -- Send the Gym Leader card to the arena.
   if battleManager.call("sendToArenaGym", params) then
     self.editButton({
         index=0, label="-", click_function="recall",
-        function_owner=self, tooltip="Recall Champion"
+        function_owner=self, tooltip="Recall Gym Leader",
+        position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
     })
   end
 end
 
 function recall()
   -- Tell BM to send the card back to us.
+  local params = {gymGUID = self.getGUID()}
   local battleManager = getObjectFromGUID(battleManager)
-  battleManager.call("recallGym")
+  battleManager.call("recallGym", params)
 
   if chaos then
     -- Take the leader card out of.. myself and put it back into its Pokeball.
@@ -145,7 +112,7 @@ function recall()
       end,
       5, -- 5 seconds, sheesh.
       function() -- Timeout function.
-        print("Timeout occurred waiting for the Rival card, please place it back in the Gen " .. currentGen .. " Rival Pokeball manually.")
+        print("Timeout occurred waiting for the Gym Leader card, please place it back in the Gen " .. currentGen .. " Gym Leader Pokeball manually.")
     
         -- Clear the gym data of the previous Gym Leader.
         uninitGym()
@@ -157,12 +124,9 @@ function recall()
 
   self.editButton({ --Apply settings button
       index=0, label="+", click_function="battle",
-      function_owner=self, tooltip="Start Champion Battle"
+      function_owner=self, tooltip="Start Gym Battle",
+      position= gymButtonPos, rotation={0,0,0}, height=800, width=800, font_size=20000
   })
-end
-
-function victory()
-    Global.call("PlayVictoryMusic",{})
 end
 
 function setLeaderGUID(params)
@@ -174,21 +138,18 @@ function setLeaderGUID(params)
 end
 
 function initGym(guid)
-  local gymData = Global.call("GetGymDataByGUID", {guid=guid})
-  local leaderData = {guid=gymData.guid, trainerName= gymData.trainerName}
-  local pokemonData = {}
+  pokemonData = {}
+  gymData = Global.call("GetGymDataByGUID", {guid=guid})
   for i=1, #gymData.pokemon do
     local newPokemon = {}
     setNewPokemon(newPokemon, gymData.pokemon[i])
     table.insert(pokemonData, newPokemon)
   end
-  leaderData.pokemon = pokemonData
-
-  table.insert(leadersData, leaderData)
 end
 
 function uninitGym()
-  leadersData = {}
+  gymData = {}
+  pokemonData = {}
   currentGen = nil
   leaderGuid = nil
 end
