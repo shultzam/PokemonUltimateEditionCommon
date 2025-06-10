@@ -392,6 +392,40 @@ active_secondary_type_tokens = {}
 -- Custom data fields
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+--@Thanathoum
+--ClonedPokemonData table.
+clonedPokemonData = 
+{
+
+}
+
+--@Thanathoum
+-- Insert cloned pokemon into the clonedPokemonData table.
+function insertClonedPokemonData(clonedPoke)
+	table.insert(clonedPokemonData,clonedPoke)
+end
+
+--@Thanathoum
+function add_cloned_chips_to_active_chips_by_GUID(params)
+  -- Get the chip by its GUID.
+  params.data.chip = getObjectFromGUID(params.data.chip_GUID)
+  
+  -- Wait until the <whatever> token is resting.
+  Wait.condition(
+    function()
+      params.data.model = get_model_guid_on_top(params.data)  
+    end,
+    function() -- Condition function
+      return params.data.chip ~= nil and params.data.chip.resting and get_model_guid_on_top(params.data) ~= nil
+    end,
+    3
+  )
+  -- Insert the data into the table.  
+  active_chips[params.guid] = params.data
+  -- Return the created before flag. This helps the caller call check_for_spawn_or_despawn() correctly. (It is gross, yes.)
+  return params.data.base.created_before
+end
+
 -----------------------------------------------------------------------------------------
 -- Custom Gym Data
 --
@@ -683,7 +717,7 @@ gen1PokemonData =
   { name="Pidgey",      level=1, types={ "Flying", "Normal" },   moves={ "Quick Attack", "Sand Attack" },  guids={ "ffa899" },                    evoData={ { cost=2, ball=BLUE, gen=1, guids={ "35b436" } } }, model_GUID="e042f9", pokedex=16 },
   { name="Pidgeotto",   level=3, types={ "Flying", "Normal" },   moves={ "Wing Attack", "Twister" },       guids={ "7d5ef0", "35b436" },          evoData={ { cost=2, ball=RED, gen=1, guids={ "45e30a", "9f1834" } } }, model_GUID="47d87b", spawn_effect="Physical Attack", pokedex=17 },
   { name="Pidgeot",     level=5, types={ "Flying", "Normal" },   moves={ "Hurricane", "Facade" },          guids={ "1d36ba", "45e30a", "9f1834" },evoData={ { cost="Mega", ball=MEGA, gen=1, cycle=true, guids={ "9844cb", "9be58b" } } }, model_GUID="831415", pokedex=18 },
-  { name="Rattata",     level=1, types={ "Normal" },             moves={ "Quick Attack", "Tail Whip" },    guids={ "dd6f20" },                    evoData={ { cost=2, ball=BLUE, gen=1, guids={ "1533cd" } } }, model_GUID="dd6f20", pokedex=19 },
+  { name="Rattata",     level=1, types={ "Normal" },             moves={ "Quick Attack", "Tail Whip" },    guids={ "e2226d" },                    evoData={ { cost=2, ball=BLUE, gen=1, guids={ "1533cd" } } }, model_GUID="dd6f20", pokedex=19 },
   { name="Raticate",    level=3, types={ "Normal" },             moves={ "Hyper Fang", "Super Fang" },     guids={ "50866f", "1533cd" }, model_GUID="2539f9", pokedex=20 },
   { name="Spearow",     level=1, types={ "Flying", "Normal" },   moves={ "Leer", "Peck" },                 guids={ "b2ebc5" },                    evoData={ { cost=2, ball=BLUE, gen=1, guids={ "7598db" } } }, model_GUID="f508f3", pokedex=21 },
   { name="Fearow",      level=3, types={ "Flying", "Normal" },   moves={ "Mirror Move", "Drill Peck" },    guids={ "5b5a42", "7598db" }, model_GUID="c4b8b6", pokedex=22 },
@@ -1339,8 +1373,8 @@ gen5PokemonData =
   { name="Munna",           level=2, types={ "Psychic" },  moves={ "Psywave", "Yawn" },                guids={ "3c0505" }, evoData={ { cost=1, ball=GREEN, gen=5, guids={ "198c08" }, model_GUID="f742b2" } }, model_GUID="d7cfc6", pokedex=517 },
   { name="Musharna",        level=3, types={ "Psychic" },  moves={ "Hypnosis", "Psybeam" },            guids={ "91179d", "198c08" }, model_GUID="f742b2", pokedex=518 },
   { name="Pidove",          level=1, types={ "Flying", "Normal" }, moves={ "Growl", "Gust" }, guids={ "723bbc" }, evoData={ { cost=2, ball=GREEN, gen=5, guids={ "fa3490" }, model_GUID="0f8928" } }, model_GUID="4f6c26", pokedex=519 },
-  { name="Tranquil",        level=3, types={ "Flying", "Normal" }, moves={ "Feather Dance", "Razor Wind" }, guids={ "3d420b", "fa3490" }, evoData={ { cost=1, ball=YELLOW, gen=5, guids={ "c37df9", "3bbd1b" }, model_GUID="e4c215" } }, model_GUID="0f8928", pokedex=520 },
-  { name="Unfezant",        level=4, types={ "Flying", "Normal" }, moves={ "Air Slash", "Facade" },    guids={ "f71153", "c37df9", "3bbd1b" }, model_GUID="e4c215", pokedex=521 },
+  { name="Tranquil",        level=3, types={ "Flying", "Normal" }, moves={ "Feather Dance", "Razor Wind" }, guids={ "3d420b", "fa3490" }, evoData={ { cost=1, ball=YELLOW, gen=5, guids={ "25764f", "c37df9" }, model_GUID="e4c215" } }, model_GUID="0f8928", pokedex=520 },
+  { name="Unfezant",        level=4, types={ "Flying", "Normal" }, moves={ "Air Slash", "Facade" },    guids={ "3bbd1b", "25764f", "c37df9" }, model_GUID="e4c215", pokedex=521 },
   { name="Blitzle",         level=2, types={ "Electric" }, moves={ "Thunder Wave", "Flame Charge" },   guids={ "c3f811" }, evoData={ { cost=2, ball=YELLOW, gen=5, guids={ "a00b30" }, model_GUID="1f6bb5", spawn_effect="Physical Attack" } }, model_GUID="14eed5", pokedex=522 },
   { name="Zebstrika",       level=4, types={ "Electric" }, moves={ "Wild Charge", "Stomp" },           guids={ "718d9a", "a00b30" }, model_GUID="1f6bb5", spawn_effect="Physical Attack", pokedex=523 },
   { name="Roggenrola",      level=2, types={ "Rock" },     moves={ "Sand Attack", "Headbutt" },        guids={ "f96286" }, evoData={ { cost=2, ball=BLUE, gen=5, guids={ "b65495" }, model_GUID="a80816", spawn_effect="Physical Attack" } }, model_GUID="5e5531", pokedex=524 },
@@ -1850,7 +1884,6 @@ gen8PokemonData =
   { name="Therian Enamorus", level=7, types={ "Fairy", "Flying" }, moves={ "Springtide Storm", "Outrage" }, guids={ "52580d" }, ball=LEGENDARY, model_GUID="4d2b9c", custom_scale=1.3, offset={x=0, y=0.5, z=0}, pokedex=905 },      -- Turtle Version
   
   -- GenVIII Hisuian, Galarian
-  -- TODO: pages
   { name="Galarian Zigzagoon",level=1, types={ "Dark", "Normal" }, moves={ "Pin Missile", "Leer" }, guids={ "2eae89"},            evoData={ { cost=2, ball=BLUE, gen=8, guids={ "513b01"}, model_GUID="af2407" } }, model_GUID="4e078d", pokedex_info={book=2, page=38} },
   { name="Galarian Linoone", level=3, types={ "Dark", "Normal" }, moves={ "Take Down", "Lick" },   guids={ "967c36", "513b01" }, evoData={ { cost=2, ball=YELLOW, gen=8, guids={ "18880a", "f9576c"}, model_GUID="89cdcd" } }, model_GUID="af2407", pokedex_info={book=2, page=38} }, 
   { name="Galarian Meowth",  level=2, types={ "Steel" },  moves={ "Fury Swipes", "Metal Claw" },   guids={ "9df32b" },           evoData={ { cost=2, ball=BLUE, gen=8, guids={ "33995d"}, model_GUID="7ae05b" } }, model_GUID="5bd893", pokedex_info={book=2, page=38} },
@@ -2282,7 +2315,7 @@ moveData =
     {name="Superpower",     power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="StatDown", target="Self"}} },
     {name="Triple Arrows",  power=1,      type="Fighting",  dice=8, STAB=true,  effects={{name="Advantage", target="Self", chance=5}} },
     {name="Triple Kick",    power=-1,     type="Fighting",  dice=4, STAB=false, effects={{name="AddDice2", target="Self"}} },
-    {name="Vital Throw",    power=2,      type="Fighting",  dice=6, STAB=true},
+    {name="Vital Throw",    power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="Advantage", target="Self"}} },
     {name="Wake-up Slap",   power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="ConditionBoost", target="Enemy"}} },
     {name="Rolling Kick",   power=2,      type="Fighting",  dice=6, STAB=true,  effects={{name="Disadvantage", target="Enemy", chance=5}} },
     {name="Knuckle",        power=3,      type="Fighting",  dice=6, STAB=true,  effects={{name="Custom"}} },
@@ -2647,7 +2680,7 @@ moveData =
     {name="Gold Rush",      power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}, {name="Confuse", target="Enemy"} } },
     {name="Cuddle",         power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Safeguard", target="Self", chance=4}} },
     {name="Replenish",      power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Custom"}} },
-    {name="Guard",          power=3,      type="Normal",  dice=6, STAB=false,   effects={{name="Protection", target="Self"}} },
+    {name="Guard",          power=0,      type="Normal",  dice=6, STAB=false,   effects={{name="Protection", target="Self"}} },
     {name="Secret Power",   power=2,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Snore",          power=1,      type="Normal",  dice=6, STAB=true,    effects={{name="Custom"}} },
     {name="Breakneck Blitz", power=4,     type="Normal",  dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
@@ -2848,7 +2881,7 @@ moveData =
     {name="Muddy Water",    power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Disadvantage", target="Enemy", chance=5}} },
     {name="Octazooka",      power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Advantage", target="Enemy", chance=4}} },
     {name="Raging Bull Water",power=2,    type="Water",  dice=6, STAB=true},
-    {name="Rain Dance",     power=3,      type="Water",  dice=6, STAB=true,     effects={{name="Rain"}} },
+    {name="Rain Dance",     power=0,      type="Water",  dice=6, STAB=false,    effects={{name="Rain"}} },
     {name="Razor Shell",    power=2,      type="Water",  dice=8, STAB=true},
     {name="Scald",          power=2,      type="Water",  dice=6, STAB=true,     effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Snipe Shot",     power=2,      type="Water",  dice=8, STAB=true},
@@ -3167,7 +3200,7 @@ rivalData =
         guid = "da96aa",
         tier = YELLOW,
         pokemon = {
-          { name="Alolan Raichu", level=4, types={ "Electric" }, moves={ "Thunderbolt", "Psychic" }, model_GUID="ac9e94", spawn_effect="Physical Attack" },
+          { name="Alolan Raichu", level=4, types={ "Electric", "Psychic" }, moves={ "Thunderbolt", "Psychic" }, model_GUID="ac9e94", spawn_effect="Physical Attack" },
           { name="Vaporeon", level=5, types={ "Water" }, moves={ "Water Pulse", "Charm" }, model_GUID="b8e8a6" } }
       },
       {
@@ -3456,7 +3489,7 @@ gymData =
     gymTier = 11,   -- Signifies Team Rocket
     pokemon = {
       { name="Spiritomb",  level=5, types={ "Ghost", "Dark" },    moves={ "Shadow Sneak", "Dark Pulse", "Dream Eater" }, model_GUID="0a6f0d" },
-      { name="Crobat",    level=6, types={ "Poison", "Flying" },  moves={ "Venoshock", "Air Slash", "Leech Life" }, model_GUID="40d4cd" }
+      { name="Weavile",    level=6, types={ "Dark", "Ice" },  moves={ "Night Slash", "Ice Shard", "Slash" }, model_GUID="ded7dd", spawn_effect="Physical Attack" }
     }
   },
   -- Orange Islands Team Rocket
@@ -4894,6 +4927,15 @@ gymData =
     pokemon = {
       { name="Scyther", level=5, types={ "Bug", "Flying" }, moves={ "Air Slash", "Fury Cutter", "Slash" }, model_GUID="a98dea" },
       { name="Braviary", level=6, types={ "Normal", "Flying" }, moves={ "Aerial Ace", "Superpower", "Crush Claw" }, model_GUID="a5fe68" } }
+  },
+  {
+    guid = "9247d1",
+    trainerName = "Nene",
+    gen=10,
+    gymTier = 5,
+    pokemon = {
+      { name="Croagunk", level=5, types={ "Poison", "Fighting" }, moves={ "Poison Jab", "Low Kick", "Sucker Punch" }, model_GUID="924639" },
+      { name="Crobat", level=6, types={ "Poison", "Flying" }, moves={ "Venoshock", "Air Slash", "Leech Life" }, model_GUID="40d4cd" } }
   },
   {
     guid = "507164",
@@ -6766,6 +6808,13 @@ function GetPokemonDataByGUID(params)
   if data ~= nil then
     return data
   end
+
+  --@Thanathoum
+  -- Check cloned Pokemon.
+  data = getPokemonData(clonedPokemonData, params.guid)
+  if data ~= nil then
+    return data
+  end
 end
 
 function GetAnyPokemonDataByGUID(params)
@@ -6796,6 +6845,13 @@ function GetAnyPokemonDataByGUID(params)
 
   -- Check the paradox Pokemon.
   data = getPokemonData(paradoxPokeballPokemonData, params.guid)
+  if data ~= nil then
+    return data
+  end
+
+  --@Thanathoum
+  -- Check cloned Pokemon.
+  data = getPokemonData(clonedPokemonData, params.guid)
   if data ~= nil then
     return data
   end
@@ -7287,6 +7343,9 @@ function onLoad(saved_data)
     pokeBackground=save_table.pokeBackground
     -- Pokedex info.
     SORTED_POKEDEX_TKEYS=save_table.SORTED_POKEDEX_TKEYS
+    --@Thanathoum
+	  --Cloned Pokemon
+    clonedPokemonData=save_table.clonedPokemonData  
   end
 
   -- Do some safety checks.
@@ -7329,6 +7388,10 @@ function onLoad(saved_data)
   if SORTED_POKEDEX_TKEYS == nil then
     SORTED_POKEDEX_TKEYS = {}
   end
+  --@Thanathoum
+  if clonedPokemonData == nil then
+    clonedPokemonData = {}
+  end
 
   -- Update the music playlists.
   update_playlists()
@@ -7339,6 +7402,8 @@ function onLoad(saved_data)
   table.insert(allData, fossilPokeballPokemonData)
   table.insert(allData, paradoxPokeballPokemonData)
   table.insert(allData, customPokemonData)
+  --@Thanathoum
+  table.insert(allData, clonedPokemonData)
 
   index = 1
   local key = 1
@@ -7503,8 +7568,10 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 04 June 2025 - v3.4.6 \
+  printToAll("Last update on 09 June 2025 - v3.4.6 \
     - Added Ransei map :) \
+    -- Added second tier 5 gym option - Viperia! \
+    - Added PokeCloner by @Thanathoum (see Additional Mods Pokéball) \
     - Many bug fixes \
   There is still a minor deploy issue. I have only seen it when using Random Gym Leaders on Alola.. but if you keep trying it will work eventually :/",
   "Pink")
@@ -7586,7 +7653,10 @@ function onSave()
     -- Background.
     pokeBackground=pokeBackground,
     -- Pokedex info.
-    SORTED_POKEDEX_TKEYS=SORTED_POKEDEX_TKEYS
+    SORTED_POKEDEX_TKEYS=SORTED_POKEDEX_TKEYS,
+    --@Thanathoum
+    -- Cloned Pokemon.
+    clonedPokemonData=clonedPokemonData
   }
   return JSON.encode(save_table)
 end
@@ -7718,7 +7788,7 @@ function battle_wild_pokemon(chip)
   for pokeball_index=1, #deploy_pokeballs do
     local pokeball_object = getObjectFromGUID(deploy_pokeballs[pokeball_index])
     if not pokeball_object then
-      printToAll("Failed to find pokeball with GUID " .. tostring(deploy_pokeballs[pokeball_index]) .. ". Hmm.")
+      printToAll("Failed to find Pokéball with GUID " .. tostring(deploy_pokeballs[pokeball_index]) .. ". Hmm.")
       return
     end
 

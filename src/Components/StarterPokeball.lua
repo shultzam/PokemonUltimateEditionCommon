@@ -108,6 +108,7 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401055/7A87F7479DEFF7B2435F49DC9AD6A1F179F20FC4/",
         "https://steamusercontent-a.akamaihd.net/ugc/2452852831747400830/2E36C789DAD25149087A619E2657E5D18F9F9E1F/"
      },
+-- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Sinnoh = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591681/83C2A89956FD23A2145D148A5D22B9468B025EE1/",
         "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591473/5970BBC767375CF38EBCF3B8D707D65304C39C5C/",
@@ -132,6 +133,7 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400844/6041242C1D5443BE356BDCF961F8948343AA01C1/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400595/F80CF5D35CEDF74BFF112E81A9F17282CA02153B/"
      },
+-- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Alola = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407259/8ADD0154FC5782959F960CC58D51C34D4207D310/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407355/63795DE52ED4E878D6B0F4F8FE0228FE2815B1C9/",
@@ -156,13 +158,14 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404005/4E2AB9A8893E305B809AAC2F47FD54D96B1A8F2B/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094403885/ADAE8EE866C0C3B671C2E450AA8995A1C6B4112A/"
      },
+-- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Ransei = {
-        "https://steamusercontent-a.akamaihd.net/ugc/11681184585746199209/7DB1150BE742AFDD55CFCE36B779FB1702B1ED74/",
-        "https://steamusercontent-a.akamaihd.net/ugc/13292676122160554964/B75CFC3C4118C2B9BDA00F904184F92B0EC597C6/",
-        "https://steamusercontent-a.akamaihd.net/ugc/10903823168933928504/D04F2271DE7B64F96394F6EF603F0ED2C720FE41/",
-        "https://steamusercontent-a.akamaihd.net/ugc/12761050576176918382/D946B2AC16217C00C643A5C3E4AC26E9BC689BFF/",
-        "https://steamusercontent-a.akamaihd.net/ugc/16981722704382916548/0480C8340B52C4EBDD66B6FFDF4C43F7C111AE61/",
-        "https://steamusercontent-a.akamaihd.net/ugc/17673876893395695121/AE5F778956E77CC3A890487B5B11F81047DE3985/"
+        "https://steamusercontent-a.akamaihd.net/ugc/14495026167592481260/DCE5E214AF270D353AAE0F6BE04C93F548AABDDA/",
+        "https://steamusercontent-a.akamaihd.net/ugc/13952032409084734457/D1E7D397865C56166EEF41FE5AE3F1C350A63242/",
+        "https://steamusercontent-a.akamaihd.net/ugc/11352952635905886106/708EA807CC0C5EFF33FE3BE752D95DAF288BFD09/",
+        "https://steamusercontent-a.akamaihd.net/ugc/11505974387789337526/608945BF271D414ACEBD26B1F8B5ACA6872DB17A/",
+        "https://steamusercontent-a.akamaihd.net/ugc/16333773344373329365/E2229AF43BF8035F5C9687BB00738647B1B7BBE3/",
+        "https://steamusercontent-a.akamaihd.net/ugc/9401982623111932656/A750704A2C0DDD28BE707E61CD4B0E4161C9A043/"
     },
     ["Orange Islands"] = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452154/5DE45931305977EDB788C867921FF5E49F06391D/",
@@ -936,13 +939,16 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
                 local leader_guid = nil
                 local gymPokeball = getObjectFromGUID("c4a729")
 
-                -- There are three tier-1 gyms in Ransei. Make sure they all get the correct home.
+                -- There are three tier-1 and two tier-5 gyms in Ransei. Make sure they all get the correct home.
                 if params.guid == "40bf4b" then
-                    -- Fontaine.
+                    -- Fontaine. Tier 1.
                     leader_guid = "a49a60"
                 elseif params.guid == "67ac73" then
-                    -- Ignis.
+                    -- Ignis. Tier 1.
                     leader_guid = "68b3fc"
+                elseif params.guid == "48aa90" then
+                    -- Viperia. Tier 5.
+                    leader_guid = "9247d1"
                 end
 
                 object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))

@@ -43,7 +43,7 @@ CARD_INFO = {
   leftovers = { name="Leftovers", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293150962/0B2903C823941F37AEED5270C79C48A72970A943/", back=CARD_BACK_URLS.default, tags = {"Item"} },
   lucky_egg = { name="Lucky Egg", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293150995/B10052B11C3B8E372C519E1BED5B6ADF0DF1892D/", back=CARD_BACK_URLS.default, tags = {"Item"} },
   max_potion = { name="Max Potion", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293151043/5D1B27146BEB6335D6140A01EBF58497168F35C2/", back=CARD_BACK_URLS.default, tags = {"Item"} },
-  max_revive = { name="Max Revive", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293151114/338D5726B6F1EB7A3E184B6D16AF1DEE8C22190E/", back=CARD_BACK_URLS.default },
+  max_revive = { name="Max Revive", front="https://steamusercontent-a.akamaihd.net/ugc/10770486561716578630/9C025547584177A77AB604F1A8AE6C3DA727D041/", back=CARD_BACK_URLS.default },
   mega_bracelet = { name="Mega Bracelet", front="https://steamusercontent-a.akamaihd.net/ugc/2468621052561344203/9F154534E97E702C4F1E687B6ED23E75E107E912/", back=CARD_BACK_URLS.default },
   mega_stone = { name="Mega Stone", front="https://steamusercontent-a.akamaihd.net/ugc/2471992409973825886/A6AE517ADCD5F764BBCD260187D763D51AFBF04D/", back=CARD_BACK_URLS.default, tags = {"Item"} },
   poke_doll = { name="Poké Doll", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293151180/FDA9042B364268FF80E7D61EBB8420E217AEA49B/", back=CARD_BACK_URLS.default },
