@@ -2070,10 +2070,10 @@ function selectMove(index, isAttacker, isRandom)
   -- Check if the Pokemon is using a move with Attack power of Self, Enemy or Sleep.
   if type(pokemonData.attackValue.movePower) == "string" then 
     if pokemonData.attackValue.movePower == status_ids.the_self then
-      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2) + 0.5)
+      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2) - 0.5)
     elseif pokemonData.attackValue.movePower == status_ids.enemy then
       local opponentData = isAttacker and defenderData or attackerData
-      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2) + 0.5)
+      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2) - 0.5)
     elseif pokemonData.attackValue.movePower == status_ids.sleep then
       -- Check if the opponent is asleep.
       local opponentPokemon = isAttacker and defenderPokemon or attackerPokemon
@@ -2138,58 +2138,33 @@ function selectMove(index, isAttacker, isRandom)
   -- Get the typeData
   local typeData = Global.call("GetTypeDataByName", moveData.type)
 
-  -- Detrermine if we are doing dual type effectiveness.
-  local type_length = 1
-  if Global.call("getDualTypeEffectiveness") then
-    type_length = 2
-  end
-  
-  -- Calculate the effectiveness of this move.
-  for j=1, #typeData.effective do
-    for type_index = 1, type_length do
-      if typeData.effective[j] == opponent_types[type_index] then
-        pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness + 2
-      end
-    end
-  end
-  for j=1, #typeData.weak do
-    for type_index = 1, type_length do
-      if typeData.weak[j] == opponent_types[type_index] then
-        pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness - 2
-      end
-    end
-  end
-
-  -- Check if this move has effects that alter effectiveness.
-  if moveData.effects then
-    for j=1, #moveData.effects do
-      -- If this is SaltCure, it is additionally effective against Rock and Water types.
-      if moveData.effects[j].name == status_ids.saltCure then
-        --print("TEMP | checking SaltCure effectiveness")
-        for type_index = 1, type_length do
-          if opponent_types[type_index] == "Water" or opponent_types[type_index] == "Rock" then
-            --print("TEMP | SaltCure added effectiveness against type: " .. opponent_types[type_index])
-            pokemonData.attackValue.effectiveness = pokemonData.attackValue.effectiveness + 2
-          end
+  -- If move had NEUTRAL effect, don't calculate Effectiveness
+  local calculateEffectiveness = true
+  if moveData.effects ~= nil then
+    for i=1, #moveData.effects do
+        if moveData.effects[i].name == status_ids.neutral then
+          calculateEffectiveness = false
+          break
         end
-      end
     end
   end
 
-  -- When teratyping into the secondary type, it can cause Super-Effective/Weak. We don't want that.
-  if Global.call("getDualTypeEffectiveness") and opponent_types[1] == opponent_types[2] then
-    if pokemonData.attackValue.effectiveness >= 4 then
-      pokemonData.attackValue.effectiveness = 2
-    elseif pokemonData.attackValue.effectiveness <= -4 then
-      pokemonData.attackValue.effectiveness = -2
-    end
+  if calculateEffectiveness then
+    pokemonData.attackValue.effectiveness = calculateMoveEffectiveness(moveData, typeData, opponent_types)
   end
 
-  -- Super-Effective and Super-Weak are are +3/-3 respectively. So do a simple conversion.
-  if pokemonData.attackValue.effectiveness >= 4 then
-    pokemonData.attackValue.effectiveness = 3
-  elseif pokemonData.attackValue.effectiveness <= -4 then
-    pokemonData.attackValue.effectiveness = -3
+  -- If this is Flying Press, we should check which is better out of Fighting/Flying. The default is Fighting.
+  if moveData.name == "Flying Press" then
+    -- Determine the effectiveness when Flying type.
+    local tempMoveDataFlying = copyTable(moveData)
+    tempMoveDataFlying.type = "Flying"
+    local tempTypeDataFlying = Global.call("GetTypeDataByName", tempMoveDataFlying.type)
+    local tempEffectiveness = calculateMoveEffectiveness(tempMoveDataFlying, tempTypeDataFlying, opponent_types)
+
+    -- Determine which effectiveness to keep.
+    if tempEffectiveness > pokemonData.attackValue.effectiveness then
+      pokemonData.attackValue.effectiveness = tempEffectiveness
+    end
   end
 
   -- Check for the self's tera type.
@@ -2293,6 +2268,68 @@ function selectMove(index, isAttacker, isRandom)
       selectMove(randomMove, DEFENDER, true)
     end
   end
+end
+
+-- Helper function to calculate effectiveness for a particular move.
+function calculateMoveEffectiveness(moveData, typeData, opponent_types)
+  -- Detrermine if we are doing dual type effectiveness.
+  local type_length = 1
+  if Global.call("getDualTypeEffectiveness") then
+    type_length = 2
+  end
+
+  -- Initialize the effectiveness.
+  local effectiveness = 0
+
+  -- Calculate the effectiveness of this move.
+  for j=1, #typeData.effective do
+    for type_index = 1, type_length do
+      if typeData.effective[j] == opponent_types[type_index] then
+        effectiveness = effectiveness + 2
+      end
+    end
+  end
+  for j=1, #typeData.weak do
+    for type_index = 1, type_length do
+      if typeData.weak[j] == opponent_types[type_index] then
+        effectiveness = effectiveness - 2
+      end
+    end
+  end
+
+  -- Check if this move has effects that alter effectiveness.
+  if moveData.effects then
+    for j=1, #moveData.effects do
+      -- If this is SaltCure, it is additionally effective against Rock and Water types.
+      if moveData.effects[j].name == status_ids.saltCure then
+        --print("TEMP | checking SaltCure effectiveness")
+        for type_index = 1, type_length do
+          if opponent_types[type_index] == "Water" or opponent_types[type_index] == "Rock" then
+            --print("TEMP | SaltCure added effectiveness against type: " .. opponent_types[type_index])
+            effectiveness = effectiveness + 2
+          end
+        end
+      end
+    end
+  end
+
+  -- When teratyping into the secondary type, it can cause Super-Effective/Weak. We don't want that.
+  if Global.call("getDualTypeEffectiveness") and opponent_types[1] == opponent_types[2] then
+    if effectiveness >= 4 then
+      effectiveness = 2
+    elseif effectiveness <= -4 then
+      effectiveness = -2
+    end
+  end
+
+  -- Super-Effective and Super-Weak are are +3/-3 respectively. So do a simple conversion.
+  if effectiveness >= 4 then
+    effectiveness = 3
+  elseif effectiveness <= -4 then
+    effectiveness = -3
+  end
+
+  return effectiveness
 end
 
 function activateMoves()
@@ -4835,38 +4872,7 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
         end
 
         if calculateEffectiveness then
-          -- Get the type data.
-          local typeData = Global.call("GetTypeDataByName", moveData.type)
-
-          -- Detrermine if we are doing dual type effectiveness.
-          local type_length = 1
-          if Global.call("getDualTypeEffectiveness") and (not opponent_tera_type) then
-            type_length = 2
-          end
-
-          -- If the opponent is Teresteralized, only consider that type.
-          if opponent_tera_type then
-            opponent_types = { opponent_tera_type }
-          end
-
-          -- Intitialize the effectiveness score.
-          local effectiveness_score = 0
-
-          for j=1, #typeData.effective do
-            for type_index = 1, type_length do
-              if typeData.effective[j] == opponent_types[type_index] then
-                effectiveness_score = effectiveness_score + 2
-              end
-            end
-          end
-
-          for j=1, #typeData.weak do
-            for type_index = 1, type_length do
-              if typeData.weak[j] == opponent_types[type_index] then
-                effectiveness_score = effectiveness_score - 2
-              end
-            end
-          end
+          local effectiveness_score = getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
 
           -- When teratyping into the secondary type, it can cause Super-Effective/Weak. We don't want that.
           if Global.call("getDualTypeEffectiveness") and opponent_types[1] == opponent_types[2] then
@@ -4874,6 +4880,19 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
               effectiveness_score = 2
             elseif effectiveness_score == -4 then
               effectiveness_score = -2
+            end
+          end
+
+          -- If this move is Flying Press, check which label to use.
+          if moveData.name == "Flying Press" then
+            -- Determine the effectiveness when Flying type.
+            local tempMoveDataFlying = copyTable(moveData)
+            tempMoveDataFlying.type = "Flying"
+            local tempEffectivenessScore = getEffectivenessScore(tempMoveDataFlying, opponent_tera_type, opponent_types)
+
+            -- Determine which effectiveness to keep.
+            if tempEffectivenessScore > effectiveness_score then
+              effectiveness_score = tempEffectivenessScore
             end
           end
 
@@ -4897,6 +4916,44 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
   end
 end
 
+-- Helper function used to get the effectiveness score of a move.
+function getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
+  -- Get the type data.
+  local typeData = Global.call("GetTypeDataByName", moveData.type)
+
+  -- Detrermine if we are doing dual type effectiveness.
+  local type_length = 1
+  if Global.call("getDualTypeEffectiveness") and (not opponent_tera_type) then
+    type_length = 2
+  end
+
+  -- If the opponent is Teresteralized, only consider that type.
+  if opponent_tera_type then
+    opponent_types = { opponent_tera_type }
+  end
+
+  -- Intitialize the effectiveness score.
+  local effectiveness_score = 0
+
+  for j=1, #typeData.effective do
+    for type_index = 1, type_length do
+      if typeData.effective[j] == opponent_types[type_index] then
+        effectiveness_score = effectiveness_score + 2
+      end
+    end
+  end
+
+  for j=1, #typeData.weak do
+    for type_index = 1, type_length do
+      if typeData.weak[j] == opponent_types[type_index] then
+        effectiveness_score = effectiveness_score - 2
+      end
+    end
+  end
+
+  return effectiveness_score
+end
+
 function isAITrainer(isAttacker)
   local type = isAttacker and attackerType or defenderType
   if aiDifficulty > 0 and type == GYM then
@@ -4908,7 +4965,7 @@ function isAITrainer(isAttacker)
   end
 end
 
-function copyTable (original)
+function copyTable(original)
   local copy = {}
 	for k, v in pairs(original) do
 		if type(v) == "table" then
@@ -4996,11 +5053,19 @@ function setLevel(params)
       attackerPokemon.levelDiceGUID = slotData.levelDiceGUID
       attackerPokemon.diceLevel = slotData.diceLevel
       attackerData.attackValue.level = level
+      attackerData.attackValue.movePower = 0
+      attackerData.attackValue.effectiveness = 0
+      attackerData.attackValue.attackRoll = 0
+      attackerData.attackValue.item = 0
     else
       slotData.itemGUID = defenderPokemon.itemGUID
       defenderPokemon.levelDiceGUID = slotData.levelDiceGUID
       defenderPokemon.diceLevel = slotData.diceLevel
       defenderData.attackValue.level = level
+      defenderData.attackValue.movePower = 0
+      defenderData.attackValue.effectiveness = 0
+      defenderData.attackValue.attackRoll = 0
+      defenderData.attackValue.item = 0
     end
     updateAttackValue(params.isAttacker)
   end
@@ -5025,44 +5090,34 @@ function updateEvolveButtons(params, slotData, level)
     rackGUID = params.rackGUID
   }
 
-  local selectedGens = Global.call("GetSelectedGens")
   local evoData = slotData.evoData
 
   local evoList = {}
   if evoData ~= nil then
     for i=1, #evoData do
       local evolution = evoData[i]
-      -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
-      if selectedGens[evolution.gen] or evolution.ball == 8 then 
-        if type(evolution.cost) == "string" then
-          for _, evoGuid in ipairs(evolution.guids) do
-            local evoData = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
-            if evoData == nil then
-              break
-            end
-
-            -- Insert evo option into the table.
-            table.insert(evoList, evolution)
-
-            -- Print the correct evolution instructions.
-            if evolution.cost == "Mega" then
-              printToAll("Mega Bracelet required and Mega Stone must be attached to evolve into " .. evoData.name)
-            elseif evolution.cost == "GMax" then
-              printToAll("Dynamax Band required to evolve into " .. evoData.name)
-            else
-              printToAll(evolution.cost .. " required to be played or attached to evolve into " .. evoData.name)
-            end
+      if type(evolution.cost) == "string" then
+        for _, evoGuid in ipairs(evolution.guids) do
+          local evoData = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
+          if evoData == nil then
             break
           end
-        elseif evolution.cost <= level then
+
+          -- Insert evo option into the table.
           table.insert(evoList, evolution)
-        end
-      else
-        for _, evoGuid in ipairs(evolution.guids) do
-          local unallowedPokemon = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
-          printToAll("Evolving to " .. tostring(unallowedPokemon.name) .. " not available due to gen " .. tostring(evolution.gen) .. " not being enabled")
+
+          -- Print the correct evolution instructions.
+          if evolution.cost == "Mega" then
+            printToAll("Mega Bracelet required and Mega Stone must be attached to evolve into " .. evoData.name)
+          elseif evolution.cost == "GMax" then
+            printToAll("Dynamax Band required to evolve into " .. evoData.name)
+          else
+            printToAll(evolution.cost .. " required to be played or attached to evolve into " .. evoData.name)
+          end
           break
         end
+      elseif evolution.cost <= level then
+        table.insert(evoList, evolution)
       end
     end
   end
@@ -5100,7 +5155,6 @@ function evolvePoke(params)
 
     -- Init some params.
     local pokemonData = params.slotData
-    local selectedGens = Global.call("GetSelectedGens")
     local rack = getObjectFromGUID(params.rackGUID)
     local evolvedPokemon
     local evolvedPokemonGUID
@@ -5128,16 +5182,7 @@ function evolvePoke(params)
           break
         end
       elseif evolution.cost <= diceLevel then
-        -- If the ball is 8, this is a fossil pokemon so we always allow it to evolve.
-        if selectedGens[evolution.gen] or evolution.ball == 8 then
-          table.insert(evoList, evolution)
-        else
-          for _, evoGuid in ipairs(evolution.guids) do
-            local unallowedPokemon = Global.call("GetAnyPokemonDataByGUID",{guid=evoGuid})
-            printToAll("Evolving to " .. tostring(unallowedPokemon.name) .. " not available due to gen " .. tostring(evolution.gen) .. " not being enabled")
-            break
-          end
-        end
+        table.insert(evoList, evolution)
       end
     end
     -- Check if there is a secondary type token to despawn.
@@ -5307,8 +5352,8 @@ function evolvePoke(params)
         -- Clear the appropriate move selected text.
         clearMoveText(params.isAttacker)
 
-        -- Save off the arena data for potential tera info.
-        local arenaData = params.isAttacker and attackerPokemon or defenderPokemon
+        -- Save off the arena data for potential attach card information.
+        local arenaPokemon = params.isAttacker and attackerPokemon or defenderPokemon
 
         -- Get the position and set the evo pokemon.
         local tokenPosition = params.isAttacker and attackerPos or defenderPos
@@ -5317,34 +5362,42 @@ function evolvePoke(params)
         local position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
         evolvedPokemon.setPosition(position)
 
+        -- Update the arena data level for this Pokemon - in case it is a Mega which is given a +1 level.
+        local arenaData = params.isAttacker and attackerData or defenderData
+        arenaData.baseLevel = evolvedPokemonData.level
+        arenaData.attackValue = { level = evolvedPokemonData.level + data.diceLevel, movePower = 0, effectiveness = 0, attackRoll = 0, item = 0 }
+
+        -- Update the arena calculator.
+        updateAttackValue(params.isAttacker)
+
         -- Check if there is an attach card present.
         local cardMoveData = nil
-        if arenaData.itemCardGUID ~= nil then
+        if arenaPokemon.itemCardGUID ~= nil then
           -- Get a reference to the item card.
-          local item_card = getObjectFromGUID(arenaData.itemCardGUID)
+          local item_card = getObjectFromGUID(arenaPokemon.itemCardGUID)
 
           -- Check if the attached card is a TM card.
-          if arenaData.tmCard then
-            local moveData = Global.call("GetTmDataByGUID", arenaData.itemCardGUID)
+          if arenaPokemon.tmCard then
+            local moveData = Global.call("GetTmDataByGUID", arenaPokemon.itemCardGUID)
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
             end
           -- Check if the attached card is a Z-Crystal card.
-          elseif arenaData.zCrystalCard then
-            local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=arenaData.itemCardGUID, pokemonGuid=nil})
+          elseif arenaPokemon.zCrystalCard then
+            local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=arenaPokemon.itemCardGUID, pokemonGuid=nil})
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
               cardMoveData.name = moveData.displayName
             end
-          elseif arenaData.teraType then
-            local teraData = Global.call("GetTeraDataByGUID", arenaData.itemCardGUID)
+          elseif arenaPokemon.teraType then
+            local teraData = Global.call("GetTeraDataByGUID", arenaPokemon.itemCardGUID)
             if teraData ~= nil then
               if params.isAttacker then
-                arenaData.teraType = teraData.type
+                arenaPokemon.teraType = teraData.type
                 showAttackerTeraButton(false)
                 showAttackerTeraButton(true, createAttackerTeraLabel())
               else
-                arenaData.teraType = teraData.type
+                arenaPokemon.teraType = teraData.type
                 showDefenderTeraButton(false)
                 showDefenderTeraButton(true, createDefenderTeraLabel())
               end
@@ -5352,11 +5405,11 @@ function evolvePoke(params)
           elseif item_card then
             local card_name = item_card.getName()
             if (card_name == "Vitamin" or card_name == "Shiny Charm") then
-              arenaData.vitamin = true
+              arenaPokemon.vitamin = true
             elseif card_name == "Alpha Pokémon" then
-              arenaData.alpha = true
+              arenaPokemon.alpha = true
             elseif card_name then
-              arenaData.type_enhancer = typeBoosterLookupTable[card_name]
+              arenaPokemon.type_enhancer = typeBoosterLookupTable[card_name]
             end
           end
         end
@@ -6076,7 +6129,14 @@ function showMoveButtons(isAttacker, cardMoveData)
     if moveType == "Dark" or moveType == "Ghost" or moveType == "Fighting" then
       font_color = "White"
     end
-    self.editButton({index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color})
+    local tooltip = ""
+
+    -- If this move is Flying Press then give a tooltip.
+    if moves[i].name == "Flying Press" then
+      tooltip = "Effectiveness calculated on best outcome of Fighting/Flying"
+    end
+
+    self.editButton({index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color, hover_color=hover_color, tooltip=tooltip})
   end
 end
 

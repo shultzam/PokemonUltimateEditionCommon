@@ -807,9 +807,9 @@ gen1PokemonData =
   -- Gen 1 100-151
   { name="Voltorb",     level=2, types={ "Electric" },           moves={ "Sonic Boom", "Self-Destruct" },  guids={ "7963a6" },                    evoData={ { cost=2, ball=BLUE, gen=1, guids={ "fd080d" } } }, model_GUID="37bc9d", spawn_effect="Physical Attack", pokedex=100 },
   { name="Electrode",   level=4, types={ "Electric" },           moves={ "Explosion", "Rollout" },         guids={ "d292b7", "fd080d" }, model_GUID="2fb88b", spawn_effect="Physical Attack", pokedex=101 },
-  { name="Exeggcute",   level=3, types={ "Grass", "Psychic" },   moves={ "Barrage", "Mega Drain" },        guids={ "c271ca" },                    evoData={ { cost=2, ball=RED, gen=1, guids={ "a29b99" } }, { cost=2, ball=RED, gen=5, guids={ "56fca1" } } }, model_GUID="618cb8", pokedex=102 },
+  { name="Exeggcute",   level=3, types={ "Grass", "Psychic" },   moves={ "Barrage", "Mega Drain" },        guids={ "c271ca" },                    evoData={ { cost=2, ball=RED, gen=1, guids={ "a29b99" } }, { cost=2, ball=RED, gen=7, guids={ "56fca1" } } }, model_GUID="618cb8", pokedex=102 },
   { name="Exeggutor",   level=5, types={ "Grass", "Psychic" },   moves={ "Extrasensory", "Solar Beam" },   guids={ "61be01", "a29b99" }, model_GUID="cc6a34", pokedex=103 },
-  { name="Cubone",      level=3, types={ "Ground" },             moves={ "Bone Club", "False Swipe" },     guids={ "9bb943" },                    evoData={ { cost=1, ball=YELLOW, gen=1, guids={ "921715" } }, { cost=1, ball=YELLOW, gen=7, guids={ "04850a" } } }, model_GUID="e899ae", spawn_effect="Physical Attack", pokedex=104 },
+  { name="Cubone",      level=3, types={ "Ground" },             moves={ "Bone Club", "False Swipe" },     guids={ "9bb943" },                    evoData={ { cost=1, ball=YELLOW, gen=1, guids={ "921715" } }, { cost=1, ball=YELLOW, gen=7, guids={ "deb623" } } }, model_GUID="e899ae", spawn_effect="Physical Attack", pokedex=104 },
   { name="Marowak",     level=4, types={ "Ground" },             moves={ "Bonemerang", "Thrash" },         guids={ "f416a8", "921715" }, model_GUID="c9b2ac", pokedex=105 },
   { name="Hitmonlee",   level=4, types={ "Fighting" },           moves={ "Rolling Kick", "Blaze Kick" },   guids={ "1e6425", "10087d" }, model_GUID="d821ab", spawn_effect="Physical Attack", offset={x=0, y=0, z=-0.08}, pokedex=106 },
   { name="Hitmonchan",  level=4, types={ "Fighting" },           moves={ "Bullet Punch", "Drain Punch" },  guids={ "ffe3b0", "d55591" }, model_GUID="4fea7f", spawn_effect="Physical Attack", pokedex=107 },
@@ -994,9 +994,6 @@ gen2PokemonData =
   { name="Porygon2",   level=4, types={ "Normal" },            moves={ "Conversion2", "Tri Attack" },     guids={ "b7c99b", "145660" },           evoData={ { cost=1, ball=YELLOW, gen=4, guids={ "89624f", "ccdbee" } } }, model_GUID="26714f", pokedex=233 },
   { name="Stantler",   level=2, types={ "Normal" },            moves={ "Hypnosis", "Tackle" },            guids={ "3ba296" },                     evoData={ { cost=2, ball=YELLOW, gen=8, guids={ "163267" } } }, model_GUID="fc0116", pokedex=234 },
   { name="Smeargle",   level=3, types={ "Normal" },            moves={ "Sketch", "Sketch" },              guids={ "5496a6" }, model_GUID="5efe03", pokedex=235 },
-  { name="Tyrogue",    level=1, types={ "Fighting" },          moves={ "Focus Energy", "Tackle" },        guids={ "b896b9" },                     evoData={ { cost=3, ball=BLUE, gen=1, guids={ "d55591" } }, 
-                                                                                                                                                                        { cost=3, ball=BLUE, gen=1, guids={ "10087d" } }, 
-                                                                                                                                                                        { cost=3, ball=BLUE, gen=2, guids={ "b53d14" } } }, model_GUID="9f3f98" },
   { name="Tyrogue",    level=1, types={ "Fighting" },          moves={ "Focus Energy", "Tackle" },        guids={ "b896b9" },                     evoData={ { cost=3, ball=BLUE, gen=1, guids={ "d55591" } }, 
                                                                                                                                                             { cost=3, ball=BLUE, gen=1, guids={ "10087d" } }, { cost=3, ball=BLUE, gen=2, guids={ "b53d14" } } }, 
                                                                                                                                                   model_GUID="9f3f98", pokedex=236 },
@@ -1759,7 +1756,7 @@ gen7PokemonData =
   { name="Alolan Grimer",       level=4, types={ "Poison", "Dark" },     moves={ "Disable", "Bite" },                   guids={ "c9ea3a" }, model_GUID="9b4419", evoData={ { cost=1, ball=RED, gen=7, guids={ "d5d023" }, model_GUID="7e8a7f" } }, pokedex_info={book=2, page=31} },
   { name="Alolan Muk",          level=5, types={ "Poison", "Dark" },     moves={ "Poison Fang", "Crunch" },             guids={ "20e759", "d5d023" }, model_GUID="7e8a7f", custom_scale=0.5 },
   { name="Alolan Exeggutor",    level=5, types={ "Grass", "Dragon" },    moves={ "Dragon Hammer", "Seed Bomb" },        guids={ "2b8a77", "56fca1" }, model_GUID="e56668", pokedex_info={book=2, page=31} },
-  { name="Alolan Marowak",      level=5, types={ "Fire", "Ghost" },      moves={ "Shadow Bone", "Bone Club" },          guids={ "04850a" }, model_GUID="245f21", pokedex_info={book=2, page=31} },
+  { name="Alolan Marowak",      level=5, types={ "Fire", "Ghost" },      moves={ "Shadow Bone", "Bone Club" },          guids={ "04850a", "deb623" }, model_GUID="245f21", pokedex_info={book=2, page=31} },
 
   -- Mega evolutions.
   { name="GMax Melmetal",       level=7, types={ "Steel" },    moves={ "Meltdown", "Strike" },                guids={ "89bba5", "00eaca" },           evoData={ { cost=0, ball=LEGENDARY, gen=7, cycle=true, guids={ "f35bd5", "aec8ec" } } }, model_GUID="b839e1", custom_scale=0.6, pokedex=809 },
@@ -1957,9 +1954,9 @@ gen9PokemonData =
   { name="Fuecoco",       level=1, types={ "Fire" }, moves={ "Ember", "Leer" },         guids={ "53ad3b" },               evoData={ { cost=2, ball=BLUE, gen=9, guids={ "2a93fc" } } }, model_GUID="484158", offset={x=0, y=0.035, z=0}, pokedex=909 },
   { name="Crocalor",      level=3, types={ "Fire" }, moves={ "Incinerate", "Bite" }, guids={ "f49cc4", "2a93fc" },   evoData={ { cost=2, ball=RED, gen=9, guids={ "0528b7", "91d3a3" } } }, model_GUID="9d683a", offset={x=0, y=0.03, z=0}, pokedex=910 },
   { name="Skeledirge",    level=5, types={ "Fire", "Ghost" }, moves={ "Shadow Ball", "Torch Song" }, guids={ "6b9ddf", "0528b7", "91d3a3" }, model_GUID="e59cc3", custom_scale=0.6, offset={x=0, y=0.03, z=0}, pokedex=911 },
-  { name="Quaxly",        level=1, types={ "Water" }, moves={ "Water Gun", "Growl" },    guids={ "4a2233" },               evoData={ { cost=2, ball=BLUE, gen=9, guids={ "76b74f" } } }, model_GUID="14aae3", pokedex=912 }, -- Needs Model when available
-  { name="Quaxwell",      level=3, types={ "Water" }, moves={ "Feather Dance", "Aqua Jet" }, guids={ "dc2818", "76b74f" },    evoData={ { cost=2, ball=RED, gen=9, guids={ "517d88", "7bf3d4" } } }, model_GUID="676de9", offset={x=0, y=0.02, z=0}, pokedex=913 }, -- Needs Model when available
-  { name="Quaquaval",     level=5, types={ "Water", "Fighting" }, moves={ "Aqua Step", "Counter" }, guids={ "07d04b", "517d88", "7bf3d4" }, model_GUID="8db18f", offset={x=0, y=0.015, z=0}, pokedex=914 }, -- Needs Model when available
+  { name="Quaxly",        level=1, types={ "Water" }, moves={ "Water Gun", "Growl" },    guids={ "4a2233" },               evoData={ { cost=2, ball=BLUE, gen=9, guids={ "76b74f" } } }, model_GUID="fbe251", pokedex=912 },
+  { name="Quaxwell",      level=3, types={ "Water" }, moves={ "Feather Dance", "Aqua Jet" }, guids={ "dc2818", "76b74f" },    evoData={ { cost=2, ball=RED, gen=9, guids={ "517d88", "7bf3d4" } } }, model_GUID="2931dc", offset={x=0, y=0.05, z=0}, pokedex=913 },
+  { name="Quaquaval",     level=5, types={ "Water", "Fighting" }, moves={ "Aqua Step", "Counter" }, guids={ "07d04b", "517d88", "7bf3d4" }, model_GUID="f7d14a", offset={x=0, y=0.05, z=0}, pokedex=914 },
   { name="Lechonk",       level=1, types={ "Normal" }, moves={ "Tackle", "Tail Whip" }, guids={ "fa7a0e" }, evoData={ { cost=2, ball=BLUE, gen=9, guids={ "731928" } }, { cost=2, ball=BLUE, gen=9, guids={ "9bc692" } } }, model_GUID="066e52", offset={x=0, y=0.07, z=0}, pokedex=915 },  -- Needs Model when available
   { name="Oinkologne (F)",level=3, types={ "Normal" }, moves={ "Headbutt", "Yawn" },  guids={ "286c12", "731928" }, model_GUID="2e147e", offset={x=0, y=0.05, z=0}, ball=BLUE, pokedex=916 },  -- Needs Model when available
   { name="Oinkologne (M)",level=3, types={ "Normal" }, moves={ "Take Down", "Work Up" }, guids={ "4a7427", "9bc692" }, model_GUID="999693", offset={x=0, y=0.05, z=0}, ball=BLUE, pokedex=916 },  -- Needs Model when available
@@ -6558,7 +6555,7 @@ local shiny_guid_table = {
   ["Kleavor"] = "2c44ea",
   ["Ursaluna"] = "e8ba1b",
   ["Bloodmoon Ursaluna"] = "ca6c05",
-  ["Basculegion"] = "5928ce", --  Male, TODO: Female = "b1597e" if we want to have both options randomly available when a shiny is chosen?
+  ["Basculegion"] = "5928ce", -- Male, TODO: Female = "b1597e" if we want to have both options randomly available when a shiny is chosen?
   ["Sneasler"] = "f091e0",
   ["Overqwil"] = "2d4d32",
   ["Incarnate Enamorus"] = "f4912d",
@@ -6626,9 +6623,9 @@ local shiny_guid_table = {
   ["Fuecoco"] = "d962ff",
   ["Crocalor"] = "7678ac",
   ["Skeledirge"] = "e4f360",
-  ["Quaxly"] = nil,
-  ["Quaxwell"] = nil,
-  ["Quaquaval"] = nil,
+  ["Quaxly"] = "1482ea",
+  ["Quaxwell"] = "567056",
+  ["Quaquaval"] = "751a54",
   ["Lechonk"] = nil,
   ["Oinkologne (F)"] = nil,
   ["Oinkologne (M)"] = nil,
@@ -6775,11 +6772,9 @@ function GetPokemonDataByGUID(params)
 
   local data
   for i = 1, #selectedGens do
-    if selectedGens[i] then
-      data = getPokemonData(genData[i], params.guid)
-      if data ~= nil then
-        return data
-      end
+    data = getPokemonData(genData[i], params.guid)
+    if data ~= nil then
+      return data
     end
   end
 
@@ -6860,11 +6855,9 @@ end
 function GetPokemonDataByName(params)
   local data
   for i = 1, #selectedGens do
-    if selectedGens[i] then
-      data = getPokemonDataName(genData[i], params.name)
-      if data ~= nil then
-        return data
-      end
+    data = getPokemonDataName(genData[i], params.name)
+    if data ~= nil then
+      return data
     end
   end
   if customGen then
@@ -6915,6 +6908,33 @@ function getPokemonDataName(pokemonList, name)
       return data
     end
   end
+  return nil
+end
+
+-- Helper function to get pokemon data by gen.
+function getPokemonDataByGen(gen)
+  if gen == 1 then
+    return gen1PokemonData
+  elseif gen == 2 then
+    return gen2PokemonData
+  elseif gen == 3 then
+    return gen3PokemonData
+  elseif gen == 4 then
+    return gen4PokemonData
+  elseif gen == 5 then
+    return gen5PokemonData
+  elseif gen == 6 then
+    return gen6PokemonData
+  elseif gen == 7 then
+    return gen7PokemonData
+  elseif gen == 8 then
+    return gen8PokemonData
+  elseif gen == 9 then
+    return gen9PokemonData
+  end
+
+  -- No data found.
+  print("ERROR: No Pokemon data found for gen " .. tostring(gen))
   return nil
 end
 
@@ -7568,10 +7588,10 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 09 June 2025 - v3.4.6 \
-    - Added Ransei map :) \
-    -- Added second tier 5 gym option - Viperia! \
-    - Added PokeCloner by @Thanathoum (see Additional Mods Pokéball) \
+  printToAll("Last update on 18 June 2025 - v3.4.6 \
+    - Added evo-chaining (report any bugs please!) \
+    -- this does not go backwards for an evo-chain (e.g. selecting gen 1 only will not bring in Tyrogue) \
+    - Improved arena calculations \
     - Many bug fixes \
   There is still a minor deploy issue. I have only seen it when using Random Gym Leaders on Alola.. but if you keep trying it will work eventually :/",
   "Pink")

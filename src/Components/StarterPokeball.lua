@@ -345,6 +345,9 @@ function beginSetup2(params)
         setupPokeballs(customEvoPokeballs, evoPokeballs)
     end
 
+    -- TODO: Get evo tokens we care about and throw them into the evo pokeballs.
+    handle_evo_tokens(params.selectedGens)
+
     -- Delete Saves on starting
     local tmpelite4Gym = getObjectFromGUID(elite4GymGuid)
     local tmprivalGym = getObjectFromGUID(rivalGymGuid)
@@ -1584,4 +1587,148 @@ function copyTable(original)
         copy[k] = v
     end
     return copy
+end
+
+-- Function used to snag evo tokens for Pokemon that we didn't explicitly include the gen of.
+-- This is going to be such a pain in the ass.
+function handle_evo_tokens(selected_gens)
+    -- If we are including evey gen then we don't care about this at all.
+    if selected_gens[1] and 
+       selected_gens[2] and 
+       selected_gens[3] and 
+       selected_gens[4] and 
+       selected_gens[5] and 
+       selected_gens[6] and 
+       selected_gens[7] and 
+       selected_gens[8] and 
+       selected_gens[9] then
+        return
+    end
+
+    -- Handle each selected gen.
+    for gen = 1, 9 do
+        get_evo_tokens(gen, selected_gens)
+    end
+end
+
+-- Helper function used to get the evo tokens required for a particular gen.
+-- This function should only grab these tokens IFF that particular gen was not
+-- actually chosen already.
+function get_evo_tokens(gen, selected_gens)
+    -- Sanitize the inputs a bit.
+    if gen < 1 or gen > 9 then
+        print("Invalid gen in get_evo_tokens: " .. tostring(gen))
+        return
+    end
+
+    -- If this gen was not enabled, we just skip it.
+    if not selected_gens[gen] then
+        return
+    end
+
+    -- Get the pokemon data for this gen.
+    local gen_data = Global.call("getPokemonDataByGen", gen)
+    if not gen_data then
+        print("Failed to get gen data for gen " .. tostring(gen))
+        return
+    end
+
+    -- Loop through each Pokemon data entry in this gen.
+    for index=1, #gen_data do
+        -- Check if there is evoData.
+        local evo_data = gen_data[index].evoData
+        while evo_data ~= nil do
+            -- If this evoData gen was already selected then we can skip it.
+            for evo_index=1, #evo_data do
+                if not selected_gens[evo_data[evo_index].gen] then
+                    for token_index=1, #(evo_data[evo_index].guids) do
+                        -- Get the evo tokens required for this token, if any.
+                        get_evo_token(evo_data[evo_index].gen, evo_data[evo_index].ball, evo_data[evo_index].guids[token_index])
+                    end
+                end
+            end
+
+            -- Get the next evoData.
+            evo_data = evo_data.evoData
+        end
+    end
+end
+
+-- Helper function used to get the evo tokens required for a particular token GUID.
+-- Since a previous token for this same Pokemon may have already grabbed the required tokens,
+-- this function should be error tolerant to an extent.
+function get_evo_token(gen, ball_index, guid)
+    -- Get the destination ball GUID.
+    local evo_pokeball = getObjectFromGUID(evoPokeballs[ball_index])
+    if not evo_pokeball then
+        print("Failed to get evo Pokeball by ball index: " .. tostring(ball_index))
+        return false
+    end
+
+    -- Get the token based on GUID, gen and ball index.
+    local source_ball_guid = get_ball_guid(gen, ball_index)
+
+    if source_ball_guid then
+        -- Get a handle on the source Pokeball.
+        local source_pokeball = getObjectFromGUID(source_ball_guid)
+        if not source_pokeball then
+            print("Failed to get source evo pokeball for gen/ball_index: " .. dump_table({gen, ball_index}))
+            return false
+        end
+
+        -- Since takeObject() is dumb we have to check first that the token is still in there.
+        if not check_token_is_in_pokeball(source_pokeball, guid) then
+            return false
+        end
+
+        -- Take the token we care about and put it into the evo Pokeball. The token could already be gone.
+        local token_obj = source_pokeball.takeObject({ guid = guid })
+        if not token_obj then
+            return false
+        end
+
+        -- Put the token into its destination.
+        evo_pokeball.putObject(token_obj)
+        return true
+    else
+        print("Failed to get ball GUID for gen/ball_index: " .. dump_table({gen, ball_index}))
+    end
+end
+
+-- Helper function to get ball GUID based on the generation and ball index.
+function get_ball_guid(gen, ball_index)
+    local pokeballs = {}
+    if gen == 1 then
+        return gen1EvoPokeballs[ball_index]
+    elseif gen == 2 then
+        return gen2EvoPokeballs[ball_index]
+    elseif gen == 3 then
+        return gen3EvoPokeballs[ball_index]
+    elseif gen == 4 then
+        return gen4EvoPokeballs[ball_index]
+    elseif gen == 5 then
+        return gen5EvoPokeballs[ball_index]
+    elseif gen == 6 then
+        return gen6EvoPokeballs[ball_index]
+    elseif gen == 7 then
+        return gen7EvoPokeballs[ball_index]
+    elseif gen == 8 then
+        return gen8EvoPokeballs[ball_index]
+    elseif gen == 9 then
+        return gen9EvoPokeballs[ball_index]
+    end
+
+    print("Failed to get pokeballs GUID list for gen " .. tostring(gen))
+    return nil
+end
+
+-- Helper function to check if a token is in a bag. We have to do this because takeObject() is not fault-tolerant.
+function check_token_is_in_pokeball(pokeball, token_guid)
+    local objects_in_bag = pokeball.getObjects()  -- returns a table of objects (each has .guid)
+    for _, obj in ipairs(objects_in_bag) do
+        if obj.guid == token_guid then
+            return true
+        end
+    end
+    return false
 end
