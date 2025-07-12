@@ -844,7 +844,7 @@ function flipRivalPokemon()
   updateAttackValue(ATTACKER)
 
   -- Get the rival token object handle.
-  local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  local rivalCard = getObjectFromGUID(attackerPokemon.pokemonGUID)
   
   -- Handle the model.
   local pokemonModelData = nil
@@ -862,7 +862,7 @@ function flipRivalPokemon()
         picked_up = false,
         despawn_time = 1.0,
         model_GUID = attackerPokemon.model_GUID,
-        custom_rotation = {rivalToken.getRotation().x, rivalToken.getRotation().y + 180.0, rivalToken.getRotation().z}
+        custom_rotation = {rivalCard.getRotation().x, rivalCard.getRotation().y + 180.0, rivalCard.getRotation().z}
       },
       picked_up = false,
       in_creation = false,
@@ -885,8 +885,8 @@ function flipRivalPokemon()
   end
 
   -- Flip the rival token.
-  rivalToken.unlock()
-  rivalToken.flip()
+  rivalCard.unlock()
+  rivalCard.flip()
   
   if Global.call("get_models_enabled") then
     -- Add it to the active chips.
@@ -901,10 +901,10 @@ function flipRivalPokemon()
   Wait.condition(
     function()
       -- Lock the rival in place.
-      rivalToken.lock()
+      rivalCard.lock()
     end,
     function() -- Condition function
-      return rivalToken ~= nil and rivalToken.resting
+      return rivalCard ~= nil and rivalCard.resting
     end,
     2
   )
@@ -2070,10 +2070,10 @@ function selectMove(index, isAttacker, isRandom)
   -- Check if the Pokemon is using a move with Attack power of Self, Enemy or Sleep.
   if type(pokemonData.attackValue.movePower) == "string" then 
     if pokemonData.attackValue.movePower == status_ids.the_self then
-      pokemonData.attackValue.movePower = math.floor((pokemonData.attackValue.level / 2) - 0.5)
+      pokemonData.attackValue.movePower = math.floor(pokemonData.attackValue.level / 2)
     elseif pokemonData.attackValue.movePower == status_ids.enemy then
       local opponentData = isAttacker and defenderData or attackerData
-      pokemonData.attackValue.movePower = math.floor((opponentData.attackValue.level / 2) - 0.5)
+      pokemonData.attackValue.movePower = math.floor(opponentData.attackValue.level / 2)
     elseif pokemonData.attackValue.movePower == status_ids.sleep then
       -- Check if the opponent is asleep.
       local opponentPokemon = isAttacker and defenderPokemon or attackerPokemon
@@ -2138,11 +2138,16 @@ function selectMove(index, isAttacker, isRandom)
   -- Get the typeData
   local typeData = Global.call("GetTypeDataByName", moveData.type)
 
+  local is_stellar = false
+  if pokemon.teraActive == true and pokemon.teraType == "Stellar" then
+    is_stellar = true
+  end
+
   -- If move had NEUTRAL effect, don't calculate Effectiveness
   local calculateEffectiveness = true
   if moveData.effects ~= nil then
     for i=1, #moveData.effects do
-        if moveData.effects[i].name == status_ids.neutral then
+        if moveData.effects[i].name == status_ids.neutral or is_stellar then
           calculateEffectiveness = false
           break
         end
@@ -3404,7 +3409,7 @@ function sendToArenaGym(params)
 
   if Global.call("get_models_enabled") then
     -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
-    -- I didn't feel like figuring out to fake allllll of the initialization process for RivalData models that may 
+    -- I didn't feel like figuring out to fake allllll of the initialization process for GymData models that may 
     -- never ever get seen for a game. Also it is extra complicated because we need two models per token.
     local pokemonModelData = {
       chip_GUID = params.trainerGUID,
@@ -3675,9 +3680,9 @@ function sendToArenaRival(params)
   setTrainerType(ATTACKER, RIVAL, params)
 
   -- Get the rival token.
-  local takeParams = {guid = params.pokemonGUID, position = {attackerPos.pokemon[1], 0.96, attackerPos.pokemon[2]}, rotation={0,180,0}}
+  local takeParams = {guid = params.pokemonGUID, position = {attackerPos.item[1], 1.5, attackerPos.item[2]}, rotation={0,180,0}}
   local pokeball = getObjectFromGUID(params.pokeballGUID)
-  local rivalToken = pokeball.takeObject(takeParams)
+  local rivalCard = pokeball.takeObject(takeParams)
   
   -- Wait until the rival token is resting.
   Wait.condition(
@@ -3685,14 +3690,14 @@ function sendToArenaRival(params)
       -- Do nothing.
     end,
     function() -- Condition function
-      return rivalToken ~= nil and rivalToken.resting
+      return rivalCard ~= nil and rivalCard.resting
     end,
     2
   )
 
   -- Do a sanity check.
   -- TODO: Becaise of how Wait.condition() works, this is likely pointless.
-  if rivalToken == nil then
+  if rivalCard == nil then
     print("Failed to fetch rival " .. params.trainerName)
   end
 
@@ -3731,7 +3736,7 @@ function sendToArenaRival(params)
         picked_up = false,
         despawn_time = 1.0,
         model_GUID = attackerPokemon.model_GUID,
-        custom_rotation = {rivalToken.getRotation().x, rivalToken.getRotation().y + 180.0, rivalToken.getRotation().z}
+        custom_rotation = {rivalCard.getRotation().x, rivalCard.getRotation().y + 180.0, rivalCard.getRotation().z}
       },
       picked_up = false,
       in_creation = false,
@@ -3739,6 +3744,7 @@ function sendToArenaRival(params)
       isTwoFaced = true
     }
     pokemonModelData.chip = attackerPokemon.pokemonGUID
+    Global.call("force_shiny_spawn", {guid=params.pokemonGUID, state=false})
 
     -- Copy the base to a state.
     pokemonModelData.state = pokemonModelData.base
@@ -3789,10 +3795,10 @@ function sendToArenaRival(params)
   Wait.condition(
     function()
       -- Unlock the rival in place.
-      rivalToken.lock()
+      rivalCard.lock()
     end,
     function() -- Condition function
-      return rivalToken ~= nil and rivalToken.resting
+      return rivalCard ~= nil and rivalCard.resting
     end,
     2
   )
@@ -4025,12 +4031,12 @@ function recallRival()
   end
 
   -- Get the rival token object and unlock it in place.
-  local rivalToken = getObjectFromGUID(attackerPokemon.pokemonGUID)
-  rivalToken.unlock()
+  local rivalCard = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  rivalCard.unlock()
 
   -- If we were flipped, flip it back. This prevents the model from spawning in upside down next time.
-  if not Global.call("isFaceUp", rivalToken) then
-    rivalToken.flip()
+  if not Global.call("isFaceUp", rivalCard) then
+    rivalCard.flip()
   end
 
   -- Remove this chip from the active list.
@@ -4043,17 +4049,17 @@ function recallRival()
     function()
       -- Put the rival token back in its pokeball.
       local pokeball = getObjectFromGUID(pokeballGUID)
-      pokeball.putObject(rivalToken)
+      pokeball.putObject(rivalCard)
     end,
     function() -- Condition function
-      return rivalToken.resting
+      return rivalCard.resting
     end,
     2,
     -- Timeout function.
     function()
       -- Put the rival token back in its pokeball.
       local pokeball = getObjectFromGUID(pokeballGUID)
-      pokeball.putObject(rivalToken)
+      pokeball.putObject(rivalCard)
     end
   )
 
@@ -4815,21 +4821,39 @@ function updateTypeEffectiveness()
     return
   end
 
-  -- Determine if any teratypes are active.
+  -- Determine if any teratypes are active. Stellar is special since it does not change own type.
+  -- TODO: add this to the mathy parts. :)
   local attackerTera = nil
-  if attackerPokemon.teraActive then attackerTera = attackerPokemon.teraType end
+  local attackerStellar = false
+  if attackerPokemon.teraActive == true then 
+    if attackerPokemon.teraType ~= "Stellar" then
+      attackerTera = attackerPokemon.teraType
+      attackerPokemon.stellar = false
+    else
+      attackerStellar = true
+      attackerPokemon.stellar = true
+    end
+  end
   local defenderTera = nil
-  if defenderPokemon.teraActive then defenderTera = defenderPokemon.teraType end
+  local defenderStellar = false
+  if defenderPokemon.teraActive == true then 
+    if defenderPokemon.teraType ~= "Stellar" then
+      defenderTera = defenderPokemon.teraType
+      defenderPokemon.stellar = false
+    else
+      defenderStellar = true
+      defenderPokemon.stellar = true
+    end
+  end
 
   -- Attacker
-  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, defenderPokemon.types, defenderTera)
+  calculateEffectiveness(ATTACKER, attackerPokemon.movesData, attackerStellar, defenderPokemon.types, defenderTera)
 
   -- Defender
-  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, attackerPokemon.types, attackerTera)
+  calculateEffectiveness(DEFENDER, defenderPokemon.movesData, defenderStellar, attackerPokemon.types, attackerTera)
 end
 
-
-function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera_type)
+function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, opponent_tera_type)
   if isAttacker then
     moveText = atkMoveText
     textZPos = -8.65
@@ -4843,7 +4867,6 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
   local buttonWidths = (numMoves*3.2) + ((numMoves-1) + 0.5)
 
   for i=1, 3 do
-
     local moveText = getObjectFromGUID(moveText[i])
     moveText.TextTool.setValue(" ")
 
@@ -4859,11 +4882,10 @@ function calculateEffectiveness(isAttacker, moves, opponent_types, opponent_tera
         moveData.status = DISABLED
       else
         -- If move had NEUTRAL effect, don't calculate Effectiveness
-        -- TODO: add this logic to the mathy part as well. :)
         local calculateEffectiveness = true
         if moveData.effects ~= nil then
           for i=1, #moveData.effects do
-              if moveData.effects[i].name == status_ids.neutral then
+              if moveData.effects[i].name == status_ids.neutral or is_stellar then
                 calculateEffectiveness = false
                 moveText.TextTool.setValue("Neutral")
                 break
@@ -5593,6 +5615,7 @@ function setNewPokemon(data, newPokemonData, pokemonGUID)
   -- Tera info.
   data.teraType = newPokemonData.teraType
   data.teraActive = newPokemonData.teraActive
+  data.stellar = newPokemonData.stellar
 
   -- Model info.
   data.model_GUID = newPokemonData.model_GUID

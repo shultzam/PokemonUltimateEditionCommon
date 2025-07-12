@@ -86,7 +86,7 @@
                     <Option>Alola</Option>
                     <Option>Galar</Option>
                     <Option>Paldea</Option>
-                    <!-- <Option>Ransei</Option> -->
+                    <Option>Ransei</Option>
                     <Option>Orange Islands</Option>
                     <Option>Random</Option>
                 </Dropdown>

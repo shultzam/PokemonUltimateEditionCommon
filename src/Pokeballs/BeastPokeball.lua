@@ -127,3 +127,8 @@ end
 function getKantoLocations()
   return kantoLocations
 end
+
+-- Ensure tokens are always random.
+function onCollisionExit(object)
+  self.shuffle()
+end

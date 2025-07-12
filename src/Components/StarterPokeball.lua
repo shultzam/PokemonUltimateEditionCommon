@@ -805,7 +805,30 @@ local regionToGenNumberLookupTable = {
     ["Galar"] = 8,
     ["Paldea"] = 9,
     ["Orange Islands"] = 10
-  }
+}
+
+function get_ransei_badge_tint(gym_index)
+    if gym_index == 1 then
+        return {31/255, 95/255, 37/255}
+    elseif gym_index == 2 then
+        return {119/255, 153/255, 76/255}
+    elseif gym_index == 3 then
+        return {154/255, 140/255, 93/255}
+    elseif gym_index == 4 then
+        return {71/255, 78/255, 105/255}
+    elseif gym_index == 5 then
+        return {193/255, 190/255, 181/255}
+    elseif gym_index == 6 then
+        return {89/255, 163/255, 191/255}
+    elseif gym_index == 7 then
+        return {70/255, 69/255, 76/255}
+    elseif gym_index == 8 then
+        return {83/255, 10/255, 115/255}
+    end
+
+    print("WARNING: received gym index " .. tostring(gym_index) .. " in get_ransei_badge_tint()")
+    return "White"
+end
 
 function setup_map(selected_map_name, leadersGen, pokemonGens)
     -- Get a handle on the Map Manager.
@@ -1077,6 +1100,9 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
                         image_secondary = badge_info[gym_index].url,
                     }
                 )
+
+                -- Apply custom badge tint.
+                badge.setColorTint(get_ransei_badge_tint(gym_index))
             end
 
             -- Name the badge.

@@ -7,6 +7,7 @@ local RESERVE_TM_LOCATION = { { position = {80, 1.21, -21.73}, rotation = {0, 18
 
 -- Deck GUIDs.
 PBALDECK = "e12530"
+LEVODECK = "fdf0f6"
 TERADECK = "0b44ce"
 TENHDECK = "2f2ce0"
 ZCRYDECK = "81cc95"
@@ -81,7 +82,7 @@ local map_data = {
       { type = "Event",   position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-27.30, 1.21, -21.73}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-13.60, 1.07, 22.68},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-7.59, 1.07, 22.68},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-1.69, 1.07, 22.68},   rotation = {0, 180, 180} }, -- Tera Types
@@ -141,7 +142,7 @@ local map_data = {
       { type = "Event",   position = {25.53, 1.40, -21.62},  rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-35.01, 1.21, -21.42}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-29.06, 1.69, -21.37}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-29.06, 1.69, -21.37}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-13.58, 1.07, 21.97},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-7.63, 1.07, 22.06},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-1.65, 1.07, 22.04},   rotation = {0, 180, 180} }, -- Tera Types
@@ -200,7 +201,7 @@ local map_data = {
       { type = "Event",   position = {35.19, 1.40, -20.12},  rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {3.87, 1.21, -21.36},   rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-33.03, 1.69, -21.36}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-33.03, 1.69, -21.36}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {23.47, 1.07, 22.61},   rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {29.52, 1.07, 22.58},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {35.46, 1.07, 22.61},   rotation = {0, 180, 180} }, -- Tera Types
@@ -262,7 +263,7 @@ local map_data = {
       { type = "Event",   position = {33.56, 1.43, -21.57},  rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-35.06, 1.21, -21.28}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-29.08, 1.69, -21.34}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-29.08, 1.69, -21.34}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-21.74, 1.07, 22.09},  rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-15.78, 1.07, 22.09},  rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-9.78, 1.07, 22.09},   rotation = {0, 180, 180} }, -- Tera Types
@@ -321,7 +322,7 @@ local map_data = {
       { type = "Event",   position = {26.37, 1.40, -21.99},  rotation = {0, 180, 180} },
     },
     deck_locations = { { guid = PBALDECK, position = {-6.69, 1.21, -21.87},  rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-36.85, 1.69, -21.92}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-36.85, 1.69, -21.92}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {17.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {23.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {29.00, 1.07, 31.00},   rotation = {0, 180, 180} }, -- Tera Types
@@ -381,7 +382,7 @@ local map_data = {
       { type = "Event",   position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-32.28, 1.21, -21.83}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-29, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-23, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-17, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Tera Types
@@ -443,7 +444,7 @@ local map_data = {
       { type = "Event",   position = {-0.75, 1.4, -21.83},   rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-32.28, 1.21, -21.83}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-26.76, 1.1, -21.83},  rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-29, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-23, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-17, 1.07, 22.3},      rotation = {0, 180, 180} }, -- Tera Types
@@ -509,7 +510,7 @@ local map_data = {
       { type = "Event",   position = {36.50, 1.40, -22.50},  rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-29.50, 1.21, 22.0},   rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-18.46, 1.69, 22.0},   rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-18.46, 1.69, 22.0},   rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = "b66e98", position = {-23.98, 1.10, 22.0},   rotation = {0, 180, 180} }, -- Boost Items
                        { guid = ZCRYDECK, position = {0.0, 1.07, 22.0},      rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {5.52, 1.07, 22.0},     rotation = {0, 180, 180} }, -- Type Boosters
@@ -568,7 +569,7 @@ local map_data = {
       { type = "Event",   position = {35.40, 1.4, -22.16},   rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-27.30, 1.21, -21.73}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-33.17, 1.70, -21.80}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {28.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {34.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {40.5, 1.07, 22.68},    rotation = {0, 180, 180} }, -- Tera Types
@@ -637,7 +638,7 @@ local map_data = {
       { type = "Event",   position = {-25.00, 1.40, -21.94}, rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-19.45, 1.21, 21.69}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-30.24, 1.70, 21.69}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-30.24, 1.70, 21.69}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = ZCRYDECK, position = {-14.30, 1.07, 21.69}, rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {-8.96, 1.07, 21.69},  rotation = {0, 180, 180} }, -- Type Boosters
                        { guid = TERADECK, position = {-3.77, 1.07, 21.69},  rotation = {0, 180, 180} }, -- Tera Types
@@ -700,7 +701,7 @@ local map_data = {
       { type = "Event",   position = {35.40, 1.40, -22.16},  rotation = {0, 180, 180} }
     },
     deck_locations = { { guid = PBALDECK, position = {-37.70, 1.21, -22.00}, rotation = {0, 180, 180} }, -- Pokeballs
-                       { guid = "fdf0f6", position = {-26.30, 1.69, -22.00}, rotation = {0, 180, 180} }, -- Legendary Items
+                       { guid = LEVODECK, position = {-26.30, 1.69, -22.00}, rotation = {0, 180, 180} }, -- Legendary Items
                        { guid = "b66e98", position = {-32.00, 1.10, -22.00}, rotation = {0, 180, 180} }, -- Boost Items
                        { guid = ZCRYDECK, position = {29.00, 1.07, 22.00},   rotation = {0, 180, 180} }, -- Z-Crystals
                        { guid = TENHDECK, position = {35.00, 1.07, 22.00},   rotation = {0, 180, 180} }, -- Type Boosters

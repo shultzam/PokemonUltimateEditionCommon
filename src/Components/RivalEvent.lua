@@ -55,6 +55,7 @@ local REGION_TABLE = {
   "Alola",
   "Galar",
   "Paldea",
+  "Ransei",
   "Orange Islands"
 }
 
@@ -88,7 +89,6 @@ function onLoad(saved_data)
   moveAllButtons(pokemonData ~= nil)
 
   -- Model button functionality.
-  self.tooltip = false
   self.createButton({ --Apply button
       label="3D Model Options", click_function="click_model_options",
       function_owner=self,
