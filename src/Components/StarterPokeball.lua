@@ -283,10 +283,12 @@ function beginSetup2(params)
         destroyObject(map_manager)
     end
 
-    -- Get a handle on the Map Manager and delete it.
-    local deck_builder = getObjectFromGUID(deckBuilderGuid)
-    if deck_builder then
-        destroyObject(deck_builder)
+    -- Get a handle on the Deck Builder and delete it (unless gym boosters are enabled).
+    if params.gym_boosters ~= true then
+        local deck_builder = getObjectFromGUID(deckBuilderGuid)
+        if deck_builder then
+            destroyObject(deck_builder)
+        end
     end
 
     -- Check if we need to collect Beast Pokemon.
@@ -345,7 +347,7 @@ function beginSetup2(params)
         setupPokeballs(customEvoPokeballs, evoPokeballs)
     end
 
-    -- TODO: Get evo tokens we care about and throw them into the evo pokeballs.
+    -- Get evo tokens we care about and throw them into the evo pokeballs.
     handle_evo_tokens(params.selectedGens)
 
     -- Delete Saves on starting

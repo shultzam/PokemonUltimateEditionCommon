@@ -29,11 +29,11 @@ CARDS = {
   boost_item = { name = "Boost Item", cost = 4, desc = "- Boost Item: Draw a battle booster item at random." },
   vitamin = { name = "Vitamin", cost = 30, desc = "- Vitamin: Add 1 to the final attack value of the attached Pokémon." },
   -- legendary_evo_item (12)
-  tm = { name = "Technical Machine", cost = 12, desc = "- Technical Machine: Draw 3 cards from the TM deck. Select 1 to keep, then shuffle the other 2 back into the deck." },
+  tm = { name = "Technical Machine", cost = 16, desc = "- Technical Machine: Draw 3 cards from the TM deck. Select 1 to keep, then shuffle the other 2 back into the deck." },
   type_enhancer = { name = "Type Enhancer", cost = 12, desc = "- Type Enhancer: Draw 3 cards from the Type-Enhancer deck. Select 1 to keep and then place the rest on the bottom of the deck." },
   mega_bracelet = { name = "Mega Bracelet", cost = 10, desc = "- Mega Bracelet: In a battle round, prior to either side selecting attacks, you may Mega Evolve your active Pokémon if it has a Mega Stone attached. You may only Mega Evolve one Pokémon per battle." },
   mega_stone = { name = "Mega Stone", cost = 4, desc = "- Mega Stone: You may only attach this to Pokémon capable of Mega Evolution. If this Pokémon Mega Evolves, it returns to its original state at the end of battle. Level gains for this Pokémon are given relative to its original state." },
-  z_ring = { name = "Z-Ring", cost = 14, desc = "- Z-Ring: Draw 3 cards from the Z-Ring deck. Add 1 to your hand and then place the rest on the bottom of the deck." },
+  z_ring = { name = "Z-Ring", cost = 12, desc = "- Z-Ring: Draw 3 cards from the Z-Ring deck. Add 1 to your hand and then place the rest on the bottom of the deck." },
   dynamax_band = { name = "Dynamax Band", cost = 20, desc = "- Dynamax Band: In a battle round, prior to selecting attacks, you may Dynamax your non-Mega Evolved active Pokémon. Dynamaxed Pokémon moves become Max Moves (refer to Max Moves sheet for full rules) for the rest of the battle. Pokémon with the Gigantamax sysmbol may Gigantamax instead. They change into their Gigantamax state for the battle, then return to their original state. You may only Dynamax or Gigantamax once per battle." },
   tera_orb = { name = "Tera Orb", cost = 18, desc = "- Tera Orb: Draw 3 cards from the Tera-Type deck. Add 1 to your hand and then place the rest on the bottom of the deck."},
   running_shoes = { name = "Running Shoes", cost = 4, desc = "- Running Shoes: Play this card to add 1 or 2 to your movement roll." },

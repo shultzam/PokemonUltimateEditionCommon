@@ -60,6 +60,7 @@ local statusGUID = {burned="3b8a3d", poisoned="26c816", sleep="00dbc5", paralyze
 boosterDeckGUID = "b66e98"
 BASE_HEALTH_OBJECT_GUID = "5ab909"
 RECORD_KEEPER_GUID = "ab319d"
+DECK_BUILDER_GUID = "9f7796"
 
 local levelDiceXOffset = 0.205
 local levelDiceZOffset = 0.13
@@ -369,7 +370,7 @@ function onLoad(saved_data)
     end
 
     -- Create Arena Buttons
-    self.createButton({label="TEAM", click_function="seeAttackerRack",function_owner=self, tooltip="See Team",position={teamAtkPos.x, 1000, teamAtkPos.z}, height=300, width=720, font_size=200})
+    self.createButton({label="FAINT", click_function="recallAndFaintAttackerPokemon",function_owner=self, tooltip="Recall and Faint Pokémon",position={teamAtkPos.x, 1000, teamAtkPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="MOVES", click_function="seeMoveRules",function_owner=self, tooltip="Show Move Rules",position={movesAtkPos.x, 1000, movesAtkPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="RECALL", click_function="recallAtkArena",function_owner=self, tooltip="Recall Pokémon",position={recallAtkPos.x, 1000, recallAtkPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="+", click_function="increaseAtkArena",function_owner=self, tooltip="Increase Level",position={incLevelAtkPos.x, 1000, incLevelAtkPos.z}, height=300, width=240, font_size=200})
@@ -383,7 +384,7 @@ function onLoad(saved_data)
     self.createButton({label="Move 3", click_function="attackMove3", function_owner=self, position={-35, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="CONFIRM", click_function="confirmAttack", function_owner=self, position={atkConfirmPos.x, 1000, atkConfirmPos.z}, height=300, width=1600, font_size=200})
 
-    self.createButton({label="TEAM", click_function="seeDefenderRack",function_owner=self, tooltip="See Team",position={teamDefPos.x, 1000, teamDefPos.z}, height=300, width=720, font_size=200})
+    self.createButton({label="FAINT", click_function="recallAndFaintDefenderPokemon",function_owner=self, tooltip="Recall and Faint Pokémon",position={teamDefPos.x, 1000, teamDefPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="MOVES", click_function="seeMoveRules",function_owner=self, tooltip="Show Move Rules",position={movesDefPos.x, 1000, movesDefPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="RECALL", click_function="recallDefArena",function_owner=self, tooltip="Recall Pokémon",position={recallDefPos.x, 1000, recallDefPos.z}, height=300, width=720, font_size=200})
     self.createButton({label="+", click_function="increaseDefArena",function_owner=self, tooltip="Increase Level",position={incLevelDefPos.x, 1000, incLevelDefPos.z}, height=300, width=240, font_size=200})
@@ -595,8 +596,8 @@ function flipGymLeader()
     discardBooster(DEFENDER)
   end
 
-  -- Check if this Gym Leader Boosters gets a booster.
-  local booster_chance = Global.call("getGymLeaderBoostersChance")
+  -- Check if this Gym Leader gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
   if math.random(1,100) > (100 - booster_chance) then
     getBooster(DEFENDER, nil)
   end
@@ -801,6 +802,17 @@ end
 function flipRivalPokemon()
   if attackerData.type ~= RIVAL then
     return
+  end
+
+  -- Check if we had a Booster and discard it.
+  if attackerData.boosterGuid ~= nil then
+    discardBooster(ATTACKER)
+  end
+
+  -- Check if this Rival gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
+  if math.random(1,100) > (100 - booster_chance) then
+    getBooster(ATTACKER, nil)
   end
 
   -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -1130,7 +1142,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
     wildPokemonColorIndex = nil
     
     -- Reset the buttons.
-    self.editButton({index=13, position={teamDefPos.x, 1000, teamDefPos.z}, click_function="seeDefenderRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=13, position={teamDefPos.x, 1000, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
     self.editButton({index=14, position={movesDefPos.x, 1000, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
     self.editButton({index=15, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
   end
@@ -2109,7 +2121,7 @@ function selectMove(index, isAttacker, isRandom)
     else
       pokemonData.attackValue.item = 2
     end
-  elseif pokemon.type_enhancer == moveData.type and pokemonData.attackValue.movePower > 0 then
+  elseif (pokemon.type_enhancer == moveData.type and pokemonData.attackValue.movePower > 0) or (pokemon.type_enhancer ~= nil and moveData.name == "Judgement") then
     -- Valid type booster.
     pokemonData.attackValue.item = 1
   end
@@ -2134,27 +2146,40 @@ function selectMove(index, isAttacker, isRandom)
       end
     end
   end
-  
-  -- Get the typeData
-  local typeData = Global.call("GetTypeDataByName", moveData.type)
 
+  -- Check for Stellar.
   local is_stellar = false
   if pokemon.teraActive == true and pokemon.teraType == "Stellar" then
     is_stellar = true
   end
 
-  -- If move had NEUTRAL effect, don't calculate Effectiveness
+  -- If this move is Judgement we need to change the type if there is a Type Enhancer.
+  if moveData.name == "Judgement" then
+    local pokemon_data = isAttacker and attackerPokemon or defenderPokemon
+    local enhancer_type = pokemon_data.type_enhancer
+    if enhancer_type ~= nil then
+      moveData.type = tostring(enhancer_type)
+    end
+  end
+
+  -- If move had NEUTRAL effect, don't calculate effectiveness.
   local calculateEffectiveness = true
   if moveData.effects ~= nil then
     for i=1, #moveData.effects do
-        if moveData.effects[i].name == status_ids.neutral or is_stellar then
+        if moveData.effects[i].name == status_ids.neutral then
           calculateEffectiveness = false
           break
         end
     end
   end
-
+  -- If a Pokemon is Stellar TeraTyped, they don't get effectiveness.
+  if calculateEffectiveness and is_stellar then 
+    calculateEffectiveness = false
+  end
+  
+  -- Get the typeData and calculate effectiveness.
   if calculateEffectiveness then
+    local typeData = Global.call("GetTypeDataByName", moveData.type)
     pokemonData.attackValue.effectiveness = calculateMoveEffectiveness(moveData, typeData, opponent_types)
   end
 
@@ -2862,7 +2887,7 @@ end
 function increaseAtkArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == attackerData.playerColor then
-        passParams = {player = playerColour, arenaAttack = true, zPos = -0.1, modifier = 1}
+        local passParams = {player = playerColour, arenaAttack = true, zPos = -0.1, modifier = 1}
         increaseArena(passParams)
     end
 end
@@ -2870,7 +2895,7 @@ end
 function decreaseAtkArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == attackerData.playerColor then
-        passParams = {player = playerColour, arenaAttack = true, zPos = -0.1, modifier = -1}
+        local passParams = {player = playerColour, arenaAttack = true, zPos = -0.1, modifier = -1}
         decreaseArena(passParams)
     end
 end
@@ -2878,7 +2903,7 @@ end
 function increaseDefArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == defenderData.playerColor then
-        passParams = {player = playerColour, arenaAttack = false, zPos = -0.1, modifier = 1}
+        local passParams = {player = playerColour, arenaAttack = false, zPos = -0.1, modifier = 1}
         increaseArena(passParams)
     end
 end
@@ -2886,7 +2911,7 @@ end
 function decreaseDefArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == defenderData.playerColor then
-        passParams = {player = playerColour, arenaAttack = false, zPos = -0.1, modifier = -1}
+        local passParams = {player = playerColour, arenaAttack = false, zPos = -0.1, modifier = -1}
         decreaseArena(passParams)
     end
 end
@@ -2894,7 +2919,7 @@ end
 function evolveAtk(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == attackerData.playerColor then
-        passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
         evolve(passParams)
     end
 end
@@ -2902,7 +2927,7 @@ end
 function evolveTwoAtk(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == attackerData.playerColor then
-        passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
         evolveTwo(passParams)
     end
 end
@@ -2910,7 +2935,7 @@ end
 function evolveDef(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == defenderData.playerColor then
-        passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
         evolve(passParams)
     end
 end
@@ -2918,7 +2943,7 @@ end
 function evolveTwoDef(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == defenderData.playerColor then
-        passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
         evolveTwo(passParams)
     end
 end
@@ -2926,17 +2951,73 @@ end
 function recallAtkArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == attackerData.playerColor then
-        passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
         recallArena(passParams)
+        return true
     end
+    return false
 end
 
 function recallDefArena(obj, player_clicker_color)
     local playerColour = player_clicker_color
     if playerColour == defenderData.playerColor then
-        passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
+        local passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
         recallArena(passParams)
+        return true
     end
+    return false
+end
+
+function recallAndFaintAttackerPokemon(obj, player_clicker_color)
+  -- Get the attacker token GUID.
+  local token = nil
+  if attackerPokemon.pokemonGUID ~= nil then
+    token = getObjectFromGUID(attackerPokemon.pokemonGUID)
+  end
+
+  -- Try to recall the attacker token.
+  if recallAtkArena(obj, player_clicker_color) then
+    -- Wait until the token is idle and then flip it over.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Flip the token.
+        token.flip()
+      end,
+      function() -- Condition function
+        return token ~= nil and token.resting
+      end,
+      2,
+      function() -- Timeout function.
+        print("Timed out waiting to flip token")
+      end
+    )
+  end
+end
+
+function recallAndFaintDefenderPokemon(obj, player_clicker_color)
+  -- Get the defender token GUID.
+  local token = nil
+  if defenderPokemon.pokemonGUID ~= nil then
+    token = getObjectFromGUID(defenderPokemon.pokemonGUID)
+  end
+
+  -- Try to recall the defender token.
+  if recallDefArena(obj, player_clicker_color) then
+    -- Wait until the token is idle and then flip it over.
+    Wait.condition(
+      function() -- Conditional function.
+        -- Flip the token.
+        token.flip()
+      end,
+      function() -- Condition function
+        return token ~= nil and token.resting
+      end,
+      2,
+      function() -- Timeout function.
+        print("Timed out waiting to flip token")
+      end
+    )
+  end
 end
 
 function addAtkStatus(obj, player_clicker_color)
@@ -3072,42 +3153,42 @@ end
 
 -- Move Camera Buttons
 
-function seeAttackerRack(obj, player_clicker_color)
-  viewTeam(obj, player_clicker_color, attackerData.playerColor)
-end
+-- function seeAttackerRack(obj, player_clicker_color)
+--   viewTeam(obj, player_clicker_color, attackerData.playerColor)
+-- end
 
-function seeDefenderRack(obj, player_clicker_color)
-  viewTeam(obj, player_clicker_color, defenderData.playerColor)
-end
+-- function seeDefenderRack(obj, player_clicker_color)
+--   viewTeam(obj, player_clicker_color, defenderData.playerColor)
+-- end
 
-function viewTeam(obj, playerClicker, team)
-  if team == "Blue" then
-    showPosition = {x=-21.50,y=0.14,z=-48}
-    camYaw = 0
-  elseif team == "Green" then
-    showPosition = {x=-65,y=0.96,z=-21.5}
-    camYaw = 90
-  elseif team == "Orange" then
-    showPosition = {x=65,y=0.96,z=21.5}
-    camYaw = 270
-  elseif team == "Purple" then
-    showPosition = {x=65,y=0.96,z=-21.5}
-    camYaw = 270
-  elseif team == "Red" then
-    showPosition = {x=21.50,y=0.14,z=-48}
-    camYaw = 0
-  elseif team == "Yellow" then
-    showPosition = {x=-65,y=0.96,z=21.5}
-    camYaw = 90
-  end
+-- function viewTeam(obj, playerClicker, team)
+--   if team == "Yellow" then
+--     showPosition = {x=-21.50,y=0.14,z=-48}
+--     camYaw = 0
+--   elseif team == "Green" then
+--     showPosition = {x=-65,y=0.96,z=-21.5}
+--     camYaw = 90
+--   elseif team == "Orange" then
+--     showPosition = {x=65,y=0.96,z=21.5}
+--     camYaw = 270
+--   elseif team == "Purple" then
+--     showPosition = {x=65,y=0.96,z=-21.5}
+--     camYaw = 270
+--   elseif team == "Red" then
+--     showPosition = {x=21.50,y=0.14,z=-48}
+--     camYaw = 0
+--   elseif team == "Blue" then
+--     showPosition = {x=-65,y=0.96,z=21.5}
+--     camYaw = 90
+--   end
 
-  Player[playerClicker].lookAt({
-    position = showPosition,
-    pitch    = 60,
-    yaw      = camYaw,
-    distance = 25
-  })
-end
+--   Player[playerClicker].lookAt({
+--     position = showPosition,
+--     pitch    = 60,
+--     yaw      = camYaw,
+--     distance = 25
+--   })
+-- end
 
 function showArena(passParams)
   local playerColour = passParams.player_clicker_color
@@ -3123,7 +3204,7 @@ function seeMoveRules(obj, player_clicker_color)
     local playerColour = player_clicker_color
     local showPosition
 
-    if playerColour == "Yellow" then
+    if playerColour == "Blue" then
         showPosition = {x=0.02,y=0.24,z=-55.5}
     elseif playerColour == "Green" then
         showPosition = {x=-72,y=0.14,z=0.75}
@@ -3133,7 +3214,7 @@ function seeMoveRules(obj, player_clicker_color)
         showPosition = {x=72,y=0.14,z=0.88}
     elseif playerColour == "Red" then
         showPosition = {x=0.02,y=0.24,z=-55.5}
-    elseif playerColour == "Blue" then
+    elseif playerColour == "Yellow" then
         showPosition = {x=-72,y=0.14,z=0.75}
     end
 
@@ -3388,8 +3469,8 @@ function sendToArenaGym(params)
 
   inBattle = true
 
-  -- Check if this Gym Leader Boosters gets a booster.
-  local booster_chance = Global.call("getGymLeaderBoostersChance")
+  -- Check if this Gym Leader gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
   if math.random(1,100) > (100 - booster_chance) then
     getBooster(DEFENDER, nil)
   end
@@ -3705,6 +3786,12 @@ function sendToArenaRival(params)
   inBattle = true
   Global.call("PlayTrainerBattleMusic",{})
   printToAll("Rival " .. params.trainerName .. " wants to fight!", {r=246/255, g=192/255, b=15/255})
+
+  -- Check if this Rival gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
+  if math.random(1,100) > (100 - booster_chance) then
+    getBooster(ATTACKER, nil)
+  end
 
   -- Move the button.
   self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallRivalHook", label="RECALL", tooltip="Recall Rival"})
@@ -4072,6 +4159,11 @@ function recallRival()
     hideConfirmButton(ATTACKER)
     showAutoRollButtons(false)
     moveStatusButtons(false)
+  end
+
+  -- Check if we had a Booster and discard it.
+  if attackerData.boosterGuid ~= nil then
+    discardBooster(ATTACKER)
   end
 
   -- Check if HP Rule 2 is enabled.
@@ -4822,7 +4914,6 @@ function updateTypeEffectiveness()
   end
 
   -- Determine if any teratypes are active. Stellar is special since it does not change own type.
-  -- TODO: add this to the mathy parts. :)
   local attackerTera = nil
   local attackerStellar = false
   if attackerPokemon.teraActive == true then 
@@ -4872,10 +4963,20 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
 
     if moves[i] ~= nil then
 
-      local moveData = moves[i]
+      local moveData = copyTable(moves[i])
+
       local xPos = -33.99 - (buttonWidths * 0.5)
       moveText.setPosition({xPos + (3.7*(i-1)), 1, textZPos})
       moveData.status = DEFAULT
+
+      -- If this move is Judgement we need to change the type if there is a Type Enhancer.
+      if moveData.name == "Judgement" then
+        local pokemon_data = isAttacker and attackerPokemon or defenderPokemon
+        local enhancer_type = pokemon_data.type_enhancer
+        if enhancer_type ~= nil then
+          moveData.type = tostring(enhancer_type)
+        end
+      end
 
       if canUseMoves == false then
         moveText.TextTool.setValue("Disabled")
@@ -4885,12 +4986,17 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
         local calculateEffectiveness = true
         if moveData.effects ~= nil then
           for i=1, #moveData.effects do
-              if moveData.effects[i].name == status_ids.neutral or is_stellar then
+              if moveData.effects[i].name == status_ids.neutral then
                 calculateEffectiveness = false
                 moveText.TextTool.setValue("Neutral")
                 break
               end
           end
+        end
+        -- If a Pokemon is Stellar TeraTyped, they don't get effectiveness.
+        if is_stellar then
+          calculateEffectiveness = false
+          moveText.TextTool.setValue("Neutral")
         end
 
         if calculateEffectiveness then
@@ -6155,8 +6261,18 @@ function showMoveButtons(isAttacker, cardMoveData)
     local tooltip = ""
 
     -- If this move is Flying Press then give a tooltip.
-    if moves[i].name == "Flying Press" then
+    if moveName == "Flying Press" then
       tooltip = "Effectiveness calculated on best outcome of Fighting/Flying"
+    elseif moveName == "Judgement" then
+      local pokemon_data = isAttacker and attackerPokemon or defenderPokemon
+      local enhancer_type = pokemon_data.type_enhancer
+      if enhancer_type ~= nil then
+        moveType = tostring(enhancer_type)
+        if moveType == "Dark" or moveType == "Ghost" or moveType == "Fighting" then
+          font_color = "White"
+        end
+        button_color = copyTable(Global.call("type_to_color_lookup", moveType))
+      end
     end
 
     self.editButton({index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color, hover_color=hover_color, tooltip=tooltip})
@@ -6190,10 +6306,10 @@ function hideConfirmButton(isAttacker)
   end
 end
 
-
+-- This function is for player-controlled trainers.
 function showAtkButtons(visible)
     local yPos = visible and 0.4 or 1000
-    self.editButton({index=0, position={teamAtkPos.x, yPos, teamAtkPos.z}, click_function="seeAttackerRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=0, position={teamAtkPos.x, yPos, teamAtkPos.z}, click_function="recallAndFaintAttackerPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
     self.editButton({index=1, position={movesAtkPos.x, yPos, movesAtkPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
     self.editButton({index=2, position={recallAtkPos.x, yPos, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL"})
     self.editButton({index=3, position={incLevelAtkPos.x, yPos, incLevelAtkPos.z}})
@@ -6209,7 +6325,7 @@ end
 
 function showDefButtons(visible)
     local yPos = visible and 0.4 or 1000
-    self.editButton({index=13, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="seeDefenderRack", label="TEAM", tooltip="See Team"})
+    self.editButton({index=13, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
     self.editButton({index=14, position={movesDefPos.x, yPos, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
     self.editButton({index=15, position={recallDefPos.x, yPos, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
     self.editButton({index=16, position={incLevelDefPos.x, yPos, incLevelDefPos.z}, click_function="increaseDefArena"})
@@ -8267,55 +8383,77 @@ function simulateRound(obj, color, alt)
 end
 
 -- Helper function to get a booster for a Gym Leader, etc.
+-- TODO: Incorporate TeraTypes to this. Including the button for user control.
 function getBooster(isAttacker, boosterName)
+  -- TODO: With the expansion of boosters, boosterName is currently not considered.
+  --       Previously, we iterated through the boosters until we found one with its name.
+  --       Now we can iterate through the booster options until we find it.
+
   -- Get a booster from a random position in the booster deck.
   local card_index = nil
   local positionTable = isAttacker and attackerPos or defenderPos
 
-  -- Get a handle on the Booster deck.
-  local boosterDeck = getObjectFromGUID(boosterDeckGUID)
-  if boosterDeck then
-    if boosterName then
-      -- Iterate through card and find one with the correct name.
-      -- TODO: This needs tested.
-      for _, card in ipairs(boosterDeck.getObjects()) do
-        if card.name == boosterName then
-          boosterDeck.takeObject({
-            card_index = card.index
-          })
-          -- Stop iterating.
-          break
-        end
-      end
-    else
-      card_index = math.random(1, #boosterDeck.getObjects())
-    end
+  -- Randomly select a card from the DeckBuilder "booster" types.
+  local deckBuilder = getObjectFromGUID(DECK_BUILDER_GUID)
+  if deckBuilder then
+    -- Get the Booster info.
+    local booster_options = deckBuilder.call("get_gym_booster_info")
+    local booster_data = copyTable(booster_options[math.random(1, #booster_options)])
 
-    -- Get the card.
-    if card_index then
-      local booster = boosterDeck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
-      if booster then
-        -- Log it.
-        local data = isAttacker and attackerData or defenderData
-        printToAll(data.trainerName .. " used a " .. booster.getName() .. "!")
+    -- Generate the card using DeckBuilder's create_card().
+    local position = copyTable(positionTable)
+    local params = { card_data=booster_data, offset=false, position={position.booster[1], 1.5, position.booster[2]}, rotation={0,180,0} }
+    local booster_guid = deckBuilder.call("create_card", params)
 
-        -- A Booster is used, add its data to the Defender Data (if applicable).
-        data.boosterGuid = booster.getGUID()
-      end
-    end
+    -- Log it and save the GUID.
+    local data = isAttacker and attackerData or defenderData
+    printToAll(data.trainerName .. " used a " .. booster_data.name .. "!")
+    data.boosterGuid = booster_guid
+  else
+    print("Failed to find Deck Builder, cannot create booster")
   end
+
+  -- Get a handle on the Booster deck.
+  -- local boosterDeck = getObjectFromGUID(boosterDeckGUID)
+  -- if boosterDeck then
+  --   if boosterName then
+  --     -- Iterate through card and find one with the correct name.
+  --     for _, card in ipairs(boosterDeck.getObjects()) do
+  --       if card.name == boosterName then
+  --         boosterDeck.takeObject({
+  --           card_index = card.index
+  --         })
+  --         -- Stop iterating.
+  --         break
+  --       end
+  --     end
+  --   else
+  --     card_index = math.random(1, #boosterDeck.getObjects())
+  --   end
+
+  --   -- Get the card.
+  --   if card_index then
+  --     local booster = boosterDeck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
+  --     if booster then
+  --       -- Log it.
+  --       local data = isAttacker and attackerData or defenderData
+  --       printToAll(data.trainerName .. " used a " .. booster.getName() .. "!")
+
+  --       -- A Booster is used, add its data to the Defender Data (if applicable).
+  --       data.boosterGuid = booster.getGUID()
+  --     end
+  --   end
+  -- end
 end
 
 -- After a Gym Leader, etc. is recalled we need to discard their booster.
 function discardBooster(isAttacker)
   local data = isAttacker and attackerData or defenderData
 
-  -- Put the booster back into the deck at a random position.
-  local boosterDeck = getObjectFromGUID(boosterDeckGUID)
+  -- Delete the booster file since we generated it for this purpose.
   local booster = getObjectFromGUID(data.boosterGuid)
-  if boosterDeck and booster then
-    boosterDeck.putObject(booster)
-    boosterDeck.shuffle()
+  if booster then
+    destroyObject(booster)
   end
   
   -- Reset the booster GUID.

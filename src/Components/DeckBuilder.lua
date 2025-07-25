@@ -54,7 +54,7 @@ CARD_INFO = {
   repel = { name="Repel", front="https://steamusercontent-a.akamaihd.net/ugc/16494352917487387415/EE7F4B50337A21C355B7449B6EB0D3DCCC4666A4/", back=CARD_BACK_URLS.default },
   revive = { name="Revive", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293151970/75665598F9D26CB6729DB215A0E62365DF1720ED/", back=CARD_BACK_URLS.default },
   running_shoes = { name="Running Shoes", front="https://steamusercontent-a.akamaihd.net/ugc/10037544696594162620/6958BA78A4FD4EA369D1C2F98674A17CD90AD1E9/", back=CARD_BACK_URLS.default },
-  shiny_charm = { name="Shiny Charm", front="https://steamusercontent-a.akamaihd.net/ugc/12176966659299453871/0E0F8909DFA6FA5588110A77909211C65E07E374/", back=CARD_BACK_URLS.default, tags = {"Item"} },
+  shiny_charm = { name="Shiny Charm", front="https://steamusercontent-a.akamaihd.net/ugc/10242531035428832915/7C5B14E611A532F2D223836D5E9008E3DE0170D8/", back=CARD_BACK_URLS.default, tags = {"Item"} },
   technical_machine = { name="Technical Machine", front="https://steamusercontent-a.akamaihd.net/ugc/14070320069017210787/6462036C87970912220682DB72786063F18B85F3/", back=CARD_BACK_URLS.default },
   tera_orb = { name="Tera Orb", front="https://steamusercontent-a.akamaihd.net/ugc/12423817305788187831/82C21F68BE71A45168FF478AEF5235DE84A6BD48/", back=CARD_BACK_URLS.default },
   treasure = { name="Treasure", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293152301/7BC580A33FCF3D63AFBE569DD471B45BD2AA0394/", back=CARD_BACK_URLS.default },
@@ -252,14 +252,41 @@ TYPE_ENHANCER_DECK = {}
 -- Z-Crystals deck used across all maps.
 Z_CRYSTALS_DECK = {}
 
+-- Cards available to be gym boosters.
+-- TODO: Incorporate TeraTypes, etc. to this.
+GYM_BOOSTERS_INFO = {
+  -- Attach.
+  CARD_INFO.zoom_lens,
+  CARD_INFO.razor_claw,
+  CARD_INFO.eviolite,
+  CARD_INFO.wide_lens,
+  CARD_INFO.kings_rock,
+  CARD_INFO.vitamin,
+  CARD_INFO.quick_claw,
+  CARD_INFO.leftovers,
+  CARD_INFO.berry,
+  CARD_INFO.weather_rock,
+  CARD_INFO.potion,
+
+  -- Boosters.
+  CARD_INFO.x_attack,
+  CARD_INFO.x_defense,
+  CARD_INFO.x_accuracy,
+  CARD_INFO.dire_hit,
+  CARD_INFO.guard_spec,
+}
+
 --------------------------------------------
 -- Functions
 --------------------------------------------
 
 -- Helper function used to create a custom card.
-function create_card(params, card_data)
+function create_card(params)
   -- Spawn a base card. The offset helps the deck get auto-shuffled.
-  local offset = math.random(10, 26) * 0.1
+  local offset = 0
+  if params.offset == true then
+    offset = math.random(10, 45) * 0.1
+  end
   local card = spawnObject(
     {
       type = "CardCustom",
@@ -274,21 +301,25 @@ function create_card(params, card_data)
   card.setCustomObject(
     {
       type = 0,   -- Rounded Rectangle
-      face = card_data.front,
-      back = card_data.back,
+      face = params.card_data.front,
+      back = params.card_data.back,
       sideways = false
     }
   )
 
   -- Name the item card.
-  card.setName(card_data.name)
+  card.setName(params.card_data.name)
 
   -- Assign the tags, if applicable.
+  local card_data = params.card_data
   if card_data.tags ~= nil then
     for tag_index=1, #card_data.tags do
       card.addTag(card_data.tags[tag_index])
     end
   end
+
+  -- Return the card GUID.
+  return card.getGUID()
 end
 
 -- Helper function to build a standard item card deck.
@@ -321,7 +352,10 @@ function build_card_deck(params)
 
     -- We need to spawn a set count of this card.
     for card_index=1, deck[index].count do
-      create_card(params, card_data)
+      local card_params = copyTable(params)
+      card_params.card_data = card_data
+      card_params.offset = true
+      create_card(card_params)
     end
   end
 
@@ -333,7 +367,10 @@ function build_card_deck(params)
 
     -- We need to spawn a set count of this card.
     for card_index=1, map_item_cards[index].count do
-      create_card(params, map_card_data)
+      local card_params = copyTable(params)
+      card_params.card_data = map_card_data
+      card_params.offset = true
+      create_card(card_params)
     end
   end
 
@@ -344,7 +381,10 @@ function build_card_deck(params)
 
     -- We need to spawn a set count of this card.
     for card_index=1, custom_card_data[index].count do
-      create_card(params, custom_card_data)
+      local card_params = copyTable(params)
+      card_params.card_data = custom_card_data
+      card_params.offset = true
+      create_card(card_params)
     end
   end
 end
@@ -359,6 +399,11 @@ function get_event_card_config()
   return STANDARD_EVENT_DECK
 end
 
+-- Helper function to get booster info.
+function get_gym_booster_info()
+  return GYM_BOOSTERS_INFO
+end
+
 -- Helper function to print a table.
 function dump_table(o)
   if type(o) == 'table' then
@@ -371,4 +416,15 @@ function dump_table(o)
   else
       return tostring(o)
   end
+end
+
+function copyTable (original)
+  local copy = {}
+	for k, v in pairs(original) do
+		if type(v) == "table" then
+			v = copyTable(v)
+		end
+		copy[k] = v
+	end
+	return copy
 end
