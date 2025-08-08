@@ -1444,7 +1444,7 @@ gen5PokemonData =
   { name="Swanna",          level=5, types={ "Water", "Flying" }, moves={ "Water Pulse", "Air Slash" }, guids={ "e43f99", "0cc3e9" }, model_GUID="653e11", pokedex=581 },
   { name="Vanillite",       level=2, types={ "Ice" },      moves={ "Icicle Spear", "Astonish" },       guids={ "746959" },                     evoData={ { cost=2, ball=BLUE, gen=5, guids={ "67e645" }, model_GUID="aa33f1", spawn_effect="Physical Attack" } }, model_GUID="a60d6e", pokedex=582 },
   { name="Vanillish",       level=4, types={ "Ice" },      moves={ "Mirror Shot", "Icy Wind" },        guids={ "a2fe81", "67e645" },           evoData={ { cost=2, ball=RED, gen=4, guids={ "6f598b", "98f88f" }, model_GUID="7abd8f" } }, model_GUID="aa33f1", spawn_effect="Physical Attack", pokedex=583 },
-  { name="Vanilluxe",       level=6, types={ "Ice" },      moves={ "Mirror Coat", "Blizzard" },        guids={ "642461", "6f598b", "98f88f" }, model_GUID="7abd8f", pokedex=584 },
+  { name="Vanilluxe",       level=6, types={ "Ice" },      moves={ "Mirror Coat", "Freeze-Dry" },      guids={ "642461", "6f598b", "98f88f" }, model_GUID="7abd8f", pokedex=584 },
   { name="Spring Deerling", level=2, types={ "Normal", "Grass" }, moves={ "Camouflage", "Tackle" },    guids={ "7fe6be" },                     evoData={ { cost=2, ball=YELLOW, gen=5, guids={ "f5963d" }, model_GUID="9b9805" } }, model_GUID="fe766f", ball=PINK, pokedex=585 },
   { name="Spring Sawsbuck", level=4, types={ "Normal", "Grass" }, moves={ "Double-Edge", "Horn Leech" }, guids={ "2a61be", "f5963d" }, model_GUID="9b9805", ball=YELLOW, pokedex=586 },
   { name="Autumn Deerling", level=2, types={ "Normal", "Grass" }, moves={ "Sand Attack", "Tackle" },   guids={ "9ce73b" },                     evoData={ { cost=2, ball=YELLOW, gen=5, guids={ "1f9d13" }, model_GUID="8aaef9" } }, model_GUID="aa4a1c", ball=PINK, pokedex=585 },
@@ -1985,7 +1985,7 @@ gen9PokemonData =
   { name="Tadbulb",       level=2, types={ "Electric" }, moves={ "Thunder Shock", "Mud Slap" },     guids={ "fc24d2" }, evoData={ { cost=1, ball=BLUE, gen=9, guids={ "7dbae8" } } }, model_GUID="cfebba", offset={x=0, y=0.05, z=0}, pokedex=938 },   -- Needs Model when available
   { name="Bellibolt",     level=3, types={ "Electric" }, moves={ "Sucker Punch", "Discharge" },  guids={ "d11554", "7dbae8" }, model_GUID="7753e7", custom_scale=0.8, offset={x=0, y=0.03, z=0}, pokedex=939 },  -- Needs Model when available 
   { name="Wattrel",       level=2, types={ "Electric", "Flying" }, moves={ "Growl", "Peck" },    guids={ "388592" },  evoData={ { cost=2, ball=BLUE, gen=9, guids={ "a10303" } } }, model_GUID="a285c1", offset={x=0, y=0.05, z=0}, pokedex=940 },
-  { name="Kilowattrel",   level=4, types={ "Electric", "Flying" }, moves={ "Dual Wingbeat", "Spark" },    guids={ "81d760", "a10303" }, model_GUID="af9df4", offset={x=0, y=0.05, z=0}, pokedex=941 },
+  { name="Kilowattrel",   level=4, types={ "Electric", "Flying" }, moves={ "Dual Wingbeat", "Spark" },    guids={ "81d760", "a10303" }, model_GUID="af9df4", offset={x=0, y=0.15, z=0}, pokedex=941 },
   { name="Maschiff",      level=2, types={ "Dark" }, moves={ "Bite", "Roar" }, guids={ "8cb576" }, evoData={ { cost=2, ball=BLUE, gen=9, guids={ "41dfa5" } } }, model_GUID="33b41b", offset={x=0, y=0.08, z=0}, pokedex=942 }, -- Needs Model when available 
   { name="Mabosstiff",    level=4, types={ "Dark" }, moves={ "Double-Edge", "Jaw Lock" },   guids={ "3e9b8c", "41dfa5" }, model_GUID="f4d83c", offset={x=0, y=0.4, z=0}, pokedex=943 },  -- Needs Model when available 
   { name="Shroodle",      level=2, types={ "Poison", "Normal" }, moves={ "Fury Swipes", "Acid Spray" }, guids={ "bd638c" }, evoData={ { cost=1, ball=BLUE, gen=9, guids={ "74dde9" } } }, model_GUID="d41d88", offset={x=0, y=0.05, z=0}, pokedex=944 }, -- Needs Model when available 
@@ -2518,7 +2518,7 @@ moveData =
     {name="Shore Up",       power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="LifeRecovery", target="Self"}} },
     {name="Scorching Sands", power=2,     type="Ground",  dice=6, STAB=true,    effects={{name="Burn", target="Enemy", chance=5}} },
     {name="Sandblast",      power=2,      type="Ground",  dice=4, STAB=true,    effects={{name="AddDice", target="Self", chance=4}}},
-    {name="Earthquake (CO)", power=3,      type="Ground",  dice=6, STAB=true},
+    {name="Earthquake (CO)", power=3,     type="Ground",  dice=6, STAB=true},
 
     -- Ice
     {name="Aurora Beam",    power=2,      type="Ice",     dice=6, STAB=true,    effects={{name="Disadvantage", target="Enemy", chance=6}} },
@@ -2970,7 +2970,7 @@ rivalData =
     trainerName = "Silver",
     pokemonData = {
       {
-        guid = "ef6dcf",
+        guid = "7358e9",
         tier = PINK,
         pokemon = {
           { name="Zubat", level=1, types={ "Poison", "Flying" }, moves={ "Absorb", "Supersonic", "Gust" }, model_GUID="6ce120", spawn_effect="Physical Attack" },
@@ -3982,7 +3982,7 @@ gymData =
     gymTier = 1,
     pokemon = {
       { name="Onix",     level=2, types={ "Rock", "Ground" }, moves={ "Screech", "Stealth Rock", "Rock Throw" }, model_GUID="f5b6ad", custom_scale=0.7, offset={x=0,y=0,z=0.2} },
-      { name="Cranidos", level=2, types={ "Rock" }, moves={ "Bulldoze", "Pursuit", "Headbutt" }, model_GUID="c3204c", spawn_effect="Physical Attack" } }
+      { name="Cranidos", level=2, types={ "Rock" }, moves={ "Bulldoze", "Rock Smash", "Headbutt" }, model_GUID="c3204c", spawn_effect="Physical Attack" } }
   },
   {
     guid = "e2826d",
@@ -4102,7 +4102,7 @@ gymData =
     gymTier = 10,
     pokemon = {
       { name="Roserade", level=10,  types={ "Grass", "Poison" }, moves={ "Dazzling Gleam", "Energy Ball", "Sludge Bomb" }, model_GUID="62a471", spawn_effect="Physical Attack" },
-      { name="Milotic",  level=11, types={ "Water" }, moves={ "Mirror Coat", "Scald", "Ice Beam" }, model_GUID="ab980b", spawn_effect="Physical Attack", offset={x=0, y=1.0, z=0} } }
+      { name="Milotic",  level=11, types={ "Water" }, moves={ "Mirror Coat", "Scald", "Blizzard" }, model_GUID="ab980b", spawn_effect="Physical Attack", offset={x=0, y=1.0, z=0} } }
   },
   {
     guid = "25281e",
@@ -4272,7 +4272,7 @@ gymData =
     gen=6,
     gymTier = 2,
     pokemon = {
-      { name="Amaura", level=3, types={ "Rock", "Ice" }, moves={ "Thunder Wave", "Take Down", "Rock Tomb" }, model_GUID="73d866"  },
+      { name="Amaura", level=3, types={ "Rock", "Ice" }, moves={ "Thunder Wave", "Powder Snow", "Rock Tomb" }, model_GUID="73d866"  },
       { name="Tyrunt", level=3, types={ "Rock", "Dragon" }, moves={ "Bite", "Stomp", "Rock Tomb" }, model_GUID="f6e97c" } }
   },
   {
@@ -4281,7 +4281,7 @@ gymData =
     gen=6,
     gymTier = 3,
     pokemon = {
-        { name="Hawlucha", level=3, types={ "Fighting", "Flying" }, moves={ "Hone Claws", "Wing Attack", "Flying Press" }, model_GUID="c7140e", spawn_effect="Status Attack" },
+        { name="Hawlucha", level=3, types={ "Fighting", "Flying" }, moves={ "Hone Claws", "X-Scissor", "Flying Press" }, model_GUID="c7140e", spawn_effect="Status Attack" },
         { name="Lucario", level=4, types={ "Fighting", "Steel" }, moves={ "Metal Sound", "Bone Rush", "Power-Up Punch" }, model_GUID="6f7542"  } }
   },
   {
@@ -4290,8 +4290,8 @@ gymData =
     gen=6,
     gymTier = 4,
     pokemon = {
-      { name="Weepinbell", level=4, types={ "Grass", "Poison" }, moves={ "Poison Powder", "Acid", "Grass Knot" }, model_GUID="961d7f" },
-      { name="Gogoat", level=4, types={ "Grass" }, moves={ "Bulldoze", "Take Down", "Razor Leaf" }, model_GUID="88d0b0", spawn_effect="Status Attack" } }
+      { name="Jumpluff", level=4, types={ "Grass", "Flying" }, moves={ "Leech Seed", "Dazzling Gleam", "Grass Knot" }, model_GUID="08d23f", spawn_effect="Physical Attack" },
+      { name="Gogoat", level=4, types={ "Grass" }, moves={ "Bulk Up", "Bulldoze", "Horn Leech" }, model_GUID="88d0b0", spawn_effect="Status Attack" } }
   },
   {
     guid = "170341",
@@ -7641,12 +7641,12 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 24 July 25 - v3.4.7 \
-    - Gen 5 Gym Leader refresh \
-    - Revamped Gym Leader boosters (with more to come) \
-    -- Rivals can now get boosters when playing with this ruleset \
-    - Some new QoL features \
-    - Fixed Stellar TeraType logic, whoops.. \
+  printToAll("Last update on xx yy zz - v3.4.8 \
+    - Gen 6 token refresh \
+    - Gen 6 Gym Leaders refresh \
+    - Added TMs and TeraCards as booster options for Gym Leaders \
+    - Fixed evolving with Tera while in the arena \
+    - QoL improvements \
     - Many bug fixes \
   There is still a minor deploy issue. I have only seen it when using Random Gym Leaders on Alola.. but if you keep trying it will work eventually :/",
   "Pink")
@@ -8643,13 +8643,13 @@ end
 function printGymLeaderBoostersRules()
   printToAll("\nGym Leader Boosters: Enabled \
   - Gym Leader Boosters Rules: \
-    * When battling a Gym Leader, Elite 4, Team Rocket, etc. they have a 35% chance to get a random booster for the duration of the battle.", 
+    * When battling a Gym Leader, Elite 4, Team Rocket, etc. they have a 45% chance to get a random booster for the duration of the battle.", 
     "Pink")
 end
 
 function getBoostersChance()
   if HR_gym_leader_boosters then
-    return 35
+    return 45
   else
     return 0
   end

@@ -156,7 +156,8 @@ local paralysisDefPos = {x=11.3, z=-4.5}
 local frozenDefPos = {x=12.1, z=-4.5}
 local confusedDefPos = {x=12.9, z=-4.5}
 
-local rivalFipButtonPos = {x=7.33, z=6.28}
+local gymFlipButtonPos = {x=7.33, z=-6.28}
+local rivalFlipButtonPos = {x=7.33, z=6.28}
 
 -- AutoRoll and Simulation values.
 local BATTLE_ROUND = 1
@@ -382,6 +383,7 @@ function onLoad(saved_data)
     self.createButton({label="Move 1", click_function="attackMove1", function_owner=self, position={-45, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="Move 2", click_function="attackMove2", function_owner=self, position={-40, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="Move 3", click_function="attackMove3", function_owner=self, position={-35, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
+    self.createButton({label="Move 4", click_function="attackMove4", function_owner=self, position={-30, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="CONFIRM", click_function="confirmAttack", function_owner=self, position={atkConfirmPos.x, 1000, atkConfirmPos.z}, height=300, width=1600, font_size=200})
 
     self.createButton({label="FAINT", click_function="recallAndFaintDefenderPokemon",function_owner=self, tooltip="Recall and Faint Pokémon",position={teamDefPos.x, 1000, teamDefPos.z}, height=300, width=720, font_size=200})
@@ -396,7 +398,7 @@ function onLoad(saved_data)
     self.createButton({label="Move 1", click_function="defenseMove1", function_owner=self, position={-45, 1000, defMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="Move 2", click_function="defenseMove2", function_owner=self, position={-40, 1000, defMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="Move 3", click_function="defenseMove3", function_owner=self, position={-35, 1000, defMoveZPos}, height=300, width=1600, font_size=200})
-    self.createButton({label="Move 3", click_function="attackMove3", function_owner=self, position={-35, 1000, atkMoveZPos}, height=300, width=1600, font_size=200})
+    self.createButton({label="Move 4", click_function="defenseMove4", function_owner=self, position={-30, 1000, defMoveZPos}, height=300, width=1600, font_size=200})
     self.createButton({label="CONFIRM", click_function="confirmDefense", function_owner=self, position={defConfirmPos.x, 1000, defConfirmPos.z}, height=300, width=1600, font_size=200})
 
     -- Multi Evolution Buttons
@@ -459,7 +461,7 @@ function onLoad(saved_data)
       -- Mass clear of buttons and labels.
       hideConfirmButton(DEFENDER)
       showFlipRivalButton(false)
-      self.editButton({index=36, label="BATTLE"})
+      self.editButton({index=37, label="BATTLE"})
       showWildPokemonButton(false)
       showFlipGymButton(false)
       hideConfirmButton(ATTACKER)
@@ -545,7 +547,7 @@ end
 function showAttackerTeraButton(visible, type_label)
   local yPos = visible and 0.5 or 1000
   local label = type_label and "Current: " .. type_label or ""
-  self.editButton({index=38, label=label, position={2.6, yPos, 0.6}})
+  self.editButton({index=39, label=label, position={2.6, yPos, 0.6}})
 end
 
 function createDefenderTeraLabel()
@@ -579,7 +581,7 @@ end
 function showDefenderTeraButton(visible, type_label)
   local yPos = visible and 0.5 or 1000
   local label = type_label and "Current: " .. type_label or ""
-  self.editButton({index=39, label=label, position={2.6, yPos, -0.6}})
+  self.editButton({index=40, label=label, position={2.6, yPos, -0.6}})
 end
 
 --------------------------
@@ -591,6 +593,8 @@ function flipGymLeader()
     return
   end
 
+  showDefenderTeraButton(false)
+
   -- Check if we had a Booster and discard it.
   if defenderData.boosterGuid ~= nil then
     discardBooster(DEFENDER)
@@ -600,6 +604,28 @@ function flipGymLeader()
   local booster_chance = Global.call("getBoostersChance")
   if math.random(1,100) > (100 - booster_chance) then
     getBooster(DEFENDER, nil)
+  end
+
+  -- Check if we have a TM booster.
+  local cardMoveData = nil
+  if defenderData.tmCard then
+    local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
+    if tmData ~= nil then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    end
+  elseif defenderData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", defenderData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      defenderPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = defenderPokemon.pokemon2.types[1]
+      if Global.call("getDualTypeEffectiveness") and defenderPokemon.pokemon2.types[2] then
+        label = label .. "/" .. defenderPokemon.pokemon2.types[2]
+      end
+      -- Show the defender Tera button.
+      showDefenderTeraButton(true, label)
+    end
   end
 
   -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -635,7 +661,7 @@ function flipGymLeader()
 
   -- Update pokemon and arena info
   setNewPokemon(defenderPokemon, defenderPokemon.pokemon2, defenderPokemon.pokemonGUID)
-  updateMoves(DEFENDER, defenderPokemon)
+  updateMoves(DEFENDER, defenderPokemon, cardMoveData)
   showFlipGymButton(false)
 
   -- Update the defender pokemon value counter.
@@ -804,6 +830,8 @@ function flipRivalPokemon()
     return
   end
 
+  showAttackerTeraButton(false)
+
   -- Check if we had a Booster and discard it.
   if attackerData.boosterGuid ~= nil then
     discardBooster(ATTACKER)
@@ -813,6 +841,28 @@ function flipRivalPokemon()
   local booster_chance = Global.call("getBoostersChance")
   if math.random(1,100) > (100 - booster_chance) then
     getBooster(ATTACKER, nil)
+  end
+
+  -- Check if we have a TM or Tera booster.
+  local cardMoveData = nil
+  if attackerData.tmCard then
+    local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
+    if tmData ~= nil then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    end
+  elseif attackerData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", attackerData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      attackerPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = pokemonData.types[1]
+      if Global.call("getDualTypeEffectiveness") and pokemonData.types[2] then
+        label = label .. "/" .. pokemonData.types[2]
+      end
+      -- Show the defender Tera button.
+      showDefenderTeraButton(true, label)
+    end
   end
 
   -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -848,7 +898,7 @@ function flipRivalPokemon()
 
   -- Update pokemon and arena info
   setNewPokemon(attackerPokemon, attackerPokemon.pokemon2, attackerPokemon.pokemonGUID)
-  updateMoves(ATTACKER, attackerPokemon)
+  updateMoves(ATTACKER, attackerPokemon, cardMoveData)
   showFlipRivalButton(false)
 
   -- Update the attacker value counter.
@@ -1044,6 +1094,9 @@ function battleWildPokemon(wild_battle_params, is_automated)
     -- Lock the wild token.
     token.lock()
 
+    -- Give the status buttons.
+    showDefStatusButtons(true)
+
     -- Update the BM data.
     setTrainerType(DEFENDER, WILD)
     defenderPokemon = {}
@@ -1070,13 +1123,13 @@ function battleWildPokemon(wild_battle_params, is_automated)
       if numMoves > 1 then
         showConfirmButton(DEFENDER, "RANDOM MOVE")
       end
-      self.editButton({index=36, label="END BATTLE"})
+      self.editButton({index=37, label="END BATTLE"})
       showAutoRollButtons(true)
       moveStatusButtons(true)
     end
     
     -- Create a button that allows someone to click it to catch the wild Pokemon.
-    self.editButton({index=13, position={teamDefPos.x, 0.4, teamDefPos.z}, click_function="wildPokemonCatch", label="CATCH", tooltip="Catch Pokemon"})
+    self.editButton({index=14, position={teamDefPos.x, 0.4, teamDefPos.z}, click_function="wildPokemonCatch", label="CATCH", tooltip="Catch Pokemon"})
 
     -- Check if this is an automated Wild Battle.
     -- NOTE: When using the BATTLE button manually this field is not empty since we are using
@@ -1087,7 +1140,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
       if wild_battle_params.position then
         -- Valid position received.
         wildPokemonKanto = wild_battle_params.position
-        self.editButton({index=14, position={movesDefPos.x, 0.4, movesDefPos.z}, click_function="wildPokemonFlee", label="FLEE", tooltip="Wild Pokemon Flees"})
+        self.editButton({index=15, position={movesDefPos.x, 0.4, movesDefPos.z}, click_function="wildPokemonFlee", label="FLEE", tooltip="Wild Pokemon Flees"})
       else
         print("Invalid Recall color given to battleWildPokemon: " .. tostring(wild_battle_params.color_index))
       end
@@ -1097,7 +1150,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
         if wild_battle_params.color_index > 0 and wild_battle_params.color_index < 8 then
           -- Valid color_index received.
           wildPokemonColorIndex = wild_battle_params.color_index
-          self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="wildPokemonFaint", label="FAINT", tooltip="Wild Pokemon Faints"})
+          self.editButton({index=16, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="wildPokemonFaint", label="FAINT", tooltip="Wild Pokemon Faints"})
         else
           print("Invalid Faint color given to battleWildPokemon: " .. tostring(wild_battle_params.color_index))
         end
@@ -1132,7 +1185,7 @@ function battleWildPokemon(wild_battle_params, is_automated)
 
     clearPokemonData(DEFENDER)
     clearTrainerData(DEFENDER)
-    self.editButton({index=36, label="BATTLE"})
+    self.editButton({index=37, label="BATTLE"})
 
     Global.call("PlayRouteMusic",{})
 
@@ -1140,11 +1193,14 @@ function battleWildPokemon(wild_battle_params, is_automated)
     wildPokemonGUID = nil
     wildPokemonKanto = nil
     wildPokemonColorIndex = nil
+
+    -- Give the status buttons.
+    showDefStatusButtons(false)
     
     -- Reset the buttons.
-    self.editButton({index=13, position={teamDefPos.x, 1000, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
-    self.editButton({index=14, position={movesDefPos.x, 1000, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
-    self.editButton({index=15, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
+    self.editButton({index=14, position={teamDefPos.x, 1000, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
+    self.editButton({index=15, position={movesDefPos.x, 1000, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
+    self.editButton({index=16, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
   end
 end
 
@@ -2027,6 +2083,10 @@ function attackMove3()
   selectMove(3, ATTACKER)
 end
 
+function attackMove4()
+  selectMove(4, ATTACKER)
+end
+
 function defenseMove1()
   selectMove(1, DEFENDER)
 end
@@ -2037,6 +2097,10 @@ end
 
 function defenseMove3()
   selectMove(3, DEFENDER)
+end
+
+function defenseMove4()
+  selectMove(4, DEFENDER)
 end
 
 function selectMove(index, isAttacker, isRandom)
@@ -3022,7 +3086,7 @@ end
 
 function addAtkStatus(obj, player_clicker_color)
     local playerColour = player_clicker_color
-    if playerColour == attackerData.playerColor then
+    if playerColour == attackerData.playerColor or attackerData.playerColor == nil then
         passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
         addStatusCounter(passParams)
     end
@@ -3030,7 +3094,7 @@ end
 
 function removeAtkStatus(obj, player_clicker_color)
     local playerColour = player_clicker_color
-    if playerColour == attackerData.playerColor then
+    if playerColour == attackerData.playerColor or attackerData.playerColor == nil then
         passParams = {player = playerColour, arenaAttack = true, zPos = -0.1}
         removeStatusCounter(ATTACKER)
     end
@@ -3038,7 +3102,7 @@ end
 
 function addDefStatus(obj, player_clicker_color)
     local playerColour = player_clicker_color
-    if playerColour == defenderData.playerColor then
+    if playerColour == defenderData.playerColor or defenderData.playerColor == nil then
         passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
         addStatusCounter(passParams)
     end
@@ -3046,7 +3110,7 @@ end
 
 function removeDefStatus(obj, player_clicker_color)
     local playerColour = player_clicker_color
-    if playerColour == defenderData.playerColor then
+    if playerColour == defenderData.playerColor or defenderData.playerColor == nil then
         passParams = {player = playerColour, arenaAttack = false, zPos = -0.1}
         removeStatusCounter(DEFENDER)
     end
@@ -3247,6 +3311,9 @@ function sendToArenaTitan(params)
   defenderData.attackValue.level = params.titanData.level
   updateAttackValue(DEFENDER)
 
+  -- Add the status buttons.
+  showDefStatusButtons(true)
+
   -- Titan Card.
   local takeParams = {guid = defenderData.trainerGUID, position = {defenderPos.item[1], 1.5, defenderPos.item[2]}, rotation={0,180,0}}
   local pokeball = getObjectFromGUID(params.gymGUID)
@@ -3267,7 +3334,7 @@ function sendToArenaTitan(params)
   gymLeaderGuid = params.titanGUID
 
   -- Move the button.
-  self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="recallGymLeader", label="RECALL", tooltip="Recall Titan"})
+  self.editButton({index=16, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="recallGymLeader", label="RECALL", tooltip="Recall Titan"})
 
   if Global.call("get_models_enabled") then
     -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -3433,11 +3500,44 @@ function sendToArenaGym(params)
   defenderPokemon.pokemon2 = pokemonData[2]
   defenderPokemon.pokemon2.pokemonGUID = params.trainerGUID
   defenderPokemon.pokemon2.model_GUID = gymData.pokemon[2].model_GUID
-  updateMoves(DEFENDER, defenderPokemon)
+
+  -- Check if this Gym Leader gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
+  if math.random(1,100) > (100 - booster_chance) then
+    getBooster(DEFENDER, nil)
+  end
+
+  -- Check if we have a TM or Tera booster.
+  local cardMoveData = nil
+  if defenderData.tmCard then
+    local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
+    if tmData ~= nil then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    end
+  elseif defenderData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", defenderData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      defenderPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = pokemonData[1].types[1]
+      if Global.call("getDualTypeEffectiveness") and pokemonData[1].types[2] then
+        label = label .. "/" .. pokemonData[1].types[2]
+      end
+      -- Show the defender Tera button.
+      showDefenderTeraButton(true, label)
+    end
+  end
+
+  -- Update the moves.
+  updateMoves(DEFENDER, defenderPokemon, cardMoveData)
 
   -- Update the defender value counter.
   defenderData.attackValue.level = pokemonData[1].baseLevel
   updateAttackValue(DEFENDER)
+
+  -- Add the status buttons.
+  showDefStatusButtons(true)
 
   -- Gym Leader
   local takeParams = {guid = defenderData.trainerGUID, position = {defenderPos.item[1], 1.5, defenderPos.item[2]}, rotation={0,180,0}}
@@ -3469,12 +3569,6 @@ function sendToArenaGym(params)
 
   inBattle = true
 
-  -- Check if this Gym Leader gets a booster.
-  local booster_chance = Global.call("getBoostersChance")
-  if math.random(1,100) > (100 - booster_chance) then
-    getBooster(DEFENDER, nil)
-  end
-
   -- Check if we can provide a recall button in the arena.
   -- gyms tiers: 1-8
   -- elite4    : 9
@@ -3485,7 +3579,7 @@ function sendToArenaGym(params)
     gymLeaderGuid = gymData.guid
 
     -- Move the button.
-    self.editButton({index=15, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="recallGymLeader", label="RECALL", tooltip="Recall Gym Leader"})
+    self.editButton({index=16, position={recallDefPos.x, 0.4, recallDefPos.z}, click_function="recallGymLeader", label="RECALL", tooltip="Recall Gym Leader"})
   end
 
   if Global.call("get_models_enabled") then
@@ -3634,7 +3728,7 @@ function recallGymLeader()
   if not gymLeaderGuid then return end
 
   -- Remove the button.
-  self.editButton({index=15, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
+  self.editButton({index=16, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
 
   -- Check if there is a secondary type token to despawn.
   if Global.call("getDualTypeEffectiveness") then
@@ -3677,7 +3771,7 @@ function sendToArenaTrainer(params)
   -- recall buttons then this button can get out of sync.
   self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallTrainerHook", label="RECALL", tooltip="Recall Trainer"})
   if not isSecondTrainer then
-    self.editButton({index=40, position={rivalFipButtonPos.x, 0.4, rivalFipButtonPos.z}, click_function="nextTrainerBattle", label="NEXT", tooltip="Next Trainer Fight"})
+    self.editButton({index=41, position={rivalFlipButtonPos.x, 0.4, rivalFlipButtonPos.z}, click_function="nextTrainerBattle", label="NEXT", tooltip="Next Trainer Fight"})
   end
 
   -- Trainer Pokemon.
@@ -3700,6 +3794,9 @@ function sendToArenaTrainer(params)
   -- Update the attacker value counter.
   attackerData.attackValue.level = attackerPokemon.baseLevel
   updateAttackValue(ATTACKER)
+
+  -- Add the status buttons.
+  showAtkStatusButtons(true)
 
    if scriptingEnabled then
       attackerData.attackValue.level = attackerPokemon.baseLevel
@@ -3787,12 +3884,6 @@ function sendToArenaRival(params)
   Global.call("PlayTrainerBattleMusic",{})
   printToAll("Rival " .. params.trainerName .. " wants to fight!", {r=246/255, g=192/255, b=15/255})
 
-  -- Check if this Rival gets a booster.
-  local booster_chance = Global.call("getBoostersChance")
-  if math.random(1,100) > (100 - booster_chance) then
-    getBooster(ATTACKER, nil)
-  end
-
   -- Move the button.
   self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallRivalHook", label="RECALL", tooltip="Recall Rival"})
   
@@ -3803,11 +3894,43 @@ function sendToArenaRival(params)
   attackerPokemon.pokemonGUID = params.pokemonGUID
   attackerPokemon.pokemon2 = pokemonData[2]
   attackerPokemon.pokemon2.pokemonGUID = params.pokemonGUID
-  updateMoves(ATTACKER, attackerPokemon)
+
+  -- Check if this Rival gets a booster.
+  local booster_chance = Global.call("getBoostersChance")
+  if math.random(1,100) > (100 - booster_chance) then
+    getBooster(ATTACKER, nil)
+  end
+
+  -- Check if we have a TM or Tera booster.
+  local cardMoveData = nil
+  if attackerData.tmCard then
+    local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
+    if tmData ~= nil then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    end
+  elseif attackerData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", attackerData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      attackerPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = pokemonData[1].types[1]
+      if Global.call("getDualTypeEffectiveness") and pokemonData[1].types[2] then
+        label = label .. "/" .. pokemonData[1].types[2]
+      end
+      -- Show the defender Tera button.
+      showAttackerTeraButton(true, label)
+    end
+  end
+
+  updateMoves(ATTACKER, attackerPokemon, cardMoveData)
 
   -- Update the attacker value counter.
   attackerData.attackValue.level = attackerPokemon.baseLevel
   updateAttackValue(ATTACKER)
+
+  -- Add the status buttons.
+  showAtkStatusButtons(true)
   
   if Global.call("get_models_enabled") then
     -- Reformat the data so that the model code can use it. (Sorry, I know this is hideous.) This is extra gross because
@@ -3908,7 +4031,7 @@ end
 function recallTrainer(params)
   -- Remove both buttons.
   self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
-  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+  self.editButton({index=41, position={rivalFlipButtonPos.x, 1000, rivalFlipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 
   local trainerPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
 
@@ -3958,6 +4081,9 @@ function recallTrainer(params)
       destroyObject(tokens)
     end
   end
+
+  -- Add the status buttons.
+  showAtkStatusButtons(false)
 
   showAttackerTeraButton(false)
   clearPokemonData(ATTACKER)
@@ -4080,10 +4206,14 @@ function recallGym()
     end
   end
 
+  -- Add the status buttons.
+  showDefStatusButtons(false)
+
   clearPokemonData(DEFENDER)
   clearTrainerData(DEFENDER)
 
   -- Clear the texts.
+  showDefenderTeraButton(false)
   clearMoveText(ATTACKER)
   clearMoveText(DEFENDER)
 end
@@ -4191,7 +4321,11 @@ function recallRival()
   clearTrainerData(ATTACKER)
   showFlipRivalButton(false)
 
+  -- Add the status buttons.
+  showAtkStatusButtons(true)
+
   -- Clear the texts.
+  showAttackerTeraButton(false)
   clearMoveText(ATTACKER)
   clearMoveText(DEFENDER)
 end
@@ -4218,7 +4352,7 @@ end
 function recallTrainerHook()
   -- Remove both buttons.
   self.editButton({index=2, position={recallAtkPos.x, 1000, recallAtkPos.z}, click_function="recallAtkArena", label="RECALL", tooltip=""})
-  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+  self.editButton({index=41, position={rivalFlipButtonPos.x, 1000, rivalFlipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 
   -- Update the isSecondTrainer flag.
   isSecondTrainer = false
@@ -4244,7 +4378,7 @@ end
 -- battles.
 function nextTrainerBattle()
   -- Hide this button, since there is only ever a Trainer Battle (2) at most.
-  self.editButton({index=40, position={rivalFipButtonPos.x, 1000, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+  self.editButton({index=41, position={rivalFlipButtonPos.x, 1000, rivalFlipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 
   -- Update the isSecondTrainer flag.
   isSecondTrainer = true
@@ -4955,18 +5089,17 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
     canUseMoves = defenderData.canSelectMove
   end
   local numMoves = #moves
-  local buttonWidths = (numMoves*3.2) + ((numMoves-1) + 0.5)
+  local buttonWidths = (numMoves*3.15) + ((numMoves-1) + 0.45)
 
   for i=1, 3 do
     local moveText = getObjectFromGUID(moveText[i])
     moveText.TextTool.setValue(" ")
 
     if moves[i] ~= nil then
-
       local moveData = copyTable(moves[i])
 
-      local xPos = -33.99 - (buttonWidths * 0.5)
-      moveText.setPosition({xPos + (3.7*(i-1)), 1, textZPos})
+      local xPos = -33.98 - (buttonWidths * 0.5)
+      moveText.setPosition({xPos + (3.75*(i-1)), 1, textZPos})
       moveData.status = DEFAULT
 
       -- If this move is Judgement we need to change the type if there is a Type Enhancer.
@@ -5505,19 +5638,19 @@ function evolvePoke(params)
           local item_card = getObjectFromGUID(arenaPokemon.itemCardGUID)
 
           -- Check if the attached card is a TM card.
-          if arenaPokemon.tmCard then
+          if item_card.hasTag("TM") then
             local moveData = Global.call("GetTmDataByGUID", arenaPokemon.itemCardGUID)
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
             end
           -- Check if the attached card is a Z-Crystal card.
-          elseif arenaPokemon.zCrystalCard then
+          elseif item_card.hasTag("ZCrystal") then
             local moveData = Global.call("GetZCrystalDataByGUID", {zCrystalGuid=arenaPokemon.itemCardGUID, pokemonGuid=nil})
             if moveData ~= nil then
               cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
               cardMoveData.name = moveData.displayName
             end
-          elseif arenaPokemon.teraType then
+          elseif item_card.hasTag("TeraType") then
             local teraData = Global.call("GetTeraDataByGUID", arenaPokemon.itemCardGUID)
             if teraData ~= nil then
               if params.isAttacker then
@@ -5713,15 +5846,20 @@ function refreshPokemon(params)
 end
 
 function setNewPokemon(data, newPokemonData, pokemonGUID)
+  -- Save off existing Tera data.
+  local new_teraType = data.teraType
+  local new_teraActive = data.teraActive
+  local new_stellar = data.stellar
+
   data.name = newPokemonData.name
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
   data.effects = {}
 
   -- Tera info.
-  data.teraType = newPokemonData.teraType
-  data.teraActive = newPokemonData.teraActive
-  data.stellar = newPokemonData.stellar
+  data.teraType = new_teraType
+  data.teraActive = new_teraActive
+  data.stellar = new_stellar
 
   -- Model info.
   data.model_GUID = newPokemonData.model_GUID
@@ -6195,7 +6333,7 @@ function updateArenaEvoButtons(params, isAttacker)
     position1 = {x=atkEvolve1Pos.x, y=0.4, z=atkEvolve1Pos.z}
     position2 = {x=atkEvolve2Pos.x, y=0.4, z=atkEvolve2Pos.z}
   else
-    buttonIndex = 20
+    buttonIndex = 21
     position1 = {x=defEvolve1Pos.x, y=0.4, z=defEvolve1Pos.z}
     position2 = {x=defEvolve2Pos.x, y=0.4, z=defEvolve2Pos.z}
   end
@@ -6222,8 +6360,8 @@ function hideArenaEvoButtons(isAttacker)
       self.editButton({index=7, position={atkEvolve1Pos.x, 1000, atkEvolve1Pos.z}})
       self.editButton({index=8, position={atkEvolve2Pos.x, 1000, atkEvolve2Pos.z}})
     else
-      self.editButton({index=20, position={defEvolve1Pos.x, 1000, defEvolve1Pos.z}})
-      self.editButton({index=21, position={defEvolve2Pos.x, 1000, defEvolve2Pos.z}})
+      self.editButton({index=21, position={defEvolve1Pos.x, 1000, defEvolve1Pos.z}})
+      self.editButton({index=22, position={defEvolve2Pos.x, 1000, defEvolve2Pos.z}})
     end
 end
 
@@ -6237,7 +6375,7 @@ function showMoveButtons(isAttacker, cardMoveData)
     movesZPos = atkMoveZPos
     moves = attackerPokemon.movesData
   else
-    buttonIndex = 21
+    buttonIndex = 22
     movesZPos = defMoveZPos
     moves = defenderPokemon.movesData
   end
@@ -6247,8 +6385,8 @@ function showMoveButtons(isAttacker, cardMoveData)
     numMoves = numMoves + 1
     table.insert(moves, 1, cardMoveData)
   end
-  local buttonWidths = (numMoves*3.2) + ((numMoves-1) + 0.5)
-  local xPos = 9.38 - (buttonWidths * 0.5)
+  local buttonWidths = (numMoves*3.15) + ((numMoves-1) + 0.45)
+  local xPos = 9.415 - (buttonWidths * 0.49)
 
   for i=1, numMoves do
     local moveName = tostring(moves[i].name)
@@ -6258,9 +6396,9 @@ function showMoveButtons(isAttacker, cardMoveData)
     if moveType == "Dark" or moveType == "Ghost" or moveType == "Fighting" then
       font_color = "White"
     end
-    local tooltip = ""
 
     -- If this move is Flying Press then give a tooltip.
+    local tooltip = ""
     if moveName == "Flying Press" then
       tooltip = "Effectiveness calculated on best outcome of Fighting/Flying"
     elseif moveName == "Judgement" then
@@ -6275,7 +6413,7 @@ function showMoveButtons(isAttacker, cardMoveData)
       end
     end
 
-    self.editButton({index=buttonIndex+i, position={xPos + (3.7*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color, hover_color=hover_color, tooltip=tooltip})
+    self.editButton({index=buttonIndex+i, position={xPos + (3.75*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color, tooltip=tooltip})
   end
 end
 
@@ -6285,11 +6423,11 @@ function showConfirmButton(isAttacker, label)
   local pos
 
   if isAttacker then
-    buttonIndex = 12
+    buttonIndex = 13
     pos = {x=atkConfirmPos.x, y=0.4, z=atkConfirmPos.z}
     attackerConfirmed = false
   else
-    buttonIndex = 26
+    buttonIndex = 27
     pos = {x=defConfirmPos.x, y=0.4, z=defConfirmPos.z}
     defenderConfirmed = false
   end
@@ -6300,9 +6438,9 @@ end
 function hideConfirmButton(isAttacker)
 
   if isAttacker then
-      self.editButton({index=12, position={atkConfirmPos.x, 1000, atkConfirmPos.z}})
+      self.editButton({index=13, position={atkConfirmPos.x, 1000, atkConfirmPos.z}})
   else
-      self.editButton({index=26, position={defConfirmPos.x, 1000, defConfirmPos.z}})
+      self.editButton({index=27, position={defConfirmPos.x, 1000, defConfirmPos.z}})
   end
 end
 
@@ -6325,13 +6463,13 @@ end
 
 function showDefButtons(visible)
     local yPos = visible and 0.4 or 1000
-    self.editButton({index=13, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
-    self.editButton({index=14, position={movesDefPos.x, yPos, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
-    self.editButton({index=15, position={recallDefPos.x, yPos, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
-    self.editButton({index=16, position={incLevelDefPos.x, yPos, incLevelDefPos.z}, click_function="increaseDefArena"})
-    self.editButton({index=17, position={decLevelDefPos.x, yPos, decLevelDefPos.z}, click_function="decreaseDefArena"})
-    self.editButton({index=18, position={incStatusDefPos.x, yPos, incStatusDefPos.z}, click_function="addDefStatus"})
-    self.editButton({index=19, position={decStatusDefPos.x, yPos, decStatusDefPos.z}, click_function="removeDefStatus"})
+    self.editButton({index=14, position={teamDefPos.x, yPos, teamDefPos.z}, click_function="recallAndFaintDefenderPokemon", label="FAINT", tooltip="Recall and Faint Pokémon"})
+    self.editButton({index=15, position={movesDefPos.x, yPos, movesDefPos.z}, click_function="seeMoveRules", label="MOVES", tooltip="Show Move Rules"})
+    self.editButton({index=16, position={recallDefPos.x, yPos, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
+    self.editButton({index=17, position={incLevelDefPos.x, yPos, incLevelDefPos.z}, click_function="increaseDefArena"})
+    self.editButton({index=18, position={decLevelDefPos.x, yPos, decLevelDefPos.z}, click_function="decreaseDefArena"})
+    self.editButton({index=19, position={incStatusDefPos.x, yPos, incStatusDefPos.z}, click_function="addDefStatus"})
+    self.editButton({index=20, position={decStatusDefPos.x, yPos, decStatusDefPos.z}, click_function="removeDefStatus"})
 
     if visible == false then
       hideArenaEvoButtons(false)
@@ -6339,16 +6477,32 @@ function showDefButtons(visible)
     end
 end
 
+-- This function shows or hides the attacker status buttons. For use with Gyms and Rivals, since Players automaticaclly get this.
+function showAtkStatusButtons(visible)
+  local yPos = visible and 0.4 or 1000
+  self.editButton({index=5, position={incStatusAtkPos.x, yPos, incStatusAtkPos.z}})
+  self.editButton({index=6, position={decStatusAtkPos.x, yPos, decStatusAtkPos.z}})
+end
+
+-- This function shows or hides the defender status buttons. For use with Gyms and Rivals, since Players automaticaclly get this.
+function showDefStatusButtons(visible)
+  local yPos = visible and 0.4 or 1000
+  self.editButton({index=19, position={incStatusDefPos.x, yPos, incStatusDefPos.z}})
+  self.editButton({index=20, position={decStatusDefPos.x, yPos, decStatusDefPos.z}})
+end
+
 function hideArenaMoveButtons(isAttacker)
 
     if isAttacker then
       self.editButton({index=9, position={atkEvolve1Pos.x, 1000, atkEvolve1Pos.z}})
-      self.editButton({index=10, position={atkEvolve2Pos.x, 1000, atkEvolve2Pos.z}})
-      self.editButton({index=11, position={atkEvolve2Pos.x, 1000, atkEvolve2Pos.z}})
+      self.editButton({index=10, position={atkEvolve1Pos.x, 1000, atkEvolve2Pos.z}})
+      self.editButton({index=11, position={atkEvolve1Pos.x, 1000, atkEvolve2Pos.z}})
+      self.editButton({index=12, position={atkEvolve1Pos.x, 1000, atkEvolve2Pos.z}})
     else
-      self.editButton({index=22, position={defEvolve1Pos.x, 1000, defEvolve1Pos.z}})
-      self.editButton({index=23, position={defEvolve2Pos.x, 1000, defEvolve2Pos.z}})
-      self.editButton({index=24, position={defEvolve2Pos.x, 1000, defEvolve2Pos.z}})
+      self.editButton({index=23, position={defEvolve1Pos.x, 1000, defEvolve1Pos.z}})
+      self.editButton({index=24, position={defEvolve1Pos.x, 1000, defEvolve2Pos.z}})
+      self.editButton({index=25, position={defEvolve1Pos.x, 1000, defEvolve2Pos.z}})
+      self.editButton({index=26, position={defEvolve1Pos.x, 1000, defEvolve2Pos.z}})
     end
 
     hideArenaEffectiness(isAttacker)
@@ -6366,7 +6520,7 @@ end
 function showWildPokemonButton(visible)
 
   local yPos = visible and 0.4 or 1000
-  self.editButton({index=36, position={defConfirmPos.x, yPos, -6.2}})
+  self.editButton({index=37, position={defConfirmPos.x, yPos, -6.2}})
 end
 
 function showMultiEvoButtons(evoData)
@@ -6378,7 +6532,7 @@ function showMultiEvoButtons(evoData)
     end
   end
 
-  local buttonIndex = 26
+  local buttonIndex = 27
   local numEvos = #evoData
   local tokensWidth = ((numEvos * 2.8) + ((numEvos-1) * 0.2) )
 
@@ -6392,22 +6546,20 @@ function showMultiEvoButtons(evoData)
 end
 
 function hideMultiEvoButtons()
-  local buttonIndex = 26
+  local buttonIndex = 27
   for i=1, 9 do
     self.editButton({index=buttonIndex+i, position={0, 1000, 0}})
   end
 end
 
 function showFlipGymButton(visible)
-
   local yPos = visible and 0.5 or 1000
-  self.editButton({index=37, position={2.6, yPos, -0.6}})
+  self.editButton({index=38, position={gymFlipButtonPos.x, yPos, gymFlipButtonPos.z}})
 end
 
 function showFlipRivalButton(visible)
-
   local yPos = visible and 0.5 or 1000
-  self.editButton({index=40, position={rivalFipButtonPos.x, yPos, rivalFipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
+  self.editButton({index=41, position={rivalFlipButtonPos.x, yPos, rivalFlipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 end
 
 -- Helper function to despawn autoroller dice.
@@ -6460,36 +6612,36 @@ function showAutoRollButtons(visible)
   if roller_type == 0 then 
     -- AutoRollers are not enabled. Hide everything.
     -- Hide Autoroll Attacker.
-    self.editButton({index=41, position={autoRollAtkPos.x, 1000, autoRollAtkPos.z}})
-    self.editButton({index=42, position={autoRollAtkDicePos.blue.x, 1000, autoRollAtkDicePos.blue.z}})
-    self.editButton({index=43, position={autoRollAtkDicePos.white.x, 1000, autoRollAtkDicePos.white.z}})
-    self.editButton({index=44, position={autoRollAtkDicePos.purple.x, 1000, autoRollAtkDicePos.purple.z}})
-    self.editButton({index=45, position={autoRollAtkDicePos.red.x, 1000, autoRollAtkDicePos.red.z}})
+    self.editButton({index=42, position={autoRollAtkPos.x, 1000, autoRollAtkPos.z}})
+    self.editButton({index=43, position={autoRollAtkDicePos.blue.x, 1000, autoRollAtkDicePos.blue.z}})
+    self.editButton({index=44, position={autoRollAtkDicePos.white.x, 1000, autoRollAtkDicePos.white.z}})
+    self.editButton({index=45, position={autoRollAtkDicePos.purple.x, 1000, autoRollAtkDicePos.purple.z}})
+    self.editButton({index=46, position={autoRollAtkDicePos.red.x, 1000, autoRollAtkDicePos.red.z}})
     -- Show/Hide Autoroll Defender.
-    self.editButton({index=46, position={autoRollDefPos.x, 1000, autoRollDefPos.z}})
-    self.editButton({index=47, position={autoRollDefDicePos.blue.x, 1000, autoRollDefDicePos.blue.z}})
-    self.editButton({index=48, position={autoRollDefDicePos.white.x, 1000, autoRollDefDicePos.white.z}})
-    self.editButton({index=49, position={autoRollDefDicePos.purple.x, 1000, autoRollDefDicePos.purple.z}})
-    self.editButton({index=50, position={autoRollDefDicePos.red.x, 1000, autoRollDefDicePos.red.z}})
+    self.editButton({index=47, position={autoRollDefPos.x, 1000, autoRollDefPos.z}})
+    self.editButton({index=48, position={autoRollDefDicePos.blue.x, 1000, autoRollDefDicePos.blue.z}})
+    self.editButton({index=49, position={autoRollDefDicePos.white.x, 1000, autoRollDefDicePos.white.z}})
+    self.editButton({index=50, position={autoRollDefDicePos.purple.x, 1000, autoRollDefDicePos.purple.z}})
+    self.editButton({index=51, position={autoRollDefDicePos.red.x, 1000, autoRollDefDicePos.red.z}})
     -- Simulate.
-    self.editButton({index=51, position={simulatePos.x, 1000, simulatePos.z}})
+    self.editButton({index=52, position={simulatePos.x, 1000, simulatePos.z}})
   elseif roller_type == 3 or roller_type == 4 then
     -- Create some offsets and edit the button.
     local y_pos = visible and 0.5 or 1000
     -- Hide Autoroll Attacker.
-    self.editButton({index=41, position={autoRollAtkPos.x, 1000, autoRollAtkPos.z}})
-    self.editButton({index=42, position={autoRollAtkDicePos.blue.x, 1000, autoRollAtkDicePos.blue.z}})
-    self.editButton({index=43, position={autoRollAtkDicePos.white.x, 1000, autoRollAtkDicePos.white.z}})
-    self.editButton({index=44, position={autoRollAtkDicePos.purple.x, 1000, autoRollAtkDicePos.purple.z}})
-    self.editButton({index=45, position={autoRollAtkDicePos.red.x, 1000, autoRollAtkDicePos.red.z}})
+    self.editButton({index=42, position={autoRollAtkPos.x, 1000, autoRollAtkPos.z}})
+    self.editButton({index=43, position={autoRollAtkDicePos.blue.x, 1000, autoRollAtkDicePos.blue.z}})
+    self.editButton({index=44, position={autoRollAtkDicePos.white.x, 1000, autoRollAtkDicePos.white.z}})
+    self.editButton({index=45, position={autoRollAtkDicePos.purple.x, 1000, autoRollAtkDicePos.purple.z}})
+    self.editButton({index=46, position={autoRollAtkDicePos.red.x, 1000, autoRollAtkDicePos.red.z}})
     -- Hide Autoroll Defender.
-    self.editButton({index=46, position={autoRollDefPos.x, 1000, autoRollDefPos.z}})
-    self.editButton({index=47, position={autoRollDefDicePos.blue.x, 1000, autoRollDefDicePos.blue.z}})
-    self.editButton({index=48, position={autoRollDefDicePos.white.x, 1000, autoRollDefDicePos.white.z}})
-    self.editButton({index=49, position={autoRollDefDicePos.purple.x, 1000, autoRollDefDicePos.purple.z}})
-    self.editButton({index=50, position={autoRollDefDicePos.red.x, 1000, autoRollDefDicePos.red.z}})
+    self.editButton({index=47, position={autoRollDefPos.x, 1000, autoRollDefPos.z}})
+    self.editButton({index=48, position={autoRollDefDicePos.blue.x, 1000, autoRollDefDicePos.blue.z}})
+    self.editButton({index=49, position={autoRollDefDicePos.white.x, 1000, autoRollDefDicePos.white.z}})
+    self.editButton({index=50, position={autoRollDefDicePos.purple.x, 1000, autoRollDefDicePos.purple.z}})
+    self.editButton({index=51, position={autoRollDefDicePos.red.x, 1000, autoRollDefDicePos.red.z}})
     -- Show/Hide Simulate.
-    self.editButton({index=51, position={simulatePos.x, y_pos, simulatePos.z}})
+    self.editButton({index=52, position={simulatePos.x, y_pos, simulatePos.z}})
 
     -- Despawn any existing spawned dice.
     despawnAutoRollDice()
@@ -6497,19 +6649,19 @@ function showAutoRollButtons(visible)
     -- Create some offsets and edit the buttons.
     local y_pos = visible and 0.5 or 1000
     -- Show/Hide Autoroll Attacker.
-    self.editButton({index=41, position={autoRollAtkPos.x, y_pos, autoRollAtkPos.z}})
-    self.editButton({index=42, position={autoRollAtkDicePos.blue.x, y_pos, autoRollAtkDicePos.blue.z}})
-    self.editButton({index=43, position={autoRollAtkDicePos.white.x, y_pos, autoRollAtkDicePos.white.z}})
-    self.editButton({index=44, position={autoRollAtkDicePos.purple.x, y_pos, autoRollAtkDicePos.purple.z}})
-    self.editButton({index=45, position={autoRollAtkDicePos.red.x, y_pos, autoRollAtkDicePos.red.z}})
+    self.editButton({index=42, position={autoRollAtkPos.x, y_pos, autoRollAtkPos.z}})
+    self.editButton({index=43, position={autoRollAtkDicePos.blue.x, y_pos, autoRollAtkDicePos.blue.z}})
+    self.editButton({index=44, position={autoRollAtkDicePos.white.x, y_pos, autoRollAtkDicePos.white.z}})
+    self.editButton({index=45, position={autoRollAtkDicePos.purple.x, y_pos, autoRollAtkDicePos.purple.z}})
+    self.editButton({index=46, position={autoRollAtkDicePos.red.x, y_pos, autoRollAtkDicePos.red.z}})
     -- Show/Hide Autoroll Defender.
-    self.editButton({index=46, position={autoRollDefPos.x, y_pos, autoRollDefPos.z}})
-    self.editButton({index=47, position={autoRollDefDicePos.blue.x, y_pos, autoRollDefDicePos.blue.z}})
-    self.editButton({index=48, position={autoRollDefDicePos.white.x, y_pos, autoRollDefDicePos.white.z}})
-    self.editButton({index=49, position={autoRollDefDicePos.purple.x, y_pos, autoRollDefDicePos.purple.z}})
-    self.editButton({index=50, position={autoRollDefDicePos.red.x, y_pos, autoRollDefDicePos.red.z}})
+    self.editButton({index=47, position={autoRollDefPos.x, y_pos, autoRollDefPos.z}})
+    self.editButton({index=48, position={autoRollDefDicePos.blue.x, y_pos, autoRollDefDicePos.blue.z}})
+    self.editButton({index=49, position={autoRollDefDicePos.white.x, y_pos, autoRollDefDicePos.white.z}})
+    self.editButton({index=50, position={autoRollDefDicePos.purple.x, y_pos, autoRollDefDicePos.purple.z}})
+    self.editButton({index=51, position={autoRollDefDicePos.red.x, y_pos, autoRollDefDicePos.red.z}})
     -- Hide Simulate.
-    self.editButton({index=51, position={simulatePos.x, 1000, simulatePos.z}})
+    self.editButton({index=52, position={simulatePos.x, 1000, simulatePos.z}})
 
     -- Either way, reset the AutoRoll button counts.
     atkAutoRollCounts = {blue=0, white=1, purple=0, red=0}
@@ -6982,24 +7134,24 @@ end
 function updateAutoRollButtons(isAttacker)
   if isAttacker then
     -- Update Attacker only.
-    self.editButton({index=42, label=atkAutoRollCounts.blue})
-    self.editButton({index=43, label=atkAutoRollCounts.white})
-    self.editButton({index=44, label=atkAutoRollCounts.purple})
+    self.editButton({index=43, label=atkAutoRollCounts.blue})
+    self.editButton({index=44, label=atkAutoRollCounts.white})
+    self.editButton({index=45, label=atkAutoRollCounts.purple})
   elseif isAttacker == false then
     -- Update Defender only.
-    self.editButton({index=47, label=defAutoRollCounts.blue})
-    self.editButton({index=48, label=defAutoRollCounts.white})
-    self.editButton({index=49, label=defAutoRollCounts.purple})
+    self.editButton({index=48, label=defAutoRollCounts.blue})
+    self.editButton({index=49, label=defAutoRollCounts.white})
+    self.editButton({index=50, label=defAutoRollCounts.purple})
   else
     -- Both. Used when no arguement is given.
     -- Attacker.
-    self.editButton({index=42, label=atkAutoRollCounts.blue})
-    self.editButton({index=43, label=atkAutoRollCounts.white})
-    self.editButton({index=44, label=atkAutoRollCounts.purple})
+    self.editButton({index=43, label=atkAutoRollCounts.blue})
+    self.editButton({index=44, label=atkAutoRollCounts.white})
+    self.editButton({index=45, label=atkAutoRollCounts.purple})
     -- Defender.
-    self.editButton({index=47, label=defAutoRollCounts.blue})
-    self.editButton({index=48, label=defAutoRollCounts.white})
-    self.editButton({index=49, label=atkAutoRollCounts.purple})
+    self.editButton({index=48, label=defAutoRollCounts.blue})
+    self.editButton({index=49, label=defAutoRollCounts.white})
+    self.editButton({index=50, label=atkAutoRollCounts.purple})
   end
 end
 
@@ -8383,7 +8535,7 @@ function simulateRound(obj, color, alt)
 end
 
 -- Helper function to get a booster for a Gym Leader, etc.
--- TODO: Incorporate TeraTypes to this. Including the button for user control.
+-- TODO: Incorporate TeraTypes and TMs to this. Including the button for user control.
 function getBooster(isAttacker, boosterName)
   -- TODO: With the expansion of boosters, boosterName is currently not considered.
   --       Previously, we iterated through the boosters until we found one with its name.
@@ -8393,24 +8545,70 @@ function getBooster(isAttacker, boosterName)
   local card_index = nil
   local positionTable = isAttacker and attackerPos or defenderPos
 
-  -- Randomly select a card from the DeckBuilder "booster" types.
-  local deckBuilder = getObjectFromGUID(DECK_BUILDER_GUID)
-  if deckBuilder then
-    -- Get the Booster info.
-    local booster_options = deckBuilder.call("get_gym_booster_info")
-    local booster_data = copyTable(booster_options[math.random(1, #booster_options)])
+  -- Determine what kind of booster we are snagging.
+  local booster_choice = math.random(1,100)
 
-    -- Generate the card using DeckBuilder's create_card().
-    local position = copyTable(positionTable)
-    local params = { card_data=booster_data, offset=false, position={position.booster[1], 1.5, position.booster[2]}, rotation={0,180,0} }
-    local booster_guid = deckBuilder.call("create_card", params)
+  if booster_choice < 71 then
+    -- Randomly select a card from the DeckBuilder "booster" types.
+    local deckBuilder = getObjectFromGUID(DECK_BUILDER_GUID)
+    if deckBuilder then
+      -- Get the Booster info.
+      local booster_options = deckBuilder.call("get_gym_booster_info")
+      local booster_data = copyTable(booster_options[math.random(1, #booster_options)])
 
-    -- Log it and save the GUID.
+      -- Generate the card using DeckBuilder's create_card().
+      local position = copyTable(positionTable)
+      local params = { card_data=booster_data, offset=false, position={position.booster[1], 1.5, position.booster[2]}, rotation={0,180,0} }
+      local booster_guid = deckBuilder.call("create_card", params)
+
+      -- Log it and save the GUID.
+      local data = isAttacker and attackerData or defenderData
+      printToAll(data.trainerName .. " has a " .. booster_data.name .. "!")
+      data.boosterGuid = booster_guid
+    else
+      print("Failed to find Deck Builder, cannot create booster")
+    end
+  elseif booster_choice < 86 then
+    -- TM.
+    local tm_deck = getObjectFromGUID("b779ed")
+    if tm_deck == nil then
+      print("Failed to get TM deck via GUID b779ed")
+      return
+    end
+
+    -- Take a card from the TM deck.
+    card_index = math.random(1, #tm_deck.getObjects())
+    local booster = tm_deck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
     local data = isAttacker and attackerData or defenderData
-    printToAll(data.trainerName .. " used a " .. booster_data.name .. "!")
-    data.boosterGuid = booster_guid
+    printToAll(data.trainerName .. " has a TM!")
+
+    -- Update the return data.
+    data.boosterGuid = booster.getGUID()
+    data.boosterReturnDeckGuid = "b779ed"
+
+    -- Update the data.
+    data.tmCard = true
   else
-    print("Failed to find Deck Builder, cannot create booster")
+    -- Teratype.
+    local tera_deck = getObjectFromGUID("0b44ce")
+    if tera_deck == nil then
+      print("Failed to get Tera deck via GUID 0b44ce")
+      return
+    end
+
+    -- Take a card from the TM deck.
+    card_index = math.random(1, #tera_deck.getObjects())
+    local booster = tera_deck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
+    local data = isAttacker and attackerData or defenderData
+    local tera_data = Global.call("GetTeraDataByGUID", booster.getGUID())
+    printToAll(data.trainerName .. " has the " .. tera_data.type .. " Tera!")
+
+    -- Update the return data.
+    data.boosterGuid = booster.getGUID()
+    data.boosterReturnDeckGuid = "0b44ce"
+
+    -- Update the data.
+    data.teraType = true
   end
 
   -- Get a handle on the Booster deck.
@@ -8450,10 +8648,16 @@ end
 function discardBooster(isAttacker)
   local data = isAttacker and attackerData or defenderData
 
-  -- Delete the booster file since we generated it for this purpose.
+  -- Delete the booster file if we generated. Otherwise, shuffle it back into the return deck.
   local booster = getObjectFromGUID(data.boosterGuid)
   if booster then
-    destroyObject(booster)
+    if data.boosterReturnDeckGuid == nil then
+      destroyObject(booster)
+    else
+      local deck = getObjectFromGUID(data.boosterReturnDeckGuid)
+      deck.putObject(booster)
+      deck.shuffle()
+    end
   end
   
   -- Reset the booster GUID.
@@ -8510,22 +8714,22 @@ function moveStatusButtons(visible)
   local yStatusPos = visible and 0.3 or 1000
 
   -- Show the status card buttons for the Attacker.
-  self.editButton({index=52, position={curseAtkPos.x, yStatusPos, curseAtkPos.z}})
-  self.editButton({index=53, position={burnAtkPos.x, yStatusPos, burnAtkPos.z}})
-  self.editButton({index=54, position={poisonAtkPos.x, yStatusPos, poisonAtkPos.z}})
-  self.editButton({index=55, position={sleepAtkPos.x, yStatusPos, sleepAtkPos.z}})
-  self.editButton({index=56, position={paralysisAtkPos.x, yStatusPos, paralysisAtkPos.z}})
-  self.editButton({index=57, position={frozenAtkPos.x, yStatusPos, frozenAtkPos.z}})
-  self.editButton({index=58, position={confusedAtkPos.x, yStatusPos, confusedAtkPos.z}})
+  self.editButton({index=53, position={curseAtkPos.x, yStatusPos, curseAtkPos.z}})
+  self.editButton({index=54, position={burnAtkPos.x, yStatusPos, burnAtkPos.z}})
+  self.editButton({index=55, position={poisonAtkPos.x, yStatusPos, poisonAtkPos.z}})
+  self.editButton({index=56, position={sleepAtkPos.x, yStatusPos, sleepAtkPos.z}})
+  self.editButton({index=57, position={paralysisAtkPos.x, yStatusPos, paralysisAtkPos.z}})
+  self.editButton({index=58, position={frozenAtkPos.x, yStatusPos, frozenAtkPos.z}})
+  self.editButton({index=59, position={confusedAtkPos.x, yStatusPos, confusedAtkPos.z}})
 
   -- Show the status card buttons for the Defender.
-  self.editButton({index=59, position={curseDefPos.x, yStatusPos, curseDefPos.z}})
-  self.editButton({index=60, position={burnDefPos.x, yStatusPos, burnDefPos.z}})
-  self.editButton({index=61, position={poisonDefPos.x, yStatusPos, poisonDefPos.z}})
-  self.editButton({index=62, position={sleepDefPos.x, yStatusPos, sleepDefPos.z}})
-  self.editButton({index=63, position={paralysisDefPos.x, yStatusPos, paralysisDefPos.z}})
-  self.editButton({index=64, position={frozenDefPos.x, yStatusPos, frozenDefPos.z}})
-  self.editButton({index=65, position={confusedDefPos.x, yStatusPos, confusedDefPos.z}})
+  self.editButton({index=60, position={curseDefPos.x, yStatusPos, curseDefPos.z}})
+  self.editButton({index=61, position={burnDefPos.x, yStatusPos, burnDefPos.z}})
+  self.editButton({index=62, position={poisonDefPos.x, yStatusPos, poisonDefPos.z}})
+  self.editButton({index=63, position={sleepDefPos.x, yStatusPos, sleepDefPos.z}})
+  self.editButton({index=64, position={paralysisDefPos.x, yStatusPos, paralysisDefPos.z}})
+  self.editButton({index=65, position={frozenDefPos.x, yStatusPos, frozenDefPos.z}})
+  self.editButton({index=66, position={confusedDefPos.x, yStatusPos, confusedDefPos.z}})
 end
 
 function applyCursedAttacker()

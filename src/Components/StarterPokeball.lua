@@ -272,9 +272,32 @@ function beginSetup2(params)
         local filtered_tm_deck = getObjectFromGUID("b779ed")
         local bad_tm_deck = getObjectFromGUID("558862")
 
-        -- Put the poopy deck into the filtered deck and shuffle.
-        filtered_tm_deck.putObject(bad_tm_deck)
-        filtered_tm_deck.shuffle()
+        if filtered_tm_deck == nil or bad_tm_deck == nil then
+            print("Failed to get a handle on the TM decks")
+            return
+        end
+
+        Wait.condition(
+            function() -- Conditional function.
+                -- Merge the decks.
+                local targetPos = filtered_tm_deck.getPosition()
+                targetPos.y = targetPos.y + 5
+                bad_tm_deck.setPosition(targetPos)
+                bad_tm_deck.setLock(false)
+            end,
+            function() -- Condition function
+                return filtered_tm_deck ~= nil and filtered_tm_deck.resting
+            end,
+            2,
+            function() -- Timeout function.
+                print("Timed out waiting for TM deck to be resting")
+            end
+        )
+
+        -- Wait a bit to let physics merge them
+        Wait.time(function()
+            filtered_tm_deck.shuffle()
+        end, 5)
     end
 
     -- Get a handle on the Map Manager and delete it.
@@ -284,7 +307,7 @@ function beginSetup2(params)
     end
 
     -- Get a handle on the Deck Builder and delete it (unless gym boosters are enabled).
-    if params.gym_boosters ~= true then
+    if not params.gym_boosters then
         local deck_builder = getObjectFromGUID(deckBuilderGuid)
         if deck_builder then
             destroyObject(deck_builder)

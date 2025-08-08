@@ -104,7 +104,7 @@
             <Text fontSize="18" text="Scripted House Rules (Optional)" alignment="MiddleLeft" fontStyle="Bold"/>
             <HorizontalLayout spacing="15" childForceExpandHeight="false">
                 <Toggle id="setDualTypeEffectiveness" onValueChanged="dualTypeEffectivenessSet" interactable="true" >Dual Type Effectiveness</Toggle>
-                <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leader Boosters (35% chance)</Toggle>
+                <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leader Boosters (45% chance)</Toggle>
                 <!--<Toggle id="setHardGymLeaders" onValueChanged="hardGymLeadersSet" interactable="true" >Hard Gym Leaders</Toggle>-->
                 <Toggle id="setHpRule2" onValueChanged="hpRule2Set" interactable="true" >HP Rule 2</Toggle>
             </HorizontalLayout>
