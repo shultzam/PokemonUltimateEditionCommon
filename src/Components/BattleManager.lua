@@ -598,6 +598,7 @@ function flipGymLeader()
   -- Check if we had a Booster and discard it.
   if defenderData.boosterGuid ~= nil then
     discardBooster(DEFENDER)
+    defenderPokemon.teraActive = false
   end
 
   -- Check if this Gym Leader gets a booster.
@@ -612,19 +613,6 @@ function flipGymLeader()
     local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
     if tmData ~= nil then
       cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
-    end
-  elseif defenderData.teraType then
-    local teraData = Global.call("GetTeraDataByGUID", defenderData.boosterGuid)
-    if teraData ~= nil then
-      -- Update the pokemon data.
-      defenderPokemon.teraType = teraData.type
-      -- Create the Tera label.
-      local label = defenderPokemon.pokemon2.types[1]
-      if Global.call("getDualTypeEffectiveness") and defenderPokemon.pokemon2.types[2] then
-        label = label .. "/" .. defenderPokemon.pokemon2.types[2]
-      end
-      -- Show the defender Tera button.
-      showDefenderTeraButton(true, label)
     end
   end
 
@@ -663,6 +651,22 @@ function flipGymLeader()
   setNewPokemon(defenderPokemon, defenderPokemon.pokemon2, defenderPokemon.pokemonGUID)
   updateMoves(DEFENDER, defenderPokemon, cardMoveData)
   showFlipGymButton(false)
+
+  -- Check if we have a Tera booster.
+  if defenderData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", defenderData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      defenderPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = defenderPokemon.pokemon2.types[1]
+      if Global.call("getDualTypeEffectiveness") and defenderPokemon.pokemon2.types[2] then
+        label = label .. "/" .. defenderPokemon.pokemon2.types[2]
+      end
+      -- Show the defender Tera button.
+      showDefenderTeraButton(true, label)
+    end
+  end
 
   -- Update the defender pokemon value counter.
   defenderData.attackValue.level = defenderPokemon.pokemon2.baseLevel
@@ -835,6 +839,7 @@ function flipRivalPokemon()
   -- Check if we had a Booster and discard it.
   if attackerData.boosterGuid ~= nil then
     discardBooster(ATTACKER)
+    attackerPokemon.teraActive = false
   end
 
   -- Check if this Rival gets a booster.
@@ -843,25 +848,12 @@ function flipRivalPokemon()
     getBooster(ATTACKER, nil)
   end
 
-  -- Check if we have a TM or Tera booster.
+  -- Check if we have a TM booster.
   local cardMoveData = nil
   if attackerData.tmCard then
     local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
     if tmData ~= nil then
       cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
-    end
-  elseif attackerData.teraType then
-    local teraData = Global.call("GetTeraDataByGUID", attackerData.boosterGuid)
-    if teraData ~= nil then
-      -- Update the pokemon data.
-      attackerPokemon.teraType = teraData.type
-      -- Create the Tera label.
-      local label = pokemonData.types[1]
-      if Global.call("getDualTypeEffectiveness") and pokemonData.types[2] then
-        label = label .. "/" .. pokemonData.types[2]
-      end
-      -- Show the defender Tera button.
-      showDefenderTeraButton(true, label)
     end
   end
 
@@ -900,6 +892,22 @@ function flipRivalPokemon()
   setNewPokemon(attackerPokemon, attackerPokemon.pokemon2, attackerPokemon.pokemonGUID)
   updateMoves(ATTACKER, attackerPokemon, cardMoveData)
   showFlipRivalButton(false)
+
+  -- Check if we have a Tera booster.
+  if attackerData.teraType then
+    local teraData = Global.call("GetTeraDataByGUID", attackerData.boosterGuid)
+    if teraData ~= nil then
+      -- Update the pokemon data.
+      attackerPokemon.teraType = teraData.type
+      -- Create the Tera label.
+      local label = pokemonData.types[1]
+      if Global.call("getDualTypeEffectiveness") and pokemonData.types[2] then
+        label = label .. "/" .. pokemonData.types[2]
+      end
+      -- Show the defender Tera button.
+      showDefenderTeraButton(true, label)
+    end
+  end
 
   -- Update the attacker value counter.
   attackerData.attackValue.level = attackerPokemon.baseLevel
@@ -2392,13 +2400,14 @@ function calculateMoveEffectiveness(moveData, typeData, opponent_types)
   end
 
   -- Check if this move has effects that alter effectiveness.
+  -- TODO: This does not offer labels.
   if moveData.effects then
     for j=1, #moveData.effects do
       -- If this is SaltCure, it is additionally effective against Rock and Water types.
       if moveData.effects[j].name == status_ids.saltCure then
         --print("TEMP | checking SaltCure effectiveness")
         for type_index = 1, type_length do
-          if opponent_types[type_index] == "Water" or opponent_types[type_index] == "Rock" then
+          if opponent_types[type_index] == "Water" or opponent_types[type_index] == "Steel" then
             --print("TEMP | SaltCure added effectiveness against type: " .. opponent_types[type_index])
             effectiveness = effectiveness + 2
           end
@@ -5038,6 +5047,7 @@ function clearDice(isAttacker)
 end
 
 function updateMoves(isAttacker, data, cardMoveData)
+  hideArenaMoveButtons(isAttacker)
   showMoveButtons(isAttacker, cardMoveData)
   updateTypeEffectiveness()
 end

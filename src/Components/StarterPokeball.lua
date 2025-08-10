@@ -1092,6 +1092,8 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
             if selected_map_name == "Ransei" then
                 custom_type = "Figurine_Custom"
                 custom_scale = {1.13, 1.13, 1.13}
+            elseif selected_map_name == "Alola" and gym_index % 2 == 1 then
+                custom_scale = {0.8, 1.0, 1.0}
             end
 
             -- Spawn a base object.

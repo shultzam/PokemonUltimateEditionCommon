@@ -472,14 +472,14 @@ local map_data = {
       { guid = "a76d6e", position = {-9.12, 0.96, -2.30}, rotation = {0, 180, 0}, is_gym = true, gym_tier = 7 },   -- Poni Grave.
     },
     badge_info = {
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436593/B6C14DA993A414053421C6A31D272D0CCFCD6B99/", name = "Melemele Totem" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436819/4017ABED7FECFEAB778C129EA78E8EA0183AC8C2/", name = "Melemele Grand Trial" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436639/7D54C6C0BB134F3D57227D11D14F68ED3E92E05C/", name = "Akala Totem" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436790/26ADAD6C143799E50D2A0F20508E8E3AA9DE1229/", name = "Akala Grand Totem" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436664/9D33873BABC6F0BB53227A6A9E49779BA699EFFD/", name = "Ula'Ula Totem" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436766/823026E32C683FC720CCA435EA1D13373CF44A03/", name = "Ula'Ula Grand Trial" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436714/589E7C75E3A3FF879B13D81EE72097BFD1120518/", name = "Poni Totem" },
-      { url = "https://steamusercontent-a.akamaihd.net/ugc/2455117542094436742/FB6C0981A62AFBEBDA92CCAA277FD62C39697A7D/", name = "Poni Grand Trial" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/11252963821244688503/4B1A3E6BBEF124D43948FACA7A16A15C596F166F/", name = "Melemele Totem" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/10268307241363965251/9DF8A7EF9F8506555263EE3511C591AA3339DEE7/", name = "Melemele Grand Trial" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/14656277952961524260/985170A9390EE1BAD2876CD0CC75CA151170250A/", name = "Akala Totem" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/17325871307188835766/8970F94DB0D89A7C09535F26E25F118A6E696EAB/", name = "Akala Grand Trial" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/16919041951899746474/23F22EDE86C9BF202CA7E6B5931A42153A236CA3/", name = "Ula'Ula Totem" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/11162691837327581952/ED462FC31DB68AC02CC35DD4C8FCA757068DEE06/", name = "Ula'Ula Grand Trial" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/16581219324773415811/0FF183AD4E3D65D983C316427B183FD359F7501B/", name = "Poni Totem" },
+      { url = "https://steamusercontent-a.akamaihd.net/ugc/14720850151895764118/10138596E3E11CD237AE211C5305B045C9067EBA/", name = "Poni Grand Trial" },
     }
   },
   Galar = {
