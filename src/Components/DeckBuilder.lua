@@ -109,11 +109,11 @@ STANDARD_ITEM_DECK = {
   { card=CARD_INFO.guard_spec, count=3 },
 
   -- Card Draw.
-  { card=CARD_INFO.apricorn, count=3 },
-  { card=CARD_INFO.technical_machine, count=4 },
-  { card=CARD_INFO.type_enhancer, count=3 },
+  { card=CARD_INFO.apricorn, count=4 },
+  { card=CARD_INFO.technical_machine, count=3 },
+  { card=CARD_INFO.type_enhancer, count=4 },
   { card=CARD_INFO.tera_orb, count=3 },
-  { card=CARD_INFO.z_ring, count=3 },
+  { card=CARD_INFO.z_ring, count=4 },
 
   -- Pokeballs.
   { card=CARD_INFO.poke_ball, count=4 },
@@ -121,7 +121,7 @@ STANDARD_ITEM_DECK = {
   { card=CARD_INFO.ultra_ball, count=2 },
 
   -- Action.
-  { card=CARD_INFO.full_heal, count=2 },
+  { card=CARD_INFO.full_heal, count=3 },
   { card=CARD_INFO.treasure, count=3 },
   { card=CARD_INFO.repel, count=4 },
   { card=CARD_INFO.black_flute, count=3 },
@@ -253,7 +253,6 @@ TYPE_ENHANCER_DECK = {}
 Z_CRYSTALS_DECK = {}
 
 -- Cards available to be gym boosters.
--- TODO: Incorporate TeraTypes, etc. to this.
 GYM_BOOSTERS_INFO = {
   -- Attach.
   CARD_INFO.zoom_lens,

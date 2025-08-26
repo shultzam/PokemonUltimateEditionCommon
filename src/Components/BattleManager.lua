@@ -15,12 +15,13 @@ ROLLING = 2
 CALCULATE = 3
 
 -- Move State
+DISABLED = -7
+IMMUNE = -5
+SUPER_WEAK = -3
+WEAK = -2
 DEFAULT = 0
-EFFECTIVE = 1
-WEAK = 2
-DISABLED = 3
-SUPER_WEAK = 4
-SUPER_EFFECTIVE = 5
+EFFECTIVE = 2
+SUPER_EFFECTIVE = 3
 
 -- Trainer type
 PLAYER = 0
@@ -74,7 +75,7 @@ local defFieldEffect = {name = nil, guid = nil}
 local attackerData = {
   type = nil,
   dice = {},
-  attackValue={level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0},
+  attackValue={level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0, immune=false},
   previousMove={},
   canSelectMove=true,
   selectedMoveIndex=-1,
@@ -90,7 +91,7 @@ local attackerPokemon=nil
 local defenderData = {
   type = nil,
   dice = {},
-  attackValue={level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0},
+  attackValue={level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0, immune=false},
   previousMove={},
   canSelectMove=true,
   selectedMoveIndex=-1,
@@ -104,10 +105,10 @@ local defenderData = {
 local defenderPokemon=nil
 
 local atkCounter="73b431"
-local atkMoveText={"d91743","8895de", "0390e6"}
+local atkMoveText={"d91743","8895de", "0390e6", "e2635c"}
 local atkText="a5671b"
 local defCounter="b76b2a"
-local defMoveText={"9e8ac1","68aee8", "8099cc"}
+local defMoveText={"9e8ac1","68aee8", "8099cc", "145335"}
 local defText="e6c686"
 local roundText="0f03b4"  --[[ TODO: get the new GUID once this is applied to the mod save we are keeping. {-40.79, 0.97, 0.19}. Slightly thicker than the white bar. ]]
 local arenaTextGUID="f0b393"
@@ -1746,6 +1747,7 @@ function clearMoveData(isAttacker, reason)
 
   atkValue.movePower = 0
   atkValue.effectiveness = 0
+  atkValue.immune = false
   local textObj = getObjectFromGUID(textfield)
   textObj.TextTool.setValue(" ")
 
@@ -2174,18 +2176,17 @@ function selectMove(index, isAttacker, isRandom)
 
   -- Stab. If the pokemon is the same type then add 1 to the attack power.
   if (moveData.type == pokemon.types[1] or moveData.type == pokemon.types[2]) and pokemonData.attackValue.movePower > 0 and moveData.STAB then 
-    pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1 
+    pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1
   end
-
-  -- Initialize the item value.
-  pokemonData.attackValue.item = 0
 
   -- Check for a few different attach cards.
   if pokemon.vitamin then
     -- Vitamin. Tasty.
+    pokemonData.vitamin = true
     pokemonData.attackValue.item = 1
   elseif pokemon.alpha then
     -- Alpha boy. Shudders.
+    pokemonData.alpha = true
     if pokemonData.attackValue.movePower > 3 then
       pokemonData.attackValue.item = 0
     elseif pokemonData.attackValue.movePower == 3 then
@@ -2193,9 +2194,12 @@ function selectMove(index, isAttacker, isRandom)
     else
       pokemonData.attackValue.item = 2
     end
-  elseif (pokemon.type_enhancer == moveData.type and pokemonData.attackValue.movePower > 0) or (pokemon.type_enhancer ~= nil and moveData.name == "Judgement") then
-    -- Valid type booster.
-    pokemonData.attackValue.item = 1
+  elseif pokemon.type_enhancer then
+    pokemonData.type_enhancer = true
+    -- Check if the Type Enhancer is valid.
+    if ((moveData.type and pokemonData.attackValue.movePower > 0) or (pokemon.type_enhancer ~= nil and moveData.name == "Judgement")) and not pokemonData.attackValue.immune then
+      pokemonData.attackValue.item = 1
+    end
   end
 
   -- Calculate effectiveness.
@@ -2204,7 +2208,7 @@ function selectMove(index, isAttacker, isRandom)
 
   -- Get the opponent types.
   local opponent_types = { "N/A" }
-  if oppenent_data.teraActive and oppenent_data.teraType ~= nil then
+  if oppenent_data.teraActive and oppenent_data.teraType ~= nil and oppenent_data.teraType ~= "Stellar" then
     -- Tera is active.
     opponent_types = { oppenent_data.teraType }
   else
@@ -2234,8 +2238,22 @@ function selectMove(index, isAttacker, isRandom)
     end
   end
 
-  -- If move had NEUTRAL effect, don't calculate effectiveness.
+  -- Get the type data for this move.
+  local typeData = Global.call("GetTypeDataByName", moveData.type)
+
+  -- If a Pokemon is Stellar TeraTyped, they don't get effectiveness.
   local calculateEffectiveness = true
+  if is_stellar then 
+    calculateEffectiveness = false
+
+    -- Immunities are still calculated.
+    local tempEffectiveness = calculateMoveEffectiveness(moveData, typeData, opponent_types, pokemonData.attackValue, oppenent_data.name)
+    if pokemonData.attackValue.immune == true then
+      pokemonData.attackValue.effectiveness = tempEffectiveness
+    end
+  end
+
+  -- If move had NEUTRAL effect, don't calculate effectiveness.
   if moveData.effects ~= nil then
     for i=1, #moveData.effects do
         if moveData.effects[i].name == status_ids.neutral then
@@ -2244,34 +2262,40 @@ function selectMove(index, isAttacker, isRandom)
         end
     end
   end
-  -- If a Pokemon is Stellar TeraTyped, they don't get effectiveness.
-  if calculateEffectiveness and is_stellar then 
-    calculateEffectiveness = false
-  end
   
   -- Get the typeData and calculate effectiveness.
   if calculateEffectiveness then
-    local typeData = Global.call("GetTypeDataByName", moveData.type)
-    pokemonData.attackValue.effectiveness = calculateMoveEffectiveness(moveData, typeData, opponent_types)
+    pokemonData.attackValue.effectiveness = calculateMoveEffectiveness(moveData, typeData, opponent_types, pokemonData.attackValue, oppenent_data.name)
   end
 
   -- If this is Flying Press, we should check which is better out of Fighting/Flying. The default is Fighting.
+  local moveType = moveData.type
   if moveData.name == "Flying Press" then
     -- Determine the effectiveness when Flying type.
     local tempMoveDataFlying = copyTable(moveData)
     tempMoveDataFlying.type = "Flying"
     local tempTypeDataFlying = Global.call("GetTypeDataByName", tempMoveDataFlying.type)
-    local tempEffectiveness = calculateMoveEffectiveness(tempMoveDataFlying, tempTypeDataFlying, opponent_types)
+    local tempEffectiveness = calculateMoveEffectiveness(tempMoveDataFlying, tempTypeDataFlying, opponent_types, pokemonData.attackValue, oppenent_data.name)
 
     -- Determine which effectiveness to keep.
     if tempEffectiveness > pokemonData.attackValue.effectiveness then
       pokemonData.attackValue.effectiveness = tempEffectiveness
+      moveType = tempMoveDataFlying.type
     end
   end
 
   -- Check for the self's tera type.
-  if pokemon.teraActive and pokemon.teraType == moveData.type then
+  if (pokemon.teraActive and pokemon.teraType == moveType) and not pokemonData.attackValue.immune then
     pokemonData.attackValue.movePower = pokemonData.attackValue.movePower + 1 
+  end
+
+  -- If the move is immune then all attach cards except Vitamin and Alpha are ignored.
+  if pokemonData.attackValue.item ~= 0 and pokemonData.attackValue.immune then
+    if not pokemonData.vitamin then
+      -- Ignore the item.
+      printToAll("Non-Vitamin attach card ignored due to Immunity", "Red")
+      pokemonData.attackValue.item = 0
+    end
   end
 
   -- Update the counter.
@@ -2343,6 +2367,8 @@ function selectMove(index, isAttacker, isRandom)
     -- Easter egg. 1% chance to change Pin Missile to Piss Missle.
     if moveName == "Pin Missile" and math.random(100) == 1 then
       moveName = "Piss Missile"
+    elseif moveName == "Mindstorm" and math.random(100) == 1 then
+      moveName = "Shitstorm"
     end
 
     local pokemonName = isAttacker and attackerPokemon.name or defenderPokemon.name
@@ -2373,11 +2399,27 @@ function selectMove(index, isAttacker, isRandom)
 end
 
 -- Helper function to calculate effectiveness for a particular move.
-function calculateMoveEffectiveness(moveData, typeData, opponent_types)
+function calculateMoveEffectiveness(moveData, typeData, opponent_types, attack_value_table, opponent_pokemon_name)
   -- Detrermine if we are doing dual type effectiveness.
   local type_length = 1
   if Global.call("getDualTypeEffectiveness") then
     type_length = 2
+  end
+
+  -- Get the immunities table.
+  local immunityData = Global.call("GetImmunityDataByName", moveData.type)
+
+  -- Calculate immunities.
+  if Global.call("getImmunitiesEnabled") then
+    for k=1, #immunityData.immune do
+      for type_index=1, type_length do
+        if immunityData.immune[k] == opponent_types[type_index] then
+          -- Set the effectiveness to whatever is necesary to ensure the Attack Strength is -3.
+          attack_value_table.immune = true
+          return -3 - attack_value_table.movePower
+        end
+      end
+    end
   end
 
   -- Initialize the effectiveness.
@@ -2430,6 +2472,14 @@ function calculateMoveEffectiveness(moveData, typeData, opponent_types)
     effectiveness = 3
   elseif effectiveness <= -4 then
     effectiveness = -3
+  end
+
+  -- Shedinja check -- Wonder Guard. We will skip this if not playing with dualtype AND immunities.
+  local opponent_is_shedinja_immune = (opponent_pokemon_name == "Shedinja") and Global.call("getImmunitiesEnabled") and Global.call("getDualTypeEffectiveness")
+  if opponent_is_shedinja_immune then
+    if effectiveness < 2 then
+      effectiveness = -3 - attack_value_table.movePower
+    end
   end
 
   return effectiveness
@@ -2895,11 +2945,6 @@ function spawnStatusDice(isAttacker)
   end
 end
 
-
-function autoRollDice()
-
-end
-
 function spawnDice(move, isAttacker, effects)
 
   local diceTable = isAttacker and attackerData.dice or defenderData.dice
@@ -3299,6 +3344,40 @@ function seeMoveRules(obj, player_clicker_color)
     })
 end
 
+-- Helper function used to prevent people from being lazy about who the gym leader is.
+-- Prints a suggestion for gym control if available. Otherwise does nothing.
+function promptGymLeaderControl(control_type)
+  -- Skip if turns aren't enabled.
+  if not Turns or not Turns.enable then
+    return
+  end
+
+  local current = Turns.turn_color
+  if not current or current == "" then
+    -- No current turn color yet.
+    return
+  end
+
+  -- Collect all seated players except the current turn color.
+  local eligible = {}
+  for _, p in ipairs(Player.getPlayers()) do
+    if p.seated and p.color ~= current then
+      table.insert(eligible, p.color)
+    end
+  end
+
+  -- Makke sure we have some eligible players.
+  if #eligible == 0 then
+    return
+  end
+
+  -- Pick one uniformly at random
+  local player_pick = eligible[math.random(#eligible)]
+  if player_pick.steam_name ~= nil then
+    printToALL(control_type .. " Control Suggestion: " .. tostring(player_pick.steam_name), player.color)
+  end
+end
+
 function sendToArenaTitan(params)
   if defenderData.type ~= nil then
     print("There is already a Pokémon in the arena")
@@ -3336,6 +3415,7 @@ function sendToArenaTitan(params)
   Global.call("PlayGymBattleMusic",{})
 
   printToAll(params.titanData.name .. " wants to fight!", {r=246/255,g=192/255,b=15/255})
+  promptGymLeaderControl("Titan")
 
   inBattle = true
 
@@ -3516,7 +3596,7 @@ function sendToArenaGym(params)
     getBooster(DEFENDER, nil)
   end
 
-  -- Check if we have a TM or Tera booster.
+  -- Check if we have a TM, Tera or Vitamin booster.
   local cardMoveData = nil
   if defenderData.tmCard then
     local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
@@ -3536,6 +3616,8 @@ function sendToArenaGym(params)
       -- Show the defender Tera button.
       showDefenderTeraButton(true, label)
     end
+  elseif defenderData.vitamin then
+    defenderData.attackValue.item = 1
   end
 
   -- Update the moves.
@@ -3575,6 +3657,7 @@ function sendToArenaGym(params)
   end
 
   printToAll(defenderData.trainerName .. " wants to fight!", {r=246/255,g=192/255,b=15/255})
+  promptGymLeaderControl("Gym")
 
   inBattle = true
 
@@ -3797,6 +3880,7 @@ function sendToArenaTrainer(params)
   inBattle = true
   Global.call("PlayTrainerBattleMusic",{})
   printToAll("Trainer wants to fight!", {r=246/255,g=192/255,b=15/255})
+  promptGymLeaderControl("Trainer")
 
   updateMoves(ATTACKER, attackerPokemon)
 
@@ -3895,6 +3979,7 @@ function sendToArenaRival(params)
 
   -- Move the button.
   self.editButton({index=2, position={recallAtkPos.x, 0.4, recallAtkPos.z}, click_function="recallRivalHook", label="RECALL", tooltip="Recall Rival"})
+  promptGymLeaderControl("Rival")
   
   -- Update pokemon info.
   local pokemonData = params.pokemonData  -- This is a table with two pokemon.
@@ -3910,7 +3995,7 @@ function sendToArenaRival(params)
     getBooster(ATTACKER, nil)
   end
 
-  -- Check if we have a TM or Tera booster.
+  -- Check if we have a TM, Tera or Vitamin booster.
   local cardMoveData = nil
   if attackerData.tmCard then
     local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
@@ -3929,6 +4014,8 @@ function sendToArenaRival(params)
       end
       -- Show the defender Tera button.
       showAttackerTeraButton(true, label)
+    elseif attackerData.vitamin then
+      attackerData.attackValue.item = 1
     end
   end
 
@@ -4715,7 +4802,7 @@ function resetTrainerData(isAttacker)
   data.moveData = {}
   data.diceMod = 0
   data.addDice = 0
-  data.attackValue = {level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0}
+  data.attackValue = {level=0, movePower=0, effectiveness=0, attackRoll=0, item=0, total=0, immune=false}
 end
 
 function clearTrainerData(isAttacker)
@@ -5089,19 +5176,28 @@ function updateTypeEffectiveness()
 end
 
 function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, opponent_tera_type)
+  local opponentData = nil
   if isAttacker then
     moveText = atkMoveText
     textZPos = -8.65
     canUseMoves = attackerData.canSelectMove
+    opponentData = defenderPokemon
   else
     moveText = defMoveText
     textZPos = 8.43
     canUseMoves = defenderData.canSelectMove
+    opponentData = attackerPokemon
   end
   local numMoves = #moves
   local buttonWidths = (numMoves*3.15) + ((numMoves-1) + 0.45)
 
-  for i=1, 3 do
+  -- Shedinja check -- Wonder Guard. We will skip this if not playing with dualtype AND immunities.
+  local opponent_is_shedinja_immune = (opponentData.name == "Shedinja") and Global.call("getImmunitiesEnabled") and Global.call("getDualTypeEffectiveness")
+  if opponent_is_shedinja_immune then
+    printToAll("Shedinja’s mysterious power only let Supereffective moves hit the Pokémon.")
+  end
+
+  for i=1, 4 do
     local moveText = getObjectFromGUID(moveText[i])
     moveText.TextTool.setValue(" ")
 
@@ -5128,10 +5224,18 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
         -- If move had NEUTRAL effect, don't calculate Effectiveness
         local calculateEffectiveness = true
         if moveData.effects ~= nil then
-          for i=1, #moveData.effects do
-              if moveData.effects[i].name == status_ids.neutral then
+          for k=1, #moveData.effects do
+              if moveData.effects[k].name == status_ids.neutral then
                 calculateEffectiveness = false
-                moveText.TextTool.setValue("Neutral")
+
+                -- Still calculate if it is actually Immune though.
+                local tempEffectivenessScore = getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
+                if tempEffectivenessScore ~= IMMUNE then
+                  moveText.TextTool.setValue("Neutral")
+                else
+                  moveText.TextTool.setValue("Immune")
+                  moveData.status = IMMUNE
+                end
                 break
               end
           end
@@ -5139,7 +5243,15 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
         -- If a Pokemon is Stellar TeraTyped, they don't get effectiveness.
         if is_stellar then
           calculateEffectiveness = false
-          moveText.TextTool.setValue("Neutral")
+          
+          -- Still calculate if it is actually Immune though.
+          local tempEffectivenessScore = getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
+          if tempEffectivenessScore ~= IMMUNE then
+            moveText.TextTool.setValue("Neutral")
+          else
+            moveText.TextTool.setValue("Immune")
+            moveData.status = IMMUNE
+          end
         end
 
         if calculateEffectiveness then
@@ -5168,18 +5280,35 @@ function calculateEffectiveness(isAttacker, moves, is_stellar, opponent_types, o
           end
 
           -- Use the effectiveness score.
-          if effectiveness_score == 4 then 
-            moveText.TextTool.setValue("Super-Effective")
-            moveData.status = SUPER_EFFECTIVE
-          elseif effectiveness_score == 2 then 
-            moveText.TextTool.setValue("Effective")
-            moveData.status = EFFECTIVE
-          elseif effectiveness_score == -2 then 
-            moveText.TextTool.setValue("Weak")
-            moveData.status = WEAK
-          elseif effectiveness_score == -4 then 
-            moveText.TextTool.setValue("Super-Weak")
-            moveData.status = SUPER_WEAK
+          if not opponent_is_shedinja_immune then
+            if effectiveness_score == 4 then 
+              moveText.TextTool.setValue("Super-Effective")
+              moveData.status = SUPER_EFFECTIVE
+            elseif effectiveness_score == 2 then 
+              moveText.TextTool.setValue("Effective")
+              moveData.status = EFFECTIVE
+            elseif effectiveness_score == -2 then 
+              moveText.TextTool.setValue("Weak")
+              moveData.status = WEAK
+            elseif effectiveness_score == -4 then 
+              moveText.TextTool.setValue("Super-Weak")
+              moveData.status = SUPER_WEAK
+            elseif effectiveness_score == IMMUNE then
+              moveText.TextTool.setValue("Immune")
+              moveData.status = IMMUNE
+            end
+          else
+            -- Shedinja immunities to deal with.
+            if effectiveness_score == 4 then 
+              moveText.TextTool.setValue("Super-Effective")
+              moveData.status = SUPER_EFFECTIVE
+            elseif effectiveness_score == 2 then 
+              moveText.TextTool.setValue("Effective")
+              moveData.status = EFFECTIVE
+            else
+              moveText.TextTool.setValue("Immune")
+              moveData.status = IMMUNE
+            end
           end
         end
       end
@@ -5189,8 +5318,6 @@ end
 
 -- Helper function used to get the effectiveness score of a move.
 function getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
-  -- Get the type data.
-  local typeData = Global.call("GetTypeDataByName", moveData.type)
 
   -- Detrermine if we are doing dual type effectiveness.
   local type_length = 1
@@ -5206,8 +5333,20 @@ function getEffectivenessScore(moveData, opponent_tera_type, opponent_types)
   -- Intitialize the effectiveness score.
   local effectiveness_score = 0
 
+  -- Get the immunities table.
+  local immunityData = Global.call("GetImmunityDataByName", moveData.type)
+
+  -- Get the type data and calculate effectiveness.
+  local typeData = Global.call("GetTypeDataByName", moveData.type)
   for j=1, #typeData.effective do
     for type_index = 1, type_length do
+      if Global.call("getImmunitiesEnabled") then
+        for k=1, #immunityData.immune do
+          if immunityData.immune[k] == opponent_types[type_index] then
+            return IMMUNE
+          end
+        end
+      end
       if typeData.effective[j] == opponent_types[type_index] then
         effectiveness_score = effectiveness_score + 2
       end
@@ -5291,7 +5430,7 @@ function setLevel(params)
   newDiceLevel = diceLevel + params.modifier
 
   if newDiceLevel < 0 then
-      return slotData
+    return slotData
   elseif diceLevel == 6 and params.modifier > 0 then
     print("Pokémon at maximum level")
     return slotData
@@ -5629,14 +5768,14 @@ function evolvePoke(params)
         -- Get the position and set the evo pokemon.
         local tokenPosition = params.isAttacker and attackerPos or defenderPos
         local data = params.isAttacker and attackerPokemon or defenderPokemon
-        setNewPokemon(data, evolvedPokemonData, evolvedPokemonGUID)
+        setNewPokemon(data, evolvedPokemonData, evolvedPokemonGUID, true)
         local position = {tokenPosition.pokemon[1], 2, tokenPosition.pokemon[2]}
         evolvedPokemon.setPosition(position)
 
         -- Update the arena data level for this Pokemon - in case it is a Mega which is given a +1 level.
         local arenaData = params.isAttacker and attackerData or defenderData
         arenaData.baseLevel = evolvedPokemonData.level
-        arenaData.attackValue = { level = evolvedPokemonData.level + data.diceLevel, movePower = 0, effectiveness = 0, attackRoll = 0, item = 0 }
+        arenaData.attackValue = { level = evolvedPokemonData.level + data.diceLevel, movePower = 0, effectiveness = 0, attackRoll = 0, item = 0, immunity = false }
 
         -- Update the arena calculator.
         updateAttackValue(params.isAttacker)
@@ -5855,21 +5994,32 @@ function refreshPokemon(params)
     return updatedRackData
 end
 
-function setNewPokemon(data, newPokemonData, pokemonGUID)
-  -- Save off existing Tera data.
-  local new_teraType = data.teraType
-  local new_teraActive = data.teraActive
-  local new_stellar = data.stellar
+function setNewPokemon(data, newPokemonData, pokemonGUID, preserveTera)
+  -- Save off existing Tera data if this is an evolution in the arena.
+  local new_teraType = nil
+  local new_teraActive = nil
+  local new_stellar = nil
+  if preserveTera == true then
+    new_teraType = data.teraType
+    new_teraActive = data.teraActive
+    new_stellar = data.stellar
+  end
 
   data.name = newPokemonData.name
   data.types = copyTable(newPokemonData.types)
   data.baseLevel = newPokemonData.level
   data.effects = {}
 
-  -- Tera info.
-  data.teraType = new_teraType
-  data.teraActive = new_teraActive
-  data.stellar = new_stellar
+  -- Tera info if preserving for an evolution in the arena.
+  if preserveTera == true then
+    data.teraType = new_teraType
+    data.teraActive = new_teraActive
+    data.stellar = new_stellar
+  else
+    data.teraType = newPokemonData.teraType
+    data.teraActive = newPokemonData.teraActive
+    data.stellar = false
+  end
 
   -- Model info.
   data.model_GUID = newPokemonData.model_GUID
@@ -6237,12 +6387,12 @@ function multiEvolve(index)
     if params.isAttacker then
       position = {attackerPos.pokemon[1], 2, attackerPos.pokemon[2]}
       evolvedPokemon.setPosition(position)
-      setNewPokemon(attackerPokemon, evolvedPokemonData, evolvedPokemonGUID)
+      setNewPokemon(attackerPokemon, evolvedPokemonData, evolvedPokemonGUID, true)
       updateMoves(params.isAttacker, attackerPokemon)
     else
       position = {defenderPos.pokemon[1], 2, defenderPos.pokemon[2]}
       evolvedPokemon.setPosition(position)
-      setNewPokemon(defenderPokemon, evolvedPokemonData, evolvedPokemonGUID)
+      setNewPokemon(defenderPokemon, evolvedPokemonData, evolvedPokemonGUID, true)
       updateMoves(params.isAttacker, defenderData)
     end
     rack.call("updatePokemonData", {index=params.index, pokemonGUID=evolvedPokemonGUID})
@@ -6521,7 +6671,7 @@ end
 function hideArenaEffectiness(isAttacker)
 
   local moveText = isAttacker and atkMoveText or defMoveText
-  for i=1, 3 do
+  for i=1, 4 do
     local textfield = getObjectFromGUID(moveText[i])
     textfield.TextTool.setValue(" ")
   end
@@ -8545,7 +8695,6 @@ function simulateRound(obj, color, alt)
 end
 
 -- Helper function to get a booster for a Gym Leader, etc.
--- TODO: Incorporate TeraTypes and TMs to this. Including the button for user control.
 function getBooster(isAttacker, boosterName)
   -- TODO: With the expansion of boosters, boosterName is currently not considered.
   --       Previously, we iterated through the boosters until we found one with its name.
@@ -8571,10 +8720,17 @@ function getBooster(isAttacker, boosterName)
       local params = { card_data=booster_data, offset=false, position={position.booster[1], 1.5, position.booster[2]}, rotation={0,180,0} }
       local booster_guid = deckBuilder.call("create_card", params)
 
+      -- Add card data to the pokemon data if applicable.
+      local pokemonData = isAttacker and attackerData or defenderData
+      local arenaData = isAttacker and attackerPokemon or defenderPokemon
+      if params.card_data.name == "Vitamin" then
+        arenaData.vitamin = true
+        pokemonData.vitamin = true
+      end
+
       -- Log it and save the GUID.
-      local data = isAttacker and attackerData or defenderData
-      printToAll(data.trainerName .. " has a " .. booster_data.name .. "!")
-      data.boosterGuid = booster_guid
+      printToAll(arenaData.name .. " has a " .. booster_data.name .. "!")
+      pokemonData.boosterGuid = booster_guid
     else
       print("Failed to find Deck Builder, cannot create booster")
     end
@@ -8590,7 +8746,8 @@ function getBooster(isAttacker, boosterName)
     card_index = math.random(1, #tm_deck.getObjects())
     local booster = tm_deck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
     local data = isAttacker and attackerData or defenderData
-    printToAll(data.trainerName .. " has a TM!")
+    local arenaData = isAttacker and attackerPokemon or defenderPokemon
+    printToAll(arenaData.name .. " has a TM!")
 
     -- Update the return data.
     data.boosterGuid = booster.getGUID()
@@ -8609,11 +8766,12 @@ function getBooster(isAttacker, boosterName)
     -- Take a card from the TM deck.
     card_index = math.random(1, #tera_deck.getObjects())
     local booster = tera_deck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
-    local data = isAttacker and attackerData or defenderData
     local tera_data = Global.call("GetTeraDataByGUID", booster.getGUID())
-    printToAll(data.trainerName .. " has the " .. tera_data.type .. " Tera!")
+    local arenaData = isAttacker and attackerPokemon or defenderPokemon
+    printToAll(arenaData.name .. " has the " .. tera_data.type .. " Tera!")
 
     -- Update the return data.
+    local data = isAttacker and attackerData or defenderData
     data.boosterGuid = booster.getGUID()
     data.boosterReturnDeckGuid = "0b44ce"
 

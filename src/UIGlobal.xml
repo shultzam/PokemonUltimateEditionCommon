@@ -14,7 +14,7 @@
         <Button text="Close" preferredHeight="40" width="300" onClick="start"/>
     </VerticalLayout>
 </Panel>
-<Panel id="Settings" visibility="false" width="660" height="850" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
+<Panel id="Settings" visibility="false" width="720" height="850" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="#DDDDDD">
     <VerticalLayout padding="15" spacing="15" childForceExpandHeight="false">
         <VerticalLayout>
             <Text fontSize="18" text="Select Region" alignment="MiddleLeft" fontStyle="Bold"/>
@@ -104,9 +104,10 @@
             <Text fontSize="18" text="Scripted House Rules (Optional)" alignment="MiddleLeft" fontStyle="Bold"/>
             <HorizontalLayout spacing="15" childForceExpandHeight="false">
                 <Toggle id="setDualTypeEffectiveness" onValueChanged="dualTypeEffectivenessSet" interactable="true" >Dual Type Effectiveness</Toggle>
+                <Toggle id="setImmunities" onValueChanged="immunitiesSet" interactable="true" >Immunities</Toggle>
                 <Toggle id="setGymLeaderBoosters" onValueChanged="gymLeaderBoostersSet" interactable="true" >Gym Leader Boosters (45% chance)</Toggle>
-                <!--<Toggle id="setHardGymLeaders" onValueChanged="hardGymLeadersSet" interactable="true" >Hard Gym Leaders</Toggle>-->
                 <Toggle id="setHpRule2" onValueChanged="hpRule2Set" interactable="true" >HP Rule 2</Toggle>
+                <!--<Toggle id="setHardGymLeaders" onValueChanged="hardGymLeadersSet" interactable="true" >Hard Gym Leaders</Toggle>-->
             </HorizontalLayout>
         </VerticalLayout>
         <VerticalLayout>
