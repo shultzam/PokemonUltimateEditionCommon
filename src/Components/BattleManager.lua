@@ -1110,9 +1110,13 @@ function battleWildPokemon(wild_battle_params, is_automated)
     setTrainerType(DEFENDER, WILD)
     defenderPokemon = {}
     setNewPokemon(defenderPokemon, pokemonData, wildPokemonGUID)
+
     inBattle = true
+    
     Global.call("PlayTrainerBattleMusic",{})
     printToAll("Wild " .. defenderPokemon.name .. " appeared!")
+    promptGymLeaderControl("Wild")
+
     updateMoves(DEFENDER, defenderPokemon)
 
     -- Update the defender value counter.
@@ -3371,10 +3375,10 @@ function promptGymLeaderControl(control_type)
     return
   end
 
-  -- Pick one uniformly at random
-  local player_pick = eligible[math.random(#eligible)]
-  if player_pick.steam_name ~= nil then
-    printToALL(control_type .. " Control Suggestion: " .. tostring(player_pick.steam_name), player.color)
+  -- Pick one uniformly at random.
+  local color_pick = eligible[math.random(#eligible)]
+  if Player[color_pick].steam_name ~= nil then
+    printToAll(control_type .. " Control Suggestion: " .. tostring(Player[color_pick].steam_name), color_pick)
   end
 end
 
