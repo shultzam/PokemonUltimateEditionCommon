@@ -4412,7 +4412,7 @@ gymData =
     gymTier = 1,
     pokemon = {
       { name="Yungoos", level=2, types={ "Normal" }, moves={ "Super Fang", "Sand Attack", "Bite" },  model_GUID="d77420" },
-      { name="Gumshoos", level=2, types={ "Normal" }, moves={ "Workk Up", "Mud Slap", "Bite" }, model_GUID="902af6" } }
+      { name="Gumshoos", level=2, types={ "Normal" }, moves={ "Work Up", "Mud Slap", "Bite" }, model_GUID="902af6" } }
   },
   {
     guid = "18bfc2",
@@ -4585,7 +4585,7 @@ gymData =
     gymTier = 9,
     pokemon = {
       { name="Dhelmise", level=9, types={ "Ghost", "Grass" }, moves={ "Heavy Slam", "Energy Ball", "Shadow Ball" }, model_GUID="af1f36", spawn_effect="Physical Attack" },
-      { name="Palossand",  level=10, types={ "Ghost", "Ground" }, moves={ "Giga Drain", "Earth Power", "Never-Ending Nightmare" }, model_GUID="d2d150", offset={x=0, y=0, z=-0.15} } }
+      { name="Palossand", level=10, types={ "Ghost", "Ground" }, moves={ "Giga Drain", "Earth Power", "Never-Ending Nightmare" }, model_GUID="d2d150", offset={x=0, y=0, z=-0.15} } }
   },
   {
     guid = "0bc60c",
@@ -4594,7 +4594,7 @@ gymData =
     gymTier = 9,
     pokemon = {
       { name="Poliwrath", level=9, types={ "Water", "Fighting" }, moves={ "Earth Power", "Waterfall", "Dynamic Punch" }, model_GUID="24f90c", custom_scale=0.8 },
-      { name="Crabominable",  level=10, types={ "Fighting", "Ice" }, moves={ "Stone Edge", "Ice Hammer", "All-Out Pummeling" }, model_GUID="bd1445" } }
+      { name="Crabominable", level=10, types={ "Fighting", "Ice" }, moves={ "Stone Edge", "Ice Hammer", "All-Out Pummeling" }, model_GUID="bd1445" } }
   },
   -- Champion
   {
@@ -4604,7 +4604,7 @@ gymData =
     gymTier = 10,
     pokemon = {
       { name="Alolan Ninetales", level=10, types={ "Ice" }, moves={ "Safeguard", "Dazzling Gleam", "Blizzard" }, model_GUID="654f90" },
-      { name="Incineroar", level=11, types={ "Fire", "Dark" }, moves={ "Darkest Lariat", "Cross Chop", "Flare Blitz" }, model_GUID="bc10fb" } }
+      { name="Incineroar", level=11, types={ "Fire", "Dark" }, moves={ "Cross Chop", "Fire Fang", "Malicious Moonsault" }, model_GUID="bc10fb" } }
   },
   {
     guid = "7faa66",
@@ -4622,7 +4622,7 @@ gymData =
     gymTier = 10,
     pokemon = {
       { name="Alolan Raichu", level=10, types={ "Electric", "Psychic" }, moves={ "Thunderbolt", "Psychic", "Focus Blast" }, model_GUID="ac9e94", spawn_effect="Physical Attack" },
-      { name="Decidueye", level=11, types={ "Grass", "Ghost" }, moves={ "Pluch", "Leaf Blade", "Sinister Arrow Raid" }, model_GUID="d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} } }
+      { name="Decidueye", level=11, types={ "Grass", "Ghost" }, moves={ "Pluck", "Leaf Blade", "Sinister Arrow Raid" }, model_GUID="d35cbf", spawn_effect="Status Attack", offset={x=0, y=0.115, z=0} } }
   },
 
   -- Gen VIII
@@ -7147,23 +7147,13 @@ function GetZCrystalDataByGUID(params)
           local override = data.overrides[overrideIndex]
           for guidIndex = 1, #override.guids do
             if override.guids[guidIndex] == params.pokemonGuid then
-              local displayName = string.sub(override.move, 1, 15)
-              if displayName ~= override.move then
-                displayName = displayName .. ".."
-              end
-              return { guid = data.guid, move = override.move, displayName = displayName }
+              return { guid = data.guid, move = override.move, displayName = override.move }
             end
           end
         end
       end
-
-      -- Return whatever data we found since there were no overrides. Format the move name. 
-      -- Anything above 17 characters need to be formatted.
-      local displayName = string.sub(data.move, 1, 15)
-      if displayName ~= data.move then
-        displayName = displayName .. ".."
-      end
-      return { guid = data.guid, move = data.move, displayName = displayName }
+      
+      return { guid = data.guid, move = data.move, displayName = data.move }
     end
   end
   return nil
@@ -7278,50 +7268,83 @@ end
 -- Sometimes this function cannot return a leader of the provided gen. If so,
 -- this function will give an updated gen value. Callers should check that.
 function RandomGymGuidOfTier(params)
-  if params.tier ~= 12 then
-    if gymData == nil then return 0 end
+  -- Basic params safety.
+  if not params or not params.tier or not params.gen then
+    return { leader_gen = params and params.gen or nil, guid = nil, error = "bad_params" }
+  end
 
-    local new_guid_list = FilterGymDataOnTier(params.gen, params.tier, true)
-    if #new_guid_list > 0 then
-      local final_guid_list = {}
-      if params.retrievedList ~= nil and #params.retrievedList > 0 then
-        for gymIndex=1, #new_guid_list do
-          local unique = true
-          for retrievedLeaderIndex=1, #params.retrievedList do
-            if new_guid_list[gymIndex] == params.retrievedList[retrievedLeaderIndex] then
-              unique = false
-            end
-          end
-
-          if unique then table.insert(final_guid_list, new_guid_list[gymIndex]) end
-        end
-      else
-        return { leader_gen = params.gen, guid = new_guid_list[math.random(#new_guid_list)] }
-      end
-      if #final_guid_list > 0 then
-        return { leader_gen = params.gen , guid = final_guid_list[math.random(#final_guid_list)] }
-      end
-
-      -- Failed to find the Gym Leader so find a random leader. This occurs when we try 
-      -- to grab more customs than are available or when we have more gyms than 8 (Alola).
-      local tries_remaining = 10
-      while tries_remaining > 0 do
-        local gen = math.random(1, 10)
-        new_guid_list = FilterGymDataOnTier(gen, params.tier, true)
-        if #new_guid_list > 0 then
-          return { leader_gen = gen, guid = new_guid_list[math.random(#new_guid_list)] }
-        end
-
-        -- Decrement tries.
-        tries_remaining = tries_remaining - 1
-      end
-    end
-  else
-    -- Seeking: local random Titans in my area.
+  -- Seeking: local random Titans in my area.
+  if params.tier == 12 then
     -- TODO: This does not consider the previously retrieved list so Titans cannot be random currently.
     local returning_titan_data = titanData[math.random(#titanData)]
     return { leader_gen = 12, guid = returning_titan_data.guid }
   end
+
+  -- GymData sanitization.
+  if gymData == nil then return { leader_gen = params.gen, guid = nil, error = "no_gymdata" } end
+
+  -- Get candidates for this gen/tier.
+  local candidates = FilterGymDataOnTier(params.gen, params.tier, true) or {}
+
+  -- Build a fast exclusion set from retrievedList (normalize to string keys).
+  local exclude = {}
+  if params.retrievedList and #params.retrievedList > 0 then
+    for i=1, #params.retrievedList do
+      exclude[tostring(params.retrievedList[i])] = true
+    end
+  end
+
+  -- Filter candidates by removing GUIDs already retrieved.
+  local pool = {}
+  for i=1, #candidates do
+    local guid = tostring(candidates[i])
+    if not exclude[guid] then
+      pool[#pool + 1] = guid
+    end
+  end
+
+  -- Pick one uniformly at random.
+  if #pool > 0 then
+    return { leader_gen=params.gen, guid=pool[math.random(1, #pool)] } 
+  end
+
+  -----------------
+
+  -- local new_guid_list = FilterGymDataOnTier(params.gen, params.tier, true)
+  -- if #new_guid_list > 0 then
+  --   local final_guid_list = {}
+  --   if params.retrievedList ~= nil and #params.retrievedList > 0 then
+  --     for gymIndex=1, #new_guid_list do
+  --       local unique = true
+  --       for retrievedLeaderIndex=1, #params.retrievedList do
+  --         if new_guid_list[gymIndex] == params.retrievedList[retrievedLeaderIndex] then
+  --           unique = false
+  --         end
+  --       end
+
+  --       if unique then table.insert(final_guid_list, new_guid_list[gymIndex]) end
+  --     end
+  --   else
+  --     return { leader_gen = params.gen, guid = new_guid_list[math.random(#new_guid_list)] }
+  --   end
+  --   if #final_guid_list > 0 then
+  --     return { leader_gen = params.gen , guid = final_guid_list[math.random(#final_guid_list)] }
+  --   end
+
+    -- Failed to find the Gym Leader so find a random leader. This occurs when we try 
+    -- to grab more customs than are available or when we have more gyms than 8 (Alola).
+    local tries_remaining = 10
+    while tries_remaining > 0 do
+      local gen = math.random(1, 10)
+      new_guid_list = FilterGymDataOnTier(gen, params.tier, true)
+      if #new_guid_list > 0 then
+        return { leader_gen = gen, guid = new_guid_list[math.random(#new_guid_list)] }
+      end
+
+      -- Decrement tries.
+      tries_remaining = tries_remaining - 1
+    end
+  -- end
 
   local gymStringTable =
   {
@@ -7693,8 +7716,7 @@ function print_changelog()
     - Gen 7 Gym Leaders refresh \
     - Fixed TeraTyped Gym Leaders \
     - QoL improvements \
-    - Many bug fixes \
-  There is still a minor deploy issue. I have only seen it when using Random Gym Leaders on Alola.. but if you keep trying it will work eventually :/",
+    - Many bug fixes",
   "Pink")
 end
 

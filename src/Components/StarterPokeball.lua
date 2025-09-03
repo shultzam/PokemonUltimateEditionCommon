@@ -1466,7 +1466,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption, leadersRetrieved)
 
             -- If this gym has multiple gym leader options per gym, we need to get creative about retrieving the correct gym.
             if elite4Pokeball.hasTag("MultipleGymLeaders") then
-                local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=9, leadersRetrieved=leadersRetrieved})
+                local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen_to_use, tier=9, retrievedList=leadersRetrieved})
                 leader = elite4Pokeball.takeObject({ guid = random_leader_params.guid })
             else
                 leader = elite4Pokeball.takeObject({})

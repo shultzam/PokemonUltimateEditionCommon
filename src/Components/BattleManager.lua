@@ -2368,10 +2368,11 @@ function selectMove(index, isAttacker, isRandom)
   end
 
   if battleState ~= SELECT_MOVE then
-    -- Easter egg. 1% chance to change Pin Missile to Piss Missle.
-    if moveName == "Pin Missile" and math.random(100) == 1 then
+    -- Easter egg. 1% chance to say funny names.
+    local easter_egg_chance = math.random(100)
+    if moveName == "Pin Missile" and easter_egg_chance == 1 then
       moveName = "Piss Missile"
-    elseif moveName == "Mindstorm" and math.random(100) == 1 then
+    elseif moveName == "Mindstorm" and easter_egg_chance == 1 then
       moveName = "Shitstorm"
     end
 
@@ -6577,6 +6578,23 @@ function showMoveButtons(isAttacker, cardMoveData)
       end
     end
 
+    -- Cap move names so they don't get gigantic.
+    if #moveName > 15 then
+      -- Grab the first 10 characters.
+      local prefix = string.sub(moveName, 1, 10)
+
+      -- Find the last space in that prefix.
+      local last_space = prefix:match(".*()%s")
+
+      if last_space then
+        -- Cut at the last space.
+        moveName = string.sub(moveName, 1, last_space - 1) .. "..."
+      else
+        -- No space, fallback to hard cutoff.
+        moveName = prefix .. " ..."
+      end
+    end
+
     self.editButton({index=buttonIndex+i, position={xPos + (3.75*(i-1)), 0.45, movesZPos}, label=moveName, font_color=font_color, color=button_color, tooltip=tooltip})
   end
 end
@@ -8782,38 +8800,6 @@ function getBooster(isAttacker, boosterName)
     -- Update the data.
     data.teraType = true
   end
-
-  -- Get a handle on the Booster deck.
-  -- local boosterDeck = getObjectFromGUID(boosterDeckGUID)
-  -- if boosterDeck then
-  --   if boosterName then
-  --     -- Iterate through card and find one with the correct name.
-  --     for _, card in ipairs(boosterDeck.getObjects()) do
-  --       if card.name == boosterName then
-  --         boosterDeck.takeObject({
-  --           card_index = card.index
-  --         })
-  --         -- Stop iterating.
-  --         break
-  --       end
-  --     end
-  --   else
-  --     card_index = math.random(1, #boosterDeck.getObjects())
-  --   end
-
-  --   -- Get the card.
-  --   if card_index then
-  --     local booster = boosterDeck.takeObject({index=card_index, position = {positionTable.booster[1], 1.5, positionTable.booster[2]}, rotation={0,180,0}})
-  --     if booster then
-  --       -- Log it.
-  --       local data = isAttacker and attackerData or defenderData
-  --       printToAll(data.trainerName .. " used a " .. booster.getName() .. "!")
-
-  --       -- A Booster is used, add its data to the Defender Data (if applicable).
-  --       data.boosterGuid = booster.getGUID()
-  --     end
-  --   end
-  -- end
 end
 
 -- After a Gym Leader, etc. is recalled we need to discard their booster.
