@@ -6,7 +6,7 @@ leadersData = {}
 -- Chaos related fields.
 chaos = false
 tier = 9
-genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7", "d8fcd7" }
+genLeadersPokeballGuids = { "8b26e1", "c3650f", "61d7e4", "9b50d1", "fe76e1", "c85052", "157ff9", "b47fe7", "7269d7", "d8fcd7", "6f3f3d" }
 customLeadersPokeballGuid = "f6be1f"
 leaderGuid = nil
 currentGen = nil

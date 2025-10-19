@@ -56,6 +56,7 @@ local REGION_TABLE = {
   "Galar",
   "Paldea",
   "Ransei",
+  "Hisui",
   "Orange Islands"
 }
 

@@ -2,8 +2,8 @@ pokeballs = { "ec1e4b", "9c4411", "c988ea", "2cf16d", "986cb5", "f66036", "e46f9
 evoPokeballs = { "757125", "6fd4a0", "23f409", "caf1c8", "35376b", "f353e7", "68c4b0" }
 gyms = { "20bcd5", "ec01e5", "f2f4fe", "d8dc51", "b564fd", "22cc88", "c4bd30", "c9dd73" }
 
-genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "c4a729" }
-genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "3675ab" }
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "c4a729", "76b037" }
+genTeamRocketPokeballGuids = { "c3b5fb", "e68807", "a926ef", "e98f45", "524ba4", "5498d4", "72fcef", "96992a", "6f3326", "3675ab", "e0ad1f" }
 
 gen1Pokeballs = { "681d76", "d7d981", "818525", "30391b", "758036", "bb73fd", "78fdbb" }
 gen1EvoPokeballs = { "e9d043", "7de53d", "f30baf", "ceb9a5", "5293ec", "98bf25", "01efbd" }
@@ -42,6 +42,7 @@ gen9EvoPokeballs = { "9c010b", "03ea82", "4217d6", "6ae5c4", "8963b5", "0dc3f5",
 gen9LeadersArr = { "e4988b", "7269d7", "80f567", "6f3326" }
 
 genRanseiLeadersArr = { "c4a729", "d8fcd7", "8e77e6", "3675ab" }
+genHisuiLeadersArr = { "76b037", "6f3f3d", "be633c", "e0ad1f" }
 
 genOrangeIslandsLeadersArr = { "8c717e", false, "163374", "2317bd" }
 
@@ -77,8 +78,10 @@ local map_lookup_table = {
     [7] = "Alola",
     [8] = "Galar",
     [9] = "Paldea",
-    [10] = "Orange Islands",
-  }
+    [10] = "Ransei",
+    [11] = "Hisui",
+    [12] = "Orange Islands",
+}
 
 -- Iniital Rack GUIDs. These are based on the Johto GUIDs, since that is the initial state of the racks.
 -- Order: Yellow, Green, Blue, Red, Purple, Orange.
@@ -108,7 +111,7 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2452852831747401055/7A87F7479DEFF7B2435F49DC9AD6A1F179F20FC4/",
         "https://steamusercontent-a.akamaihd.net/ugc/2452852831747400830/2E36C789DAD25149087A619E2657E5D18F9F9E1F/"
      },
--- Order: Yellow, Green, Blue, Red, Purple, Orange.
+    -- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Sinnoh = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591681/83C2A89956FD23A2145D148A5D22B9468B025EE1/",
         "https://steamusercontent-a.akamaihd.net/ugc/2447224599454591473/5970BBC767375CF38EBCF3B8D707D65304C39C5C/",
@@ -133,7 +136,7 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400844/6041242C1D5443BE356BDCF961F8948343AA01C1/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094400595/F80CF5D35CEDF74BFF112E81A9F17282CA02153B/"
      },
--- Order: Yellow, Green, Blue, Red, Purple, Orange.
+    -- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Alola = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407259/8ADD0154FC5782959F960CC58D51C34D4207D310/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094407355/63795DE52ED4E878D6B0F4F8FE0228FE2815B1C9/",
@@ -158,7 +161,7 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094404005/4E2AB9A8893E305B809AAC2F47FD54D96B1A8F2B/",
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094403885/ADAE8EE866C0C3B671C2E450AA8995A1C6B4112A/"
      },
--- Order: Yellow, Green, Blue, Red, Purple, Orange.
+    -- Order: Yellow, Green, Blue, Red, Purple, Orange.
     Ransei = {
         "https://steamusercontent-a.akamaihd.net/ugc/14495026167592481260/DCE5E214AF270D353AAE0F6BE04C93F548AABDDA/",
         "https://steamusercontent-a.akamaihd.net/ugc/13952032409084734457/D1E7D397865C56166EEF41FE5AE3F1C350A63242/",
@@ -166,6 +169,14 @@ rack_urls = {
         "https://steamusercontent-a.akamaihd.net/ugc/11505974387789337526/608945BF271D414ACEBD26B1F8B5ACA6872DB17A/",
         "https://steamusercontent-a.akamaihd.net/ugc/16333773344373329365/E2229AF43BF8035F5C9687BB00738647B1B7BBE3/",
         "https://steamusercontent-a.akamaihd.net/ugc/9401982623111932656/A750704A2C0DDD28BE707E61CD4B0E4161C9A043/"
+    },
+    Hisui = {
+        "https://steamusercontent-a.akamaihd.net/ugc/11926231543666186223/94FF0C4C5DB08161702718A767DECF5FD7734717/",
+        "https://steamusercontent-a.akamaihd.net/ugc/12273569499826047020/0536395D261C191D1E8D14E6EA5480512A564A41/",
+        "https://steamusercontent-a.akamaihd.net/ugc/13124238251907640585/1006D22D447D890CAAFD01A7E38E651950B563D4/",
+        "https://steamusercontent-a.akamaihd.net/ugc/16982370318733867594/F720F26DA6B0B69629F133A71FA4A2B74D06F74C/",
+        "https://steamusercontent-a.akamaihd.net/ugc/13572088602205379009/F83A7141A90EFAAE60E10732A53914D430891838/",
+        "https://steamusercontent-a.akamaihd.net/ugc/17006682037092323425/188382A47137C6534FA111D78EE4F435AA8E9473/"
     },
     ["Orange Islands"] = { 
         "https://steamusercontent-a.akamaihd.net/ugc/2455117542094452154/5DE45931305977EDB788C867921FF5E49F06391D/",
@@ -261,10 +272,8 @@ end
 
 function beginSetup2(params)
     -- Keep track of the leaders we have already retrieved. Can't retrieve them twice, lol.
-    local leadersRetrieved = {}
-
     -- Load the required map shenanigans. If this map has multiple Gyms (like Alola, some Gym Leaders will get taken during this step).
-    leadersRetrieved = setup_map(params.selected_map, params.leadersGen, params.selectedGens)
+    local leadersRetrieved = setup_map(params.selected_map, params.leadersGen, params.selectedGens)
 
     -- Check if we need to merge the TMs. setup_map() moves the filtered TM deck onto the table so this should be a save merge.
     if not params.filterTMs then
@@ -285,7 +294,7 @@ function beginSetup2(params)
                 bad_tm_deck.setPosition(targetPos)
                 bad_tm_deck.setLock(false)
             end,
-            function() -- Condition function
+            function() -- Condition function.
                 return filtered_tm_deck ~= nil and filtered_tm_deck.resting
             end,
             2,
@@ -294,7 +303,7 @@ function beginSetup2(params)
             end
         )
 
-        -- Wait a bit to let physics merge them
+        -- Wait a bit to let physics merge them.
         Wait.time(function()
             filtered_tm_deck.shuffle()
         end, 5)
@@ -401,16 +410,20 @@ function beginSetup2(params)
     elseif params.leadersGen == 10 then
         setupGyms(genRanseiLeadersArr, 10, params.customGymLeaderOption, leadersRetrieved)
     elseif params.leadersGen == 11 then
-        setupGyms(genOrangeIslandsLeadersArr, 11, params.customGymLeaderOption, leadersRetrieved)
+        setupGyms(genHisuiLeadersArr, 11, params.customGymLeaderOption, leadersRetrieved)
+    elseif params.leadersGen == 12 then
+        setupGyms(genOrangeIslandsLeadersArr, 12, params.customGymLeaderOption, leadersRetrieved)
     elseif params.leadersGen == -1 or params.leadersGen == -3 then
         -- Random Leaders or Gen Match.
         local gen
 
         -- Initialize the Gym Leaders pokeballs list. This assumes we are doing random.
-        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1], genRanseiLeadersArr[1] }
+        local gymPokeballs = { gen1LeadersArr[1], gen2LeadersArr[1], gen3LeadersArr[1], gen4LeadersArr[1], gen5LeadersArr[1], gen6LeadersArr[1], gen7LeadersArr[1], gen8LeadersArr[1], gen9LeadersArr[1], genRanseiLeadersArr[1], genHisuiLeadersArr[1] }
 
         -- If we are doing Gen match, we just need to remove a few from the gymPokeballs list.
-        local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+        --  10: Ransie
+        --  11: Hisui
+        local gen_options = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
         if params.leadersGen == -3 then
             -- Loop through the selectedGens table backwards removing any false indicies from the gymPokeballs table.
             for gen_i = #params.selectedGens, 1, -1 do
@@ -441,7 +454,7 @@ function beginSetup2(params)
                 end
 
                 local gymsPokeball = getObjectFromGUID(pokeballsList[gen])
-                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[1]) or gen == 11 then
+                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[1]) or map_lookup_table[gen] == "Orange Islands" then
                     gen = "custom"
                 end
                 local leader = nil
@@ -477,7 +490,7 @@ function beginSetup2(params)
         -- Orange Islands does not have an Elite 4.
         if params.selected_map ~= "Orange Islands" then
             -- Initialize the Elite 4 pokeballs list and gym object.
-            local eliteFourPokeballs = { gen1LeadersArr[2], gen2LeadersArr[2], gen3LeadersArr[2], gen4LeadersArr[2], gen5LeadersArr[2], gen6LeadersArr[2], gen7LeadersArr[2], gen8LeadersArr[2], gen9LeadersArr[2], genRanseiLeadersArr[2] }
+            local eliteFourPokeballs = { gen1LeadersArr[2], gen2LeadersArr[2], gen3LeadersArr[2], gen4LeadersArr[2], gen5LeadersArr[2], gen6LeadersArr[2], gen7LeadersArr[2], gen8LeadersArr[2], gen9LeadersArr[2], genRanseiLeadersArr[2], genHisuiLeadersArr[2] }
             local elite4Gym = getObjectFromGUID(elite4GymGuid)
             for i = 1, 4 do
                 -- Check if we need to consider custom Elite 4s.
@@ -497,7 +510,7 @@ function beginSetup2(params)
                 end
 
                 local elite4Pokeball = getObjectFromGUID(pokeballsList[gen])
-                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[2]) or gen == 11 then
+                if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[2]) or map_lookup_table[gen] == "Orange Islands" then
                     gen = "custom"
                 end
                 local leader = nil
@@ -518,7 +531,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Rivals pokeballs list and gym object.
-        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3], genRanseiLeadersArr[3] }
+        local rivalPokeballs = { gen1LeadersArr[3], gen2LeadersArr[3], gen3LeadersArr[3], gen4LeadersArr[3], gen5LeadersArr[3], gen6LeadersArr[3], gen7LeadersArr[3], gen8LeadersArr[3], gen9LeadersArr[3], genRanseiLeadersArr[3], genHisuiLeadersArr[3] }
         local rivalGym = getObjectFromGUID(rivalGymGuid)
         for i = 1, 3 do
             -- Check if we need to consider custom Rivals.
@@ -538,7 +551,7 @@ function beginSetup2(params)
             end
 
             local rivalPokeball = getObjectFromGUID(pokeballsList[gen])
-            if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[3]) or gen == 11 then
+            if (#pokeballsList == 1 and pokeballsList[1] == customLeadersArr[3]) or map_lookup_table[gen] == "Orange Islands" then
                 gen = "custom"
             end
             local leader = nil
@@ -558,7 +571,7 @@ function beginSetup2(params)
         end
 
         -- Initialize the Team Rocket pokeballs list.
-        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4], genRanseiLeadersArr[4] }
+        local teamRocketPokeballs = { gen1LeadersArr[4], gen2LeadersArr[4], gen3LeadersArr[4], gen4LeadersArr[4], gen5LeadersArr[4], gen6LeadersArr[4], gen7LeadersArr[4], gen8LeadersArr[4], gen9LeadersArr[4], genRanseiLeadersArr[4], genHisuiLeadersArr[4] }
 
         -- Check if we need to consider custom Team Rockets.
         local custom_leaders_available = customs_available(customLeadersArr[4], 11, leadersRetrieved)
@@ -859,7 +872,7 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
     -- Get a handle on the Map Manager.
     local map_manager = getObjectFromGUID(mapManagerGuid)
     if not map_manager then
-        printToAll("Cannot find the Map Manager :(. Reload the mod.", "Red")
+        printToAll("ERROR: Cannot find the Map Manager :(. Reload the mod.", "Red")
         return
     end
 
@@ -871,7 +884,11 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
     end
 
     -- Snappoints.
-    Global.setSnapPoints(map_data.snaps)
+    if map_data.snaps then
+        Global.setSnapPoints(map_data.snaps)
+    else
+        printToAll("WARNING: no snappoint data found for " .. selected_map_name)
+    end
 
     -- Board Pokemon.
     local unusedBoardPokeball = getObjectFromGUID("a09162")
@@ -981,7 +998,7 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
                     end,
                     8
                 )
-            elseif selected_map_name == "Ransei" and leadersGen == 10 then
+            elseif selected_map_name == "Ransei" and map_lookup_table[leadersGen] == "Ransei" then
                 --------------
                 -- Special Ransei Gym Leaders.
                 --------------
@@ -1000,6 +1017,41 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
                 elseif params.guid == "48aa90" then
                     -- Viperia. Tier 5.
                     leader_guid = "9247d1"
+                end
+
+                object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))
+
+                -- Add this to the leaders we have already retrieved list.
+                table.insert(leaders_retrieved, leader_guid)
+
+                -- Initialize the Gym once it is stationary.
+                Wait.condition(
+                    function() -- Conditional function.
+                        local gym_object = getObjectFromGUID(params.guid)
+                        gym_object.call("setLeaderGUID", { leader_guid })
+                    end,
+                    function() -- Condition function
+                        local gym_object = getObjectFromGUID(params.guid)
+                        return gym_object ~= nil and gym_object.resting
+                    end,
+                    8
+                )
+            elseif selected_map_name == "Hisui" and map_lookup_table[leadersGen] == "Hisui" then
+                --------------
+                -- Special Hisui Gym Leaders.
+                --------------
+                
+                -- Init some variables.
+                local leader_guid = nil
+                local gymPokeball = getObjectFromGUID("76b037")
+
+                -- There are two tier-1 and ... gyms in Hisui. Make sure they all get the correct home.
+                if params.guid == "215aa8" then
+                    -- Grandtree Arena. Tier 1.
+                    leader_guid = "c03171"
+                elseif params.guid == "431cce" then
+                    -- Sand's Reach. Tier 4.
+                    leader_guid = "064893"
                 end
 
                 object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))
@@ -1407,7 +1459,7 @@ function setupGyms(leadersArr, gen, customGymLeaderOption, leadersRetrieved)
     -- Loop through each gym.
     for i = 1, 8 do
         -- Orange Islands only uses a scheme where gym 1 is tiers 1/2, gym 3 is tiers 3/4, etc.
-        if gen ~= 11 or i % 2 == 1 then
+        if map_lookup_table[gen] ~= "Orange Islands" or i % 2 == 1 then
             -- Check if we need to consider custom Gym Leaders.
             local gymsPokeballs = { leadersArr[1] }
             local custom_leaders_available = customs_available(customLeadersArr[1], i, leadersRetrieved)

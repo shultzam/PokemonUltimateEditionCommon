@@ -84,3 +84,12 @@ end
 
 -- Get all the snap points.
 print(dump_table(Global.getSnapPoints()))
+
+-- Get a handle on the effects pokeball.
+base_effects_pokeball = getObjectFromGUID(EFFECTS_POKEBALL_GUID)
+if base_effects_pokeball == nil then
+  printToAll("Unable to find Effects Pokéball object :(")
+else
+  base_effects_pokeball.setPosition({0, 100, 0})
+  base_effects_pokeball.setLock(true)
+end

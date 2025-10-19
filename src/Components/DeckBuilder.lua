@@ -55,7 +55,7 @@ CARD_INFO = {
   revive = { name="Revive", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293151970/75665598F9D26CB6729DB215A0E62365DF1720ED/", back=CARD_BACK_URLS.default },
   running_shoes = { name="Running Shoes", front="https://steamusercontent-a.akamaihd.net/ugc/10037544696594162620/6958BA78A4FD4EA369D1C2F98674A17CD90AD1E9/", back=CARD_BACK_URLS.default },
   shiny_charm = { name="Shiny Charm", front="https://steamusercontent-a.akamaihd.net/ugc/10242531035428832915/7C5B14E611A532F2D223836D5E9008E3DE0170D8/", back=CARD_BACK_URLS.default, tags = {"Item"} },
-  technical_machine = { name="Technical Machine", front="https://steamusercontent-a.akamaihd.net/ugc/14070320069017210787/6462036C87970912220682DB72786063F18B85F3/", back=CARD_BACK_URLS.default },
+  technical_machine = { name="Technical Machine", front="https://steamusercontent-a.akamaihd.net/ugc/2455116747421290612/EA9E44F3969D65D9620BCE5662A2600AA5AC1FE3/", back=CARD_BACK_URLS.default },
   tera_orb = { name="Tera Orb", front="https://steamusercontent-a.akamaihd.net/ugc/12423817305788187831/82C21F68BE71A45168FF478AEF5235DE84A6BD48/", back=CARD_BACK_URLS.default },
   treasure = { name="Treasure", front="https://steamusercontent-a.akamaihd.net/ugc/41201955293152301/7BC580A33FCF3D63AFBE569DD471B45BD2AA0394/", back=CARD_BACK_URLS.default },
   type_enhancer = { name="Type Enhancer", front="https://steamusercontent-a.akamaihd.net/ugc/13023814319139827918/26022E243AB306ECDA82C4D65C28EF9734BBF308/", back=CARD_BACK_URLS.default },
@@ -157,6 +157,7 @@ ITEM_DECK_MAP_ADD_ONS = {
   Galar = {},
   Paldea = {},
   Ransei = {},
+  Hisui = {},
   ["Orange Islands"] = {}
 }
 
@@ -166,28 +167,36 @@ CUSTOM_ITEM_CARDS = {}
 
 EVEN_CARD_INFO = {
   alpha_pokemon = { name="Alpha Pokémon", front="https://steamusercontent-a.akamaihd.net/ugc/2447224599432732219/87C6BCD6605729CC9A34A02BA5AA40BAB6BB902F/", back=CARD_BACK_URLS.event, tags = {"Item"} },
-  game_corner = { name="Game", front="https://steamusercontent-a.akamaihd.net/ugc/2449485971643558322/E8BCF8279721F2C5F05C28A0485588CF7F1E8327/", back=CARD_BACK_URLS.event },
-  chance_card = { name="Chance Card", front="https://steamusercontent-a.akamaihd.net/ugc/2451736358374337674/2B29B317557B4B3E8C631DCBAE120E93C6E6B2DC/", back=CARD_BACK_URLS.event },
-  wonder_trade = { name="Wonder Trade", front="https://steamusercontent-a.akamaihd.net/ugc/2468621052561343348/7C2F518F86FE8280C2FCAFB4D063416406EA1FA7/", back=CARD_BACK_URLS.event },
-  pick_up_item_1 = { name="Pick Up Item (1)", front="https://steamusercontent-a.akamaihd.net/ugc/2468621052561343293/89DBBDD7B11E4F433C15134C382E0087960908AE/", back=CARD_BACK_URLS.event },
-  pick_up_item_2 = { name="Pick Up Item (2)", front="https://steamusercontent-a.akamaihd.net/ugc/2468621052561343214/93654150B8AECFA9C1D28495ED796B4F239E5370/", back=CARD_BACK_URLS.event },
-  pokemon_egg = { name="Pokémon Egg", front="https://steamusercontent-a.akamaihd.net/ugc/2468621052561342109/5E6B22361DCB29DF36DE1B498EDC36B6FC8CBAB9/", back=CARD_BACK_URLS.event },
-  rival_battle = { name="Rival Battle", front="https://steamusercontent-a.akamaihd.net/ugc/2447224599432732045/F4FFD4EA51EBB324E8181FFF5B71C0545771B5AF/", back=CARD_BACK_URLS.event },
-  blimp_ride = { name="Blimp Ride", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488322163/7054FA496E9377273776F28F809FB747DBAD5D24/", back=CARD_BACK_URLS.event },
-  poke_mart = { name="Poké Mart", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488318525/628C180B474C9B475A58E8EA0EA4F38F97F7A60A/", back=CARD_BACK_URLS.event },
-  pokemon_center = { name="Pokémon Center", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488316188/1C7A7A9986BEF843C92DD65120AEDE3902793A8C/", back=CARD_BACK_URLS.event },
-  team_rocket = { name="Team Rocket", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488307427/B8740BE0ED8AAF3DDF7DC5325931360A7F02C198/", back=CARD_BACK_URLS.event },
-  fossil_discovery = { name="Fossil Discovery", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488295278/0033A24FD1F6D092BC93A0ED755B637AF9C71D2D/", back=CARD_BACK_URLS.event },
-  day_care = { name="Day Care", front="https://steamusercontent-a.akamaihd.net/ugc/2492256706488293904/6D765228B74227AC6C119E0DBF19D06951427315/", back=CARD_BACK_URLS.event },
-  trainer_battle_1 = { name="Trainer Battle (1)", front="https://steamusercontent-a.akamaihd.net/ugc/41202108852833766/B3305AABAB1A97A0A93A733A8DC4321759A204FD/", back=CARD_BACK_URLS.event },
-  trainer_battle_2 = { name="Trainer Battle (2)", front="https://steamusercontent-a.akamaihd.net/ugc/41202108852833832/B895DB599BEE6C3DC62CE1587D8BC37896F06EB8/", back=CARD_BACK_URLS.event },
-  roaming_legend = { name="Roaming Legend", front="https://steamusercontent-a.akamaihd.net/ugc/2059880067052353378/4C4D1BD812FE96DF29D97355B0B7431B5C4A171C/", back=CARD_BACK_URLS.event },
-  lets_fight = { name="Let's Fight!", front="https://steamusercontent-a.akamaihd.net/ugc/41202108852841486/E9EFD75F57FB468D8E0D971C7AFF00DB08B7541D/", back=CARD_BACK_URLS.event },
+  game_corner = { name="Game", front="https://steamusercontent-a.akamaihd.net/ugc/18105693738693143429/8A6519C660D8AC21BB7EC96B910B6FD52164EE4C/", back=CARD_BACK_URLS.event },
+  chance_card = { name="Chance Card", front="https://steamusercontent-a.akamaihd.net/ugc/12268546406515072901/28375EECB008ED78ABBA8B1235BED8A76DD71E73/", back=CARD_BACK_URLS.event },
+  wonder_trade = { name="Wonder Trade", front="https://steamusercontent-a.akamaihd.net/ugc/15683538532508640609/F8A01C2804C786897B020C3DC86604D91665B8B5/", back=CARD_BACK_URLS.event },
+  pick_up_item = { name="Pick Up Item", front="https://steamusercontent-a.akamaihd.net/ugc/13156279064286227086/5CFB85AE6F763D6540F17ABD3C90AFCEB6C61CA7/", back=CARD_BACK_URLS.event },
+  pokestop = { name="Pokéstop", front="https://steamusercontent-a.akamaihd.net/ugc/11281991657761846664/69542B6D1289D2EDFD27E9EEC9DAA26DF9F453CA/", back=CARD_BACK_URLS.event },
+  pokemon_egg = { name="Pokémon Egg", front="https://steamusercontent-a.akamaihd.net/ugc/13094737038333522319/C0DDF8709B6AEC4BF133A6FB0C103809BE9C9348/", back=CARD_BACK_URLS.event },
+  rival_battle = { name="Rival Battle", front="https://steamusercontent-a.akamaihd.net/ugc/9493651423265963669/5A79A6F63D4CC5822149304D8380C493F12EB71B/", back=CARD_BACK_URLS.event },
+  blimp_ride = { name="Blimp Ride", front="https://steamusercontent-a.akamaihd.net/ugc/10701836599243327764/ECB7333A0B23A6377BAE793A4236FDC44EA2E5D9/", back=CARD_BACK_URLS.event },
+  poke_mart = { name="Poké Mart", front="https://steamusercontent-a.akamaihd.net/ugc/10518817256057593238/8F294A5F3B1C09218B20ADAD1811EFC481DEFB8A/", back=CARD_BACK_URLS.event },
+  pokemon_center = { name="Pokémon Center", front="https://steamusercontent-a.akamaihd.net/ugc/13064136183024481683/F2C1F3EEE79A444E8EAD4BDA543D1FD7B6A0E7DC/", back=CARD_BACK_URLS.event },
+  team_rocket = { name="Team Rocket", front="https://steamusercontent-a.akamaihd.net/ugc/16580675482551270305/3F397143702BA7F1768ACEFA8085BE177BAC8FCD/", back=CARD_BACK_URLS.event },
+  fossil_discovery = { name="Fossil Discovery", front="https://steamusercontent-a.akamaihd.net/ugc/13162127032496614024/793CE1A55BB211C281D065A58805906A7C28B5C8/", back=CARD_BACK_URLS.event },
+  day_care = { name="Day Care", front="https://steamusercontent-a.akamaihd.net/ugc/14671025127672324471/664A648848A4DD61D7F75997AEE6EB4F9F3EECF8/", back=CARD_BACK_URLS.event },
+  trainer_battle_1 = { name="Trainer Battle (1)", front="https://steamusercontent-a.akamaihd.net/ugc/13738758650142390279/2B040F1DCC326F4438C116EEA7421A678C1E1A2A/", back=CARD_BACK_URLS.event },
+  trainer_battle_2 = { name="Trainer Battle (2)", front="https://steamusercontent-a.akamaihd.net/ugc/11302069463819087467/E63F9B543F1480E5FAC65CCFFA4289F86D53FEB1/", back=CARD_BACK_URLS.event },
+  roaming_legend = { name="Roaming Legend", front="https://steamusercontent-a.akamaihd.net/ugc/16869779897382015577/11068AA17A9B7C9F877FA38C256133FE9DEF8328/", back=CARD_BACK_URLS.event },
+  lets_fight = { name="Let's Fight!", front="https://steamusercontent-a.akamaihd.net/ugc/13506113127439310446/A47935EAFB52AAF82B3D4A3F7B814EF4455C9895/", back=CARD_BACK_URLS.event },
+  regional_traveler = { name="Regional Traveler", front="https://steamusercontent-a.akamaihd.net/ugc/12050992074004061618/C87C92287B239DD7CD7FC883C28E367916F51358/", back=CARD_BACK_URLS.event },
 
   -- Map Specific.
-  explore_underground = { name="Explore Undergroud", front="https://steamusercontent-a.akamaihd.net/ugc/2451736358374337752/5AB8B70043B76B902AAAEAF690AEC8B22C2A2962/", back=CARD_BACK_URLS.event },
-  max_raid_battle = { name="Max Raid Battle", front="https://steamusercontent-a.akamaihd.net/ugc/2455117542099024824/AB04C4C941F51BF833F68E95E75FBDB793250715/", back=CARD_BACK_URLS.event },
-  area_zero = { name="Area Zero", front="https://steamusercontent-a.akamaihd.net/ugc/2455117542099024748/FEE328BC384BABD2787F0358A6DF51B1A11A3486/", back=CARD_BACK_URLS.event }
+  explore_underground = { name="Explore Undergroud", front="https://steamusercontent-a.akamaihd.net/ugc/11454952311343157406/0AB5F4A5FD231E6ADF29DAB2E7B6C0D1A5FCA869/", back=CARD_BACK_URLS.event },
+  max_raid_battle = { name="Max Raid Battle", front="https://steamusercontent-a.akamaihd.net/ugc/10635006920814012988/78EBE433E03DAF1C14436DA46E7F71DB9DAACB71/", back=CARD_BACK_URLS.event },
+  area_zero = { name="Area Zero", front="https://steamusercontent-a.akamaihd.net/ugc/12732930275825578756/7702ADB5BCF403C954E13955CA530F3CC5029976/", back=CARD_BACK_URLS.event },
+  shamouti_prophecy = { name="Shamouti Prophecy", front="https://steamusercontent-a.akamaihd.net/ugc/12176026173434913203/9EEADAFBEC84F37DF5A2D89192DA28E7AEDA8907/", back=CARD_BACK_URLS.event },
+  pokestar_studios = { name="Pokéstar Studios", front="https://steamusercontent-a.akamaihd.net/ugc/15252102455902343027/499383D3225B2E24E90ADB3979A88054DDE9844B/", back=CARD_BACK_URLS.event },
+  pokemon_contest = { name="Pokémon Contest", front="https://steamusercontent-a.akamaihd.net/ugc/11344146918930955387/152AC3487E99BC74B0A60178C9D2D5226FB0B609/", back=CARD_BACK_URLS.event },
+  mystery_springs = { name="Mystery Springs", front="https://steamusercontent-a.akamaihd.net/ugc/9663887983854230710/EBB291788906EF6F6BC686060085F3C11E0BA94E/", back=CARD_BACK_URLS.event },
+  gs_ball = { name="GS Ball", front="https://steamusercontent-a.akamaihd.net/ugc/12058208352402279056/A9D56447E75F97FE11614B20E2DF601598AC9973/", back=CARD_BACK_URLS.event },
+  battle_royal_dome = { name="Battle Royal Dome", front="https://steamusercontent-a.akamaihd.net/ugc/15522905169769024111/848A6C181155124BB9ABB895E81F61F0C461EEB1/", back=CARD_BACK_URLS.event },
+  horde_encounter = { name="Horde Encounter", front="https://steamusercontent-a.akamaihd.net/ugc/16333995117853438050/5F0ED1EBDF90936B75DDAC4FB517F06676FFF76B/", back=CARD_BACK_URLS.event }
 }
 
 -- Event deck used across all maps.
@@ -196,8 +205,8 @@ STANDARD_EVENT_DECK = {
   { card=EVEN_CARD_INFO.game_corner, count=3 },
   { card=EVEN_CARD_INFO.chance_card, count=5 },
   { card=EVEN_CARD_INFO.wonder_trade, count=5 },
-  { card=EVEN_CARD_INFO.pick_up_item_1, count=8 },
-  { card=EVEN_CARD_INFO.pick_up_item_2, count=8 },
+  { card=EVEN_CARD_INFO.pick_up_item, count=8 },
+  { card=EVEN_CARD_INFO.pokestop, count=8 },
   { card=EVEN_CARD_INFO.pokemon_egg, count=4 },
   { card=EVEN_CARD_INFO.rival_battle, count=6 },
   { card=EVEN_CARD_INFO.blimp_ride, count=4 },
@@ -210,27 +219,45 @@ STANDARD_EVENT_DECK = {
   { card=EVEN_CARD_INFO.trainer_battle_2, count=6 },
   { card=EVEN_CARD_INFO.roaming_legend, count=4 },
   { card=EVEN_CARD_INFO.lets_fight, count=6 },
+  { card=EVEN_CARD_INFO.regional_traveler, count=4 }
 }
 
 -- Add-ons specific to each map for the event deck.
 EVENT_MAP_ADD_ONS = {
   Kanto = {},
-  Johto = {},
-  Hoenn = {},
+  Johto = {
+    { card=EVEN_CARD_INFO.gs_ball, count=3 }
+  },
+  Hoenn = {
+    { card=EVEN_CARD_INFO.pokemon_contest, count=4 }
+  },
   Sinnoh = {
     { card=EVEN_CARD_INFO.explore_underground, count=4 }
   },
-  Unova = {},
-  Kalos = {},
-  Alola = {},
+  Unova = {
+    { card=EVEN_CARD_INFO.pokestar_studios, count=4 }
+  },
+  Kalos = {
+    { card=EVEN_CARD_INFO.horde_encounter, count=4 }
+  },
+  Alola = {
+    { card=EVEN_CARD_INFO.battle_royal_dome, count=4 }
+  },
   Galar = {
     { card=EVEN_CARD_INFO.max_raid_battle, count=4 }
   },
   Paldea = {
-    { card=EVEN_CARD_INFO.area_zero, count=4}
+    { card=EVEN_CARD_INFO.area_zero, count=4 }
   },
-  Ransei = {},
-  ["Orange Islands"] = {}
+  Ransei = {
+    { card=EVEN_CARD_INFO.mystery_springs, count=4 }
+  },
+  Hisui = {
+    -- Technially Alpha Event.
+  },
+  ["Orange Islands"] = {
+    { card=EVEN_CARD_INFO.shamouti_prophecy, count=4 }
+  }
 }
 
 -- Custom Event cards.
@@ -341,7 +368,7 @@ function build_card_deck(params)
     add_ons = EVENT_MAP_ADD_ONS
     custom_cards = CUSTOM_EVENT_CARDS
   else
-    print("Unrecognized deck type: " .. tostring(params.type))
+    print("ERROR: Unrecognized deck type: " .. tostring(params.type))
     return
   end
 

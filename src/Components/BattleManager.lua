@@ -219,6 +219,7 @@ local status_ids = {
   iceFang = "IceFang",
   thunderFang = "ThunderFang",
   fireFang = "FireFang",
+  direClaw = "DireClaw",
   saltCure = "SaltCure",
   escapePrevention = "EscapePrevention",  -- Not implemented.
   
@@ -637,14 +638,6 @@ function flipGymLeader()
     Global.call("despawn_now", despawn_data)
   end
 
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", defenderPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
-    end
-  end
-
   -- Remove the current data 
   Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
 
@@ -775,32 +768,6 @@ function flipGymLeader()
     2
   )
 
-  -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
-    -- Reformat the data so that the secondary type token code can use it.
-    local secondary_token_data = {
-      chip_GUID = defenderData.trainerGUID,
-      base = {
-        name = defenderPokemon.name,
-        created_before = false,
-        in_creation = false,
-        persistent_state = true,
-        picked_up = false,
-        types = defenderPokemon.types
-      },
-      picked_up = false,
-      in_creation = false,
-      isTwoFaced = true
-    }
-    secondary_token_data.chip = defenderData.trainerGUID
-    secondary_token_data.base.token_offset = {x=1.9, y=0, z=1.0}
-
-    -- Copy the base to a state.
-    secondary_token_data.state = secondary_token_data.base
-
-    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
-  end
-
   -- Check if we need to adjust a health indicator.
   if Global.call("getHpRule2Set") then
     -- Get a handle on the object.
@@ -876,14 +843,6 @@ function flipRivalPokemon()
     }
 
     Global.call("despawn_now", despawn_data)
-  end
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
-    end
   end
 
   -- Remove the current data 
@@ -979,32 +938,6 @@ function flipRivalPokemon()
     end,
     2
   )
-
-  -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") then
-    -- Reformat the data so that the secondary type token code can use it.
-    local secondary_token_data = {
-      chip_GUID = attackerPokemon.pokemonGUID,
-      base = {
-        name = attackerPokemon.name,
-        created_before = false,
-        in_creation = false,
-        persistent_state = true,
-        picked_up = false,
-        types = attackerPokemon.types
-      },
-      picked_up = false,
-      in_creation = false,
-      isTwoFaced = true
-    }
-    secondary_token_data.chip = attackerPokemon.pokemonGUID
-    secondary_token_data.base.token_offset = {x=1.7, y=-0.1, z=0.7}
-
-    -- Copy the base to a state.
-    secondary_token_data.state = secondary_token_data.base
-
-    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
-  end
 
   -- Check if we need to adjust a health indicator.
   if Global.call("getHpRule2Set") then
@@ -1469,15 +1402,6 @@ function wildPokemonFaint()
   if not pokeball then
     print("Failed to get Pokeball handle to allow a wild Pokémon to Faint. WHAT DID YOU DO?")
     return
-  end
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local pokemonData = Global.call("GetPokemonDataByGUID",{guid=wild_chip_guid})
-    local token_guid = Global.call("get_secondary_type_token_guid", wild_chip_guid)
-    if pokemonData and token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=pokemonData, secondary_type_token=token_guid})
-    end
   end
 
   -- Put the Pokemon chip back in its place.
@@ -3519,32 +3443,6 @@ function sendToArenaTitan(params)
     2
   )
 
-  -- Check if we spawn a secondary type token. Don't spawn a secondary type token if the Titan is Teratyped.
-  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
-    -- Reformat the data so that the secondary type token code can use it.
-    local secondary_token_data = {
-      chip_GUID = params.titanGUID,
-      base = {
-        name = defenderPokemon.name,
-        created_before = false,
-        in_creation = false,
-        persistent_state = true,
-        picked_up = false,
-        types = defenderPokemon.types
-      },
-      picked_up = false,
-      in_creation = false,
-      isTwoFaced = true
-    }
-    secondary_token_data.chip = params.titanGUID
-    secondary_token_data.base.token_offset = {x=-0.1, y=0, z=1.0}
-
-    -- Copy the base to a state.
-    secondary_token_data.state = secondary_token_data.base
-
-    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
-  end
-
   if scriptingEnabled then
     defenderData.attackValue.level = defenderPokemon.baseLevel
     updateAttackValue(DEFENDER)
@@ -3768,32 +3666,6 @@ function sendToArenaGym(params)
     2
   )
 
-  -- Check if we spawn a secondary type token. Don't spawn a secondary type token if the Gym Leader is Tera Typed.
-  if Global.call("getDualTypeEffectiveness") and not defenderPokemon.teraActive then
-    -- Reformat the data so that the secondary type token code can use it.
-    local secondary_token_data = {
-      chip_GUID = params.trainerGUID,
-      base = {
-        name = defenderPokemon.name,
-        created_before = false,
-        in_creation = false,
-        persistent_state = true,
-        picked_up = false,
-        types = defenderPokemon.types
-      },
-      picked_up = false,
-      in_creation = false,
-      isTwoFaced = true
-    }
-    secondary_token_data.chip = params.trainerGUID
-    secondary_token_data.base.token_offset = {x=-0.1, y=0, z=1.0}
-
-    -- Copy the base to a state.
-    secondary_token_data.state = secondary_token_data.base
-
-    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
-  end
-
   if scriptingEnabled then
     defenderData.attackValue.level = defenderPokemon.baseLevel
     updateAttackValue(DEFENDER)
@@ -3826,14 +3698,6 @@ function recallGymLeader()
 
   -- Remove the button.
   self.editButton({index=16, position={recallDefPos.x, 1000, recallDefPos.z}, click_function="recallDefArena", label="RECALL", tooltip="Recall Pokémon"})
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", gymLeaderGuid)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
-    end
-  end
 
   -- Get a handle on the appropriate gym.
   local gym = getObjectFromGUID(defenderData.gymGUID)
@@ -4076,32 +3940,6 @@ function sendToArenaRival(params)
     Global.call("check_for_spawn_or_despawn", pokemonModelData)
   end
 
-  -- Check if we spawn a secondary type token.
-  if Global.call("getDualTypeEffectiveness") and not attackerPokemon.teraActive then
-    -- Reformat the data so that the secondary type token code can use it.
-    local secondary_token_data = {
-      chip_GUID = params.pokemonGUID,
-      base = {
-        name = params.pokemonData[1].name,
-        created_before = false,
-        in_creation = false,
-        persistent_state = true,
-        picked_up = false,
-        types = params.pokemonData[1].types
-      },
-      picked_up = false,
-      in_creation = false,
-      isTwoFaced = true
-    }
-    secondary_token_data.chip = params.pokemonGUID
-    secondary_token_data.base.token_offset = {x=0.1, y=0, z=0.7}
-
-    -- Copy the base to a state.
-    secondary_token_data.state = secondary_token_data.base
-
-    Global.call("check_for_spawn_or_despawn_secondary_type_token", secondary_token_data)
-  end
-
   -- Lock the rival in place.
   Wait.condition(
     function()
@@ -4135,14 +3973,6 @@ function recallTrainer(params)
   self.editButton({index=41, position={rivalFlipButtonPos.x, 1000, rivalFlipButtonPos.z}, click_function="flipRivalPokemon", tooltip=""})
 
   local trainerPokemon = getObjectFromGUID(attackerPokemon.pokemonGUID)
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
-    end
-  end
 
   local pokeball = getObjectFromGUID(attackerData.pokeballGUID)
   pokeball.putObject(trainerPokemon)
@@ -4225,14 +4055,6 @@ function recallGym()
 
   -- Remove this chip from the active list.
   Global.call("remove_from_active_chips_by_GUID", defenderPokemon.pokemonGUID)
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", defenderPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=defenderPokemon, secondary_type_token=token_guid})
-    end
-  end
 
   local gym = getObjectFromGUID(defenderData.gymGUID)
   Wait.condition(
@@ -4338,14 +4160,6 @@ function recallRival()
     }
 
     Global.call("despawn_now", despawn_data)
-  end
-
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
-    end
   end
 
   -- Get the rival token object and unlock it in place.
@@ -4500,14 +4314,6 @@ function nextTrainerBattle()
     return
   end
 
-  -- Check if there is a secondary type token to despawn.
-  if Global.call("getDualTypeEffectiveness") then
-    local token_guid = Global.call("get_secondary_type_token_guid", attackerPokemon.pokemonGUID)
-    if token_guid then
-      Global.call("despawn_secondary_type_token", {pokemon=attackerPokemon, secondary_type_token=token_guid})
-    end
-  end
-
   -- Recall this Pokemon.
   pokeball.call("recall")
 
@@ -4565,9 +4371,6 @@ function sendToArena(params)
       pokemonModel.setRotation({pokemonModel.getRotation().x + params.xRotSend, pokemonModel.getRotation().y + modelYRotSend, pokemonModel.getRotation().z + params.zRotSend})
       pokemonModel.setLock(true)
     end
-
-    -- Check if we need to send out secondary type tokens.
-    Global.call("move_secondary_type_token", pokemonData)
 
     -- Level Die
     local diceLevel = 0
@@ -4881,9 +4684,6 @@ function recall(params)
         end
       )
     end
-
-    -- Check if we need to send out secondary type tokens.
-    Global.call("move_secondary_type_token", pokemonData)
 
     -- Level Die
     if pokemonData.levelDiceGUID ~= nil then
@@ -5598,13 +5398,6 @@ function evolvePoke(params)
         end
       elseif evolution.cost <= diceLevel then
         table.insert(evoList, evolution)
-      end
-    end
-    -- Check if there is a secondary type token to despawn.
-    if Global.call("getDualTypeEffectiveness") then
-      local token_guid = Global.call("get_secondary_type_token_guid", pokemonData.pokemonGUID)
-      if token_guid then
-        Global.call("despawn_secondary_type_token", {pokemon=pokemonData, secondary_type_token=token_guid})
       end
     end
 
@@ -6353,14 +6146,6 @@ function multiEvolve(index)
     
     if removeThisToken then
       for m = 1, #evoDataGuids do
-        -- Try to remove secondary type tokens.
-        if Global.call("getDualTypeEffectiveness") then
-          local token_guid = Global.call("get_secondary_type_token_guid", evoDataGuids[m])
-          if token_guid then
-            Global.call("despawn_secondary_type_token", {pokemon=evoData, secondary_type_token=token_guid})
-          end
-        end
-
         local status, pokemonToken = pcall(getObjectFromGUID, evoDataGuids[m])
         if pokemonToken ~= nil then
           local pokeball = getObjectFromGUID(evolvePokeballGUID[evoData.ball])

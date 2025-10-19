@@ -7,7 +7,7 @@ battleManager = "de7152"
 -- Chaos related fields.
 chaos = false
 tier = 5
-genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b" }
+genLeadersPokeballGuids = { "1adc9d", "d6be18", "797253", "d6b981", "cd0374", "150632", "58ca45", "227356", "e4988b", "c4a729", "76b037" }
 customLeadersPokeballGuid = "ab33b9"
 leaderGuid = nil
 currentGen = nil
