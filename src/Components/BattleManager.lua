@@ -612,9 +612,9 @@ function flipGymLeader()
   -- Check if we have a TM booster.
   local cardMoveData = nil
   if defenderData.tmCard then
-    local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
-    if tmData ~= nil then
-      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    local cardObject = getObjectFromGUID(defenderData.boosterGuid)
+    if cardObject then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
     end
   end
 
@@ -819,9 +819,9 @@ function flipRivalPokemon()
   -- Check if we have a TM booster.
   local cardMoveData = nil
   if attackerData.tmCard then
-    local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
-    if tmData ~= nil then
-      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    local cardObject = getObjectFromGUID(attackerData.boosterGuid)
+    if cardObject then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
     end
   end
 
@@ -3502,9 +3502,9 @@ function sendToArenaGym(params)
   -- Check if we have a TM, Tera or Vitamin booster.
   local cardMoveData = nil
   if defenderData.tmCard then
-    local tmData = Global.call("GetTmDataByGUID", defenderData.boosterGuid)
-    if tmData ~= nil then
-      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    local cardObject = getObjectFromGUID(defenderData.boosterGuid)
+    if cardObject then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
     end
   elseif defenderData.teraType then
     local teraData = Global.call("GetTeraDataByGUID", defenderData.boosterGuid)
@@ -3867,9 +3867,9 @@ function sendToArenaRival(params)
   -- Check if we have a TM, Tera or Vitamin booster.
   local cardMoveData = nil
   if attackerData.tmCard then
-    local tmData = Global.call("GetTmDataByGUID", attackerData.boosterGuid)
-    if tmData ~= nil then
-      cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+    local cardObject = getObjectFromGUID(attackerData.boosterGuid)
+    if cardObject then
+      cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
     end
   elseif attackerData.teraType then
     local teraData = Global.call("GetTeraDataByGUID", attackerData.boosterGuid)
@@ -4430,9 +4430,9 @@ function sendToArena(params)
 
         if itemCard.hasTag("TM") then
           pokemonData.tmCard = true
-          local tmData = Global.call("GetTmDataByGUID", itemCard.getGUID())
-          if tmData ~= nil then
-            cardMoveData = copyTable(Global.call("GetMoveDataByName", tmData.move))
+          local cardObject = getObjectFromGUID(itemCard.getGUID())
+          if cardObject then
+            cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
           end
         elseif itemCard.hasTag("ZCrystal") then
           pokemonData.zCrystalCard = true
@@ -5586,9 +5586,9 @@ function evolvePoke(params)
 
           -- Check if the attached card is a TM card.
           if item_card.hasTag("TM") then
-            local moveData = Global.call("GetTmDataByGUID", arenaPokemon.itemCardGUID)
-            if moveData ~= nil then
-              cardMoveData = copyTable(Global.call("GetMoveDataByName", moveData.move))
+            local cardObject = getObjectFromGUID(arenaPokemon.itemCardGUID)
+            if cardObject then
+              cardMoveData = copyTable(Global.call("GetMoveDataByName", cardObject.getName()))
             end
           -- Check if the attached card is a Z-Crystal card.
           elseif item_card.hasTag("ZCrystal") then
@@ -8543,9 +8543,9 @@ function getBooster(isAttacker, boosterName)
     end
   elseif booster_choice < 86 then
     -- TM.
-    local tm_deck = getObjectFromGUID("b779ed")
+    local tm_deck = getObjectFromGUID("68d25d")
     if tm_deck == nil then
-      print("Failed to get TM deck via GUID b779ed")
+      print("Failed to get TM deck via GUID 68d25d")
       return
     end
 
@@ -8558,7 +8558,7 @@ function getBooster(isAttacker, boosterName)
 
     -- Update the return data.
     data.boosterGuid = booster.getGUID()
-    data.boosterReturnDeckGuid = "b779ed"
+    data.boosterReturnDeckGuid = "68d25d"
 
     -- Update the data.
     data.tmCard = true

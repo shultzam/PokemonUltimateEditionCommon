@@ -3,7 +3,7 @@
 -- Regex to find all engineering notation values: [\s=]+([+-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+))
 
 -- The Reserve TM Deck location info.
-local RESERVE_TM_LOCATION = { { position={80, 1.21, -21.73}, rotation={0, 180, 180} } }
+local RESERVE_TM_LOCATION = { { position={80, -0.48, 65.39}, rotation={0, 180, 180} } }
 
 -- Deck GUIDs.
 PBALDECK = "e12530"
@@ -11,7 +11,7 @@ LEVODECK = "fdf0f6"
 TERADECK = "0b44ce"
 TENHDECK = "2f2ce0"
 ZCRYDECK = "81cc95"
-TMDECK   = "b779ed"
+TMDECK   = "68d25d"
 BOOSTDECK = "b66e98"
 SHOPDECK = "272b2d"
 

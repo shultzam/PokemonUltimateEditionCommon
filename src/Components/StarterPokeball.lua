@@ -278,8 +278,8 @@ function beginSetup2(params)
     -- Check if we need to merge the TMs. setup_map() moves the filtered TM deck onto the table so this should be a save merge.
     if not params.filterTMs then
         -- Get a handle on both TM decks
-        local filtered_tm_deck = getObjectFromGUID("b779ed")
-        local bad_tm_deck = getObjectFromGUID("558862")
+        local filtered_tm_deck = getObjectFromGUID("68d25d")
+        local bad_tm_deck = getObjectFromGUID("f9d9d3")
 
         if filtered_tm_deck == nil or bad_tm_deck == nil then
             print("Failed to get a handle on the TM decks")

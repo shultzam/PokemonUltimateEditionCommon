@@ -1,5 +1,3 @@
-
-
 -- TEMP
 local genPokeballs = { "681d76", "d7d981", "818525", "30391b", "758036", "bb73fd", "78fdbb", "d87f03", "2fd969", "2c76f4", 
 "710bab", "521e8b", "9f4fb9", "f5d806", "e05c61", "b3ede1", "80c3c3", "5ded3e", "4f4570", "ee7d71", "feea6b", "be7627", 
@@ -82,8 +80,12 @@ for model_index = 1, #temp_pokeball.getObjects() do
   home_pokeball.putObject(model)
 end
 
+--------------------------------------
+
 -- Get all the snap points.
 print(dump_table(Global.getSnapPoints()))
+
+--------------------------------------
 
 -- Get a handle on the effects pokeball.
 base_effects_pokeball = getObjectFromGUID(EFFECTS_POKEBALL_GUID)
@@ -93,3 +95,78 @@ else
   base_effects_pokeball.setPosition({0, 100, 0})
   base_effects_pokeball.setLock(true)
 end
+
+--------------------------------------
+
+tmByGuid = {}
+for _, row in ipairs(tmData) do
+    tmByGuid[row.guid] = row.move
+end
+
+DROP_POS = { x = -20.49, y = 3, z = 11.01 }
+
+function fix_tm_card_deck(deck_guid)
+  local deck = getObjectFromGUID(deck_guid)
+  if not deck then
+      print("ERROR: deck " .. tostring(deck_guid) .. " not found")
+      return
+  end
+
+  -- We'll iterate until we can't pull cards anymore.
+  -- We'll be defensive about the deck reference potentially changing.
+  while deck ~= nil and deck.tag == "Deck" do
+      local remaining = deck.getQuantity()
+      if not remaining or remaining <= 0 then
+          break
+      end
+
+      -- take the top card
+      local taken = deck.takeObject({
+          position = DROP_POS,  -- spawn it directly at the drop zone
+          smooth   = false,
+      })
+
+      if not taken then
+          print("WARNING: takeObject failed, aborting loop")
+          break
+      end
+
+      -- identify card GUID
+      local g = taken.getGUID()
+
+      -- lookup move name
+      local moveName = tmByGuid[g]
+      if moveName then
+          taken.setName(moveName)
+          taken.setDescription("TM: " .. moveName)
+      else
+          print("WARNING: card GUID " .. g .. " not found in tmData")
+      end
+
+      -- ensure tags "Item" and "TM"
+      local tags = taken.getTags() or {}
+      local hasItem, hasTM = false, false
+      for _, t in ipairs(tags) do
+          if t == "Item" then hasItem = true end
+          if t == "TM"   then hasTM   = true end
+      end
+      if not hasItem then
+          print("Tag fix on " .. g .. ": adding Item")
+          taken.addTag("Item")
+      end
+      if not hasTM then
+          print("Tag fix on " .. g .. ": adding TM")
+          taken.addTag("TM")
+      end
+
+      -- lock in final position for neatness
+      taken.setPositionSmooth(DROP_POS, false, false)
+  end
+
+  print("TM deck processing complete.")
+end
+
+-- TEMP
+fix_tm_card_deck(<GUID>)
+
+--------------------------------------
