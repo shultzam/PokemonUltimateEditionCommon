@@ -1944,9 +1944,9 @@ gen8PokemonData =
   { name="GMax Orbeetle",        level=4, types={ "Bug", "Psychic" }, moves={ "Gravitas", "Flutterby" },        guids={ "27ad44", "aee305" },       evoData={ { cost=0, ball=BLUE, gen=8, cycle=true, guids={ "4150f3", "6e7247", "eb4403" } } }, model_GUID="100a08", pokedex=826 },
   { name="GMax Drednaw",         level=3, types={ "Water", "Rock" }, moves={ "Stonesurge", "Darkness" },        guids={ "8054c2", "5cb470" },       evoData={ { cost=0, ball=BLUE, gen=8, cycle=true, guids={ "620b5e", "bf22b0" }, model_GUID="0ab337" } }, model_GUID="72b7ce", custom_scale=0.7, pokedex=834 },
   { name="GMax Coalossal",       level=5, types={ "Rock", "Fire" }, moves={ "Volcalith", "Flare" },             guids={ "423aca", "6407e4" },       evoData={ { cost=0, ball=RED, gen=8, cycle=true, guids={ "6ac20e", "678720", "5eecb1" }, model_GUID="e7e32a" } }, model_GUID="dfe276", custom_scale=0.6, pokedex=839 },
-  { name="GMax Flapple",         level=4, types={ "Grass", "Dragon" },    moves={ "Tartness", "Wyrmwind" },     guids={ "c4ec8a", "975b3c" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "beb575", "508cc7" }, model_GUID="c9aba6" } }, model_GUID="62fbcf", custom_scale=0.5, offset={x=0, y=1.0, z=0}, pokedex=841 },
-  { name="GMax Appletun",        level=4, types={ "Grass", "Dragon" },    moves={ "Sweetness", "Wyrmwind" },    guids={ "945af3", "31aacc" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "a26f34", "3a326b" }, model_GUID="8997a1" } }, model_GUID="b87e45", custom_scale=0.5, offset={x=0, y=1.0, z=0}, pokedex=842 },
-  { name="GMax Sandaconda",      level=5, types={ "Ground" },   moves={ "Sandblast", "Guard" },                 guids={ "2e2482", "3ab61a" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "c91baf", "3e0da6" }, model_GUID="d15ad0" } }, model_GUID="1e2e60", pokedex=844 },
+  { name="GMax Flapple",         level=4, types={ "Grass", "Dragon" },    moves={ "Tartness", "Airstream" },    guids={ "c4ec8a", "975b3c" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "beb575", "508cc7" }, model_GUID="c9aba6" } }, model_GUID="62fbcf", custom_scale=0.5, offset={x=0, y=1.0, z=0}, pokedex=841 },
+  { name="GMax Appletun",        level=4, types={ "Grass", "Dragon" },    moves={ "Sweetness", "Strike" },      guids={ "945af3", "31aacc" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "a26f34", "3a326b" }, model_GUID="8997a1" } }, model_GUID="b87e45", custom_scale=0.5, offset={x=0, y=1.0, z=0}, pokedex=842 },
+  { name="GMax Sandaconda",      level=5, types={ "Ground" },   moves={ "Sandblast", "Darkness" },              guids={ "2e2482", "3ab61a" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "c91baf", "3e0da6" }, model_GUID="d15ad0" } }, model_GUID="1e2e60", pokedex=844 },
   { name="GMax Toxtricity",      level=4, types={ "Electric", "Poison" }, moves={ "Stun Shock", "Ooze" },       guids={ "1644af", "f8615c" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "0c6876", "bea82d" }, model_GUID="42a6c3" } }, model_GUID="7c090f", custom_scale=0.5, pokedex=849 },
   { name="GMax Toxtricity",      level=4, types={ "Electric", "Poison" }, moves={ "Stun Shock", "Ooze" },       guids={ "8c4dd2", "e01e0a" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "67ec92", "a7277f" }, model_GUID="4d9bff" } }, model_GUID="7c090f", custom_scale=0.5, pokedex=849 },
   { name="GMax Centiskorch",     level=4, types={ "Fire", "Bug" },     moves={ "Centiferno", "Flutterby" },     guids={ "457776", "f8726f" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "5b2923", "bf95c2" }, model_GUID="a1917b" } }, model_GUID="6bd6e4", custom_scale=0.65, pokedex=851 },
@@ -1954,7 +1954,7 @@ gen8PokemonData =
   { name="GMax Grimmsnarl",      level=6, types={ "Dark", "Fairy" }, moves={ "Snooze", "Starfall" },            guids={ "671823", "325e58" },       evoData={ { cost=0, ball=RED, gen=8, cycle=true, guids={ "9a62bf", "2f04d6", "0cccf2" }, model_GUID="3db539" } }, model_GUID="e31f45", custom_scale=0.7, pokedex=861 },
   { name="GMax Alcremie",        level=3, types={ "Fairy" },    moves={ "Finale", "Guard" },                    guids={ "3c5cba", "0b4ee1" },       evoData={ { cost=0, ball=BLUE, gen=8, cycle=true, guids={ "71833d", "f57bd3" } } }, model_GUID="c54873", custom_scale=0.4, offset={x=0, y=1.0, z=0}, pokedex=869 },
   { name="GMax Copperajah",      level=5, types={ "Steel" },    moves={ "Steelsurge", "Quake" },                guids={ "ad2c75", "1e68f7" },       evoData={ { cost=0, ball=BLUE, gen=8, cycle=true, guids={ "772688", "bb0dab" } } }, model_GUID="be6c58", custom_scale=0.6, pokedex=879 },
-  { name="GMax Duraludon",       level=5, types={ "Steel", "Dragon" },    moves={ "Wyrmwind", "Depletion" },    guids={ "e17508", "ff891b" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "19c226" }, model_GUID="397452" } }, model_GUID="a14b0f", custom_scale=0.5, pokedex=884 },
+  { name="GMax Duraludon",       level=5, types={ "Steel", "Dragon" },    moves={ "Wyrmwind", "Steelspike" },    guids={ "e17508", "ff891b" },       evoData={ { cost=0, ball=YELLOW, gen=8, cycle=true, guids={ "19c226" }, model_GUID="397452" } }, model_GUID="a14b0f", custom_scale=0.5, pokedex=884 },
   { name="GMax Eternatus",       level=7, types={ "Poison", "Dragon" },   moves={ "Eternabeam", "Ooze" },       guids={ "e78955" },                 evoData={ { cost=0, ball=LEGENDARY, gen=8, cycle=true, guids={ "c0d41b" } } }, model_GUID="865247", offset={x=0, y=0, z=1.5}, pokedex=890 },
   { name="GMax R.S. Urshifu",    level=7, types={ "Fighting", "Water" }, moves={ "Rapid Flow", "Knuckle" },     guids={ "bf033c" },                 evoData={ { cost=0, ball=LEGENDARY, gen=8, cycle=true, guids={ "ab896e" } } }, model_GUID="6c1d60", custom_scale=0.7, pokedex=892 },
   { name="GMax S.S. Urshifu",    level=7, types={ "Fighting", "Dark" }, moves={ "One Blow", "Knuckle" },        guids={ "dd3373" },                 evoData={ { cost=0, ball=LEGENDARY, gen=8, cycle=true, guids={ "015ff0" } } }, model_GUID="4491c0", custom_scale=0.7, pokedex=892 },  
@@ -1990,7 +1990,7 @@ gen9PokemonData =
   { name="Smoliv",        level=2, types={ "Grass", "Normal" }, moves={ "Growth", "Absorb" },   guids={ "478ad3" }, evoData={ { cost=1, ball=GREEN, gen=9, guids={ "70af04" } } }, model_GUID="477ca3", pokedex=928 }, 
   { name="Dolliv",        level=3, types={ "Grass", "Normal" }, moves={ "Seed Bomb", "Tackle" },   guids={ "c00c7c", "70af04" }, evoData={ { cost=2, ball=YELLOW, gen=9, guids={ "46e56c", "8bf8dd" } } }, model_GUID="6c7c13", offset={x=0, y=0.06, z=0}, pokedex=929 },
   { name="Arboliva",      level=5, types={ "Grass", "Normal" }, moves={ "Grassy Terrain", "Terrain Pulse" }, guids={ "31acf0", "46e56c", "8bf8dd" }, model_GUID="a34ec8", offset={x=0, y=0.025, z=0}, pokedex=930 },
-  { name="Squawkabilly",  level=3, types={ "Flying", "Normal" }, moves={ "Mimic", "Fly" },  guids={ "1968bc" }, model_GUID="e3085d", offset={x=0, y=0.025, z=0}, pokedex=931 },
+  { name="Squawkabilly",  level=3, types={ "Flying", "Normal" }, moves={ "Mimic", "Fly" },  guids={ "1968bc" }, model_GUID="72d02e", offset={x=0, y=0.025, z=0}, pokedex=931 },
   { name="Nacli",         level=2, types={ "Rock" }, moves={ "Rock Throw", "Harden" }, guids={ "3b9f04" }, evoData={ { cost=2, ball=BLUE, gen=9, guids={ "0d54a8" } } }, model_GUID="741531", pokedex=932 },
   { name="Naclstack",     level=4, types={ "Rock" }, moves={ "Salt Cure", "Mud Shot" },  guids={ "69cf19", "0d54a8" }, evoData={ { cost=2, ball=RED, gen=9, guids={ "1c0e4e", "7c6d2b" } } }, model_GUID="68b08d", offset={x=0, y=0.05, z=0}, pokedex=933 },
   { name="Garganacl",     level=6, types={ "Rock" }, moves={ "Hammer Arm", "Stone Edge" }, guids={ "9aaabb", "1c0e4e", "7c6d2b" }, model_GUID="33576e", offset={x=0, y=0.05, z=0}, pokedex=934 },
@@ -1998,7 +1998,7 @@ gen9PokemonData =
   { name="Armarouge",     level=4, types={ "Fire", "Psychic" }, moves={ "Armour Cannon", "Psyshock" },  guids={ "72da86", "7a4b5f" }, model_GUID="eeebe5", offset={x=0, y=0.03, z=0}, pokedex=936 }, 
   { name="Ceruledge",     level=4, types={ "Fire", "Ghost" }, moves={ "Shadow Sneak", "Bitter Blade" }, guids={ "9d5def", "3fc935" }, model_GUID="bd3a41", offset={x=0, y=0.03, z=0}, pokedex=937 }, 
   { name="Tadbulb",       level=2, types={ "Electric" }, moves={ "Thunder Shock", "Mud-Slap" },     guids={ "fc24d2" }, evoData={ { cost=1, ball=BLUE, gen=9, guids={ "7dbae8" } } }, model_GUID="fa6405", offset={x=0, y=0.05, z=0}, pokedex=938 },
-  { name="Bellibolt",     level=3, types={ "Electric" }, moves={ "Sucker Punch", "Discharge" },  guids={ "d11554", "7dbae8" }, model_GUID="72d02e", custom_scale=0.8, offset={x=0, y=0.03, z=0}, pokedex=939 },
+  { name="Bellibolt",     level=3, types={ "Electric" }, moves={ "Sucker Punch", "Discharge" },  guids={ "d11554", "7dbae8" }, model_GUID="0f5e65", custom_scale=0.8, offset={x=0, y=0.03, z=0}, pokedex=939 },
   { name="Wattrel",       level=2, types={ "Electric", "Flying" }, moves={ "Agility", "Peck" },    guids={ "388592" },  evoData={ { cost=2, ball=BLUE, gen=9, guids={ "a10303" } } }, model_GUID="a285c1", offset={x=0, y=0.05, z=0}, pokedex=940 },
   { name="Kilowattrel",   level=4, types={ "Electric", "Flying" }, moves={ "Dual Wingbeat", "Spark" },    guids={ "81d760", "a10303" }, model_GUID="af9df4", offset={x=0, y=0.15, z=0}, pokedex=941 },
   { name="Maschiff",      level=2, types={ "Dark" }, moves={ "Bite", "Roar" }, guids={ "8cb576" }, evoData={ { cost=2, ball=BLUE, gen=9, guids={ "41dfa5" } } }, model_GUID="1e81d4", offset={x=0, y=0.08, z=0}, pokedex=942 },
@@ -2532,7 +2532,7 @@ moveData =
     {name="Earth Power",    power=2,      type="Ground",  dice=6, STAB=true,    effects={{name="Advantage", target="Self", chance=6}} },
     {name="Earthquake",     power=2,      type="Ground",  dice=6, STAB=true},
     {name="Fissure",        power=0,      type="Ground",  dice=6, STAB=false,   effects={{name="KO", target="Enemy", chance=5}} },
-    {name="High Horsepower",  power=3,      type="Ground",  dice=6, STAB=true},
+    {name="High Horsepower", power=2,      type="Ground",  dice=6, STAB=true},
     {name="Headlong Rush",  power=3,      type="Ground",  dice=6, STAB=true,    effects={{name="StatDown", target="Self"}} },
     {name="Land's Wrath",   power=3,      type="Ground",  dice=6, STAB=true},
     {name="Magnitude",      power=1,      type="Ground",  dice=6, STAB=true,    effects={{name="D4Dice", target="Self", chance=3}, {name="AddDice", target="Self", chance=5}}},
@@ -2858,7 +2858,7 @@ moveData =
     {name="Stone Axe",      power=2,      type="Rock",    dice=8, STAB=true,    effects={{name="StealthRock"}}},
     {name="Stone Edge",     power=2,      type="Rock",    dice=8, STAB=true},
     {name="Wide Guard",     power=0,      type="Rock",    dice=6, STAB=false,   effects={{name="Protection", target="Self" }} },
-    {name="Volcalith",      power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="Custom"}}},
+    {name="Volcalith",      power=3,      type="Rock",    dice=4, STAB=true,    effects={{name="AddDice", target="Self", chance=4}} },
     {name="Continental Crush", power=4,   type="Rock",    dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
     {name="Splintered Stormshards", power=4, type="Rock", dice=6, STAB=false,   effects={{name="Recharge", target="Self"}} },
     {name="Meteor Beam",    power=3,      type="Rock",    dice=6, STAB=true,    effects={{name="Recharge", target="Self"}} },
@@ -7711,9 +7711,10 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 24 Oct 2025 - v4.01 \
+  printToAll("Last update on 27 Oct 2025 - v4.01 \
      - Enjoy the new map Hisui! \
-     - bug fixes (thanks Hursti!)",
+     - improvements to solo games (thanks jbigman_, Turtwigs best friend and voidro!) \
+     -- I suggest *not* playing in Hotseat mode and instead using the Game Keys (Options > Game Keys) to actually change seats",
   "Pink")
 end
 
@@ -7873,27 +7874,27 @@ function viewTeam(team)
     showPosition = {x=-21.50,y=0.14,z=-48}
     camYaw = 0
   elseif team == "Green" then
-      showPosition = {x=-65,y=0.96,z=-21.5}
-      camYaw = 90
+    showPosition = {x=-65,y=0.96,z=-21.5}
+    camYaw = 90
   elseif team == "Orange" then
-      showPosition = {x=65,y=0.96,z=21.5}
-      camYaw = 270
+    showPosition = {x=65,y=0.96,z=21.5}
+    camYaw = 270
   elseif team == "Purple" then
-      showPosition = {x=65,y=0.96,z=-21.5}
-      camYaw = 270
+    showPosition = {x=65,y=0.96,z=-21.5}
+    camYaw = 270
   elseif team == "Red" then
-      showPosition = {x=21.50,y=0.14,z=-48}
-      camYaw = 0
+    showPosition = {x=21.50,y=0.14,z=-48}
+    camYaw = 0
   elseif team == "Yellow" then
-      showPosition = {x=-65,y=0.96,z=21.5}
-      camYaw = 90
+    showPosition = {x=-65,y=0.96,z=21.5}
+    camYaw = 90
   end
 
   Player[team].lookAt({
-      position = showPosition,
-      pitch    = 60,
-      yaw      = camYaw,
-      distance = 25
+    position = showPosition,
+    pitch    = 60,
+    yaw      = camYaw,
+    distance = 25
   })
 end
 
@@ -8076,7 +8077,7 @@ function print_pokemon_evos(pokemon_data, seen_pokemon_guids)
   end
 end
 
--- Helper function to convert a pokedex number into pokedex number with book and age.
+-- Helper function to convert a pokedex number into pokedex number with book and page.
 function get_pokedex_info(pokedex_number)
   -- Sorting this each time is an awful idea. Try to only sort it once.
   if SORTED_POKEDEX_TKEYS == nil or #SORTED_POKEDEX_TKEYS == 0 then
@@ -8486,6 +8487,12 @@ function regionMapSet(player, option, id)
   checkBeginState()
 end
 
+-- Helper function used to get the current count of seated players.
+function get_player_count()
+  local seated_players = getSeatedPlayers()
+  return #seated_players
+end
+
 -- Helper function to reset the current hands on the board. This is called by MapManager
 -- and is required because Hands is only accessible within Global (apparently).
 function reinitialize_hand_zones(hand_config_table)
@@ -8495,34 +8502,38 @@ function reinitialize_hand_zones(hand_config_table)
   Player["Pink"].setHandTransform({position = {0,75,0}})
   Player["White"].setHandTransform({position = {0,75,0}})
 
+  -- Get the count of current players.
+  local solo_game = (get_player_count() == 1)
+  print("Solo game detected. Not removing Hands for other players.")
+
   -- Move the player hands we care about. If the player does not exist,
   -- we can leave them in them in the sky for deletion.
-  if Player["Yellow"].steam_name ~= nil then
+  if Player["Yellow"].steam_name ~= nil or solo_game then
     Player["Yellow"].setHandTransform(hand_config_table["Yellow"])
   else
     Player["Yellow"].setHandTransform({position = {0,75,0}})
   end
-  if Player["Green"].steam_name ~= nil then
+  if Player["Green"].steam_name ~= nil or solo_game then
     Player["Green"].setHandTransform(hand_config_table["Green"])
   else
     Player["Green"].setHandTransform({position = {0,75,0}})
   end
-  if Player["Blue"].steam_name ~= nil then
+  if Player["Blue"].steam_name ~= nil or solo_game then
     Player["Blue"].setHandTransform(hand_config_table["Blue"])
   else
     Player["Blue"].setHandTransform({position = {0,75,0}})
   end
-  if Player["Red"].steam_name ~= nil then
+  if Player["Red"].steam_name ~= nil or solo_game then
     Player["Red"].setHandTransform(hand_config_table["Red"])
   else
     Player["Red"].setHandTransform({position = {0,75,0}})
   end
-  if Player["Purple"].steam_name ~= nil then
+  if Player["Purple"].steam_name ~= nil or solo_game then
     Player["Purple"].setHandTransform(hand_config_table["Purple"])
   else
     Player["Purple"].setHandTransform({position = {0,75,0}})
   end
-  if Player["Orange"].steam_name ~= nil then
+  if Player["Orange"].steam_name ~= nil or solo_game then
     Player["Orange"].setHandTransform(hand_config_table["Orange"])
   else
     Player["Orange"].setHandTransform({position = {0,75,0}})
