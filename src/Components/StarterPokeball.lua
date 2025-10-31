@@ -591,7 +591,7 @@ function beginSetup2(params)
         -- Get the Team Rocket card.
         local teamRocketGym = getObjectFromGUID(teamRocketGymGuid)
         local teamRocketPokeball = getObjectFromGUID(teamRocketPokeballs[gen])
-        if (#teamRocketPokeballs == 1 and teamRocketPokeballs[1] == customLeadersArr[4]) or gen == 10 then
+        if (#teamRocketPokeballs == 1 and teamRocketPokeballs[1] == customLeadersArr[4]) or map_lookup_table[gen] == "Orange Islands" then
             gen = "custom"
         end
         local random_leader_params = Global.call("RandomGymGuidOfTier", {gen=gen, tier=11, retrievedList=leadersRetrieved})       -- 11 signifes Team Rocket.
@@ -831,20 +831,6 @@ beastGuidTable = {
     }
 }
 
--- Region name to generation lookup table.
-local regionToGenNumberLookupTable = {
-    ["Kanto"] = 1,
-    ["Johto"] = 2,
-    ["Hoenn"] = 3,
-    ["Sinnoh"] = 4,
-    ["Unova"] = 5,
-    ["Kalos"] = 6,
-    ["Alola"] = 7,
-    ["Galar"] = 8,
-    ["Paldea"] = 9,
-    ["Orange Islands"] = 10
-}
-
 function get_ransei_badge_tint(gym_index)
     if gym_index == 1 then
         return {31/255, 95/255, 37/255}
@@ -1045,13 +1031,19 @@ function setup_map(selected_map_name, leadersGen, pokemonGens)
                 local leader_guid = nil
                 local gymPokeball = getObjectFromGUID("76b037")
 
-                -- There are two tier-1 and ... gyms in Hisui. Make sure they all get the correct home.
+                -- There are two tier-1, two tier-4 and two Team Rocket gyms in Hisui. 
+                -- Make sure they get the correct home. In the case of Team Rocket, the order does not matter.
                 if params.guid == "215aa8" then
                     -- Grandtree Arena. Tier 1.
                     leader_guid = "c03171"
                 elseif params.guid == "431cce" then
                     -- Sand's Reach. Tier 4.
                     leader_guid = "064893"
+                elseif params.guid == "30b80c" then
+                    -- Sand's Reach Team Rocket. Tier 4.
+                    local leaders_options = {"e845b1", "e2cd5b"}
+                    leader_guid = leaders_options[math.random(1, #leaders_options)]
+                    gymPokeball = getObjectFromGUID("e0ad1f")
                 end
 
                 object_reference.putObject(gymPokeball.takeObject({ guid = leader_guid }))

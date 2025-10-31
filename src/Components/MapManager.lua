@@ -725,12 +725,13 @@ local map_data = {
     standard_items = {
       { guid = "004c6f", position={-38.50, 1.06, 21.29},  rotation={0, 180, 180} }, -- Pokemon Encounter.
       { guid = "0531c3", position={37.74, 0.97, 29.59},   rotation={0, 180, 0} },   -- Pokecoins Rules.
-      { guid = "4a4407", position={-24.43, 0.97, -0.27}, rotation={0, 180, 0} },   -- Item Costs table.
+      { guid = "4a4407", position={-24.43, 0.97, -0.27}, rotation={0, 180, 0} },    -- Item Costs table.
     },
     map_specific_items = {
-      { guid = "7ef3df", position={24.34, 0.97, 28.68},   rotation={0, 180, 0} },                              -- Space-Time Distortion Rules.
-      { guid = "215aa8", position={-8.49, 0.96, -13.69},  rotation={0, 180, 0}, is_gym = true, gym_tier = 1 }, -- Grandtree Arena "Gym".
-      { guid = "431cce", position={42.80, 0.96, 1.83},    rotation={0, 180, 0}, is_gym = true, gym_tier = 4 }, -- Sand's Reach "Gym".
+      { guid = "7ef3df", position={24.34, 0.97, 28.68},   rotation={0, 180, 0} },                               -- Space-Time Distortion Rules.
+      { guid = "215aa8", position={-8.49, 0.96, -13.69},  rotation={0, 180, 0}, is_gym = true, gym_tier = 1 },  -- Grandtree Arena "Gym".
+      { guid = "431cce", position={42.80, 0.96, 1.83},    rotation={0, 180, 0}, is_gym = true, gym_tier = 4 },  -- Sand's Reach "Gym".
+      { guid = "30b80c", position={39.25, 0.96, 2.44},    rotation={0, 180, 0}, is_gym = true, gym_tier = 11 }, -- Sand's Reach Miss Fortunes.
     },
     badge_info = {
       { url = "https://steamusercontent-a.akamaihd.net/ugc/13220395888218920735/53E5BAAAEF1F3BCE84167988A9B50F69FDDD09BE/", name = "Wyrdeer Warden Token" },

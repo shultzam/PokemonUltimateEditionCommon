@@ -1317,7 +1317,7 @@ gen4PokemonData =
   -- Gen 4 476-493
   { name="Probopass",  level=5, types={ "Rock", "Steel" }, moves={ "Magnet Bomb", "Rock Slide" },guids={ "c36f28", "261bac" }, model_GUID="3a1a8d", pokedex=476 },
   { name="Dusknoir",   level=6, types={ "Ghost" },    moves={ "Shadow Punch", "Future Sight" },  guids={ "40e69b", "59c3d9", "0a1b22" }, model_GUID="14f5fa", pokedex=477 },
-  { name="Frosslass",  level=5, types={ "Ice", "Ghost" }, moves={ "Frost Breath", "Hex" },  guids={ "44d36b", "f5d09d" }, model_GUID="21d87a", pokedex=478 },
+  { name="Froslass",   level=5, types={ "Ice", "Ghost" }, moves={ "Frost Breath", "Hex" },  guids={ "44d36b", "f5d09d" }, model_GUID="21d87a", pokedex=478 },
   { name="Rotom",      level=3, types={ "Electric", "Ghost" }, moves={ "Ominous Wind", "Thunder Shock" }, guids={ "631643" }, model_GUID="480b20", spawn_effect="Physical Attack", ball=BLUE, pokedex=479 },
   { name="Mow Rotom",  level=3, types={ "Electric", "Grass" }, moves={ "Thunder Shock", "Leaf Storm" }, guids={ "9c2b53" }, model_GUID="cd771b", ball=BLUE, pokedex=479 },
   { name="Heat Rotom", level=3, types={ "Electric", "Fire" }, moves={ "Thunder Shock", "Overheat" }, guids={ "119ba7" }, model_GUID="154dd8", ball=BLUE, pokedex=479 },
@@ -4139,7 +4139,7 @@ gymData =
     gymTier = 7,
     pokemon = {
       { name="Abomasnow", level=7, types={ "Grass", "Ice" }, moves={ "Avalanche", "Focus Blast", "Wood Hammer" }, model_GUID="c003e7", custom_scale=0.8 },
-      { name="Frosslass", level=7, types={ "Ice", "Ghost" },   moves={ "Blizzard", "Psychic", "Shadow Ball" }, model_GUID="21d87a" } }
+      { name="Froslass",  level=7, types={ "Ice", "Ghost" },   moves={ "Blizzard", "Psychic", "Shadow Ball" }, model_GUID="21d87a" } }
   },
   {
     guid = "f14c62",
@@ -5296,7 +5296,7 @@ gymData =
     gen=11,
     gymTier = 8,
     pokemon = {
-      { name="Frosslass", level=8, types={ "Ice", "Ghost" }, moves={ "Ice Shard", "Shadow Ball", "Thunderbolt" }, model_GUID="21d87a" },
+      { name="Froslass", level=8, types={ "Ice", "Ghost" }, moves={ "Ice Shard", "Shadow Ball", "Thunderbolt" }, model_GUID="21d87a" },
       { name="Hisuian Avalugg", level=8, types={ "Ice", "Rock" }, moves={ "Stone Edge", "Mountain Gale", "Iron Head" }, model_GUID="9c5c23", custom_scale=0.45, offset={x=0, y=0.03, z=-0.15} } }
   },
 
@@ -6167,7 +6167,7 @@ local shiny_guid_table = {
   ["Gallade"] = "3369b5",
   ["Probopass"] = "b60aeb",
   ["Dusknoir"] = "426ff6",
-  ["Frosslass"] = "236683",
+  ["Froslass"] = "236683",
   ["Rotom"] = "d6acbb",
   ["Mow Rotom"] = "db18d5",
   ["Heat Rotom"] = "e85656",
@@ -7066,7 +7066,7 @@ function getPokemonDataByGen(gen)
   end
 
   -- No data found.
-  print("ERROR: No Pokemon data found for gen " .. tostring(gen))
+  print("ERROR: No Pokémon data found for gen " .. tostring(gen))
   return nil
 end
 
@@ -7130,8 +7130,7 @@ end
 function GetMoveDataByName(name)
   for i = 1, #moveData do
     local data = moveData[i]
-    local moveName = data.name
-    if moveName == name then
+    if data.name == name then
       return data
     end
   end
@@ -7139,7 +7138,6 @@ function GetMoveDataByName(name)
   -- If we get here, we didn't find the move data. Maybe it is custom? <.<
   for i = 1, #customMoveData do
     local data = customMoveData[i]
-    local moveName = data.name
     if data.name == name then
       return data
     end
@@ -7627,7 +7625,7 @@ function onLoad(saved_data)
           active_chips[guid].chip = chip
           chip.registerCollisions()
         end
-        if save_table and save_table.active[guid] then
+        if save_table and save_table.active and save_table.active[guid] then
           local pokemon = active_chips[guid]
           local active_save = save_table.active[guid]
 
@@ -7635,6 +7633,35 @@ function onLoad(saved_data)
             pokemon.state_key = active_save.state_key
             pokemon.state = pokemon.base.states[active_save.state_key]
           end
+
+          -- Shiny restoration logic.
+          if active_save.rolled_for_shiny ~= nil then
+            if tokens_checked_for_shiny == nil then tokens_checked_for_shiny = {} end
+            tokens_checked_for_shiny[guid] = active_save.was_shiny
+
+            pokemon.rolled_for_shiny = true
+            pokemon.is_shiny = (active_save.was_shiny == true)
+
+            -- if it was shiny, also rebuild species lock.
+            if active_save.was_shiny == true then
+              local pokemon_name = nil
+              local active = active_chips[guid]
+              if active and active.base and active.base.name then
+                pokemon_name = active.base.name
+              else
+                pokemon_name = GetNameOfPokemonWithGUID(guid)
+              end
+
+              if pokemon_name then
+                if shiny_pokemon_that_exist_table == nil then
+                  shiny_pokemon_that_exist_table = {}
+                end
+                shiny_pokemon_that_exist_table[pokemon_name] = guid
+              end
+            end
+          end
+
+          -- Model logic.
           local model = getObjectFromGUID(active_save.model_GUID)
           if model then
             pokemon.model = model
@@ -7711,10 +7738,10 @@ function onLoad(saved_data)
 end
 
 function print_changelog()
-  printToAll("Last update on 27 Oct 2025 - v4.01 \
+  printToAll("Last update on 30 Oct 2025 - v4.02 \
      - Enjoy the new map Hisui! \
-     - improvements to solo games (thanks jbigman_, Turtwigs best friend and voidro!) \
-     -- I suggest *not* playing in Hotseat mode and instead using the Game Keys (Options > Game Keys) to actually change seats",
+     - Fixed shiny models maybe? <.< \
+     - Bug fixes",
   "Pink")
 end
 
@@ -7739,19 +7766,39 @@ function onSave()
     end
   end
   local active_table = {}
-  for key,pokemon in pairs(active_chips) do
+  for key, pokemon in pairs(active_chips) do
+    -- Ensure we have a table for this GUID if we need to save shiny info.
+    local entry = nil
+
     -- Model.
     if pokemon.model then
-      active_table[key] = {
+      entry = {
         model_GUID = pokemon.model.getGUID()
       }
       if pokemon.state_key then
-        active_table[key].state_key = pokemon.state_key
+        entry.state_key = pokemon.state_key
       end
     elseif pokemon.state_key then
-      active_table[key] = {
+      entry = {
         state_key = pokemon.state_key
       }
+    end
+
+    -- If we didn't create an entry yet but we DO have shiny status,
+    -- we must create one now so we can persist it.
+    if entry == nil and tokens_checked_for_shiny and tokens_checked_for_shiny[key] ~= nil then
+      entry = {}
+    end
+
+    -- Restore shiny state.
+    if tokens_checked_for_shiny and tokens_checked_for_shiny[key] ~= nil then
+      entry.rolled_for_shiny = true
+      -- true or false.
+      entry.was_shiny = tokens_checked_for_shiny[key]
+    end
+
+    if entry ~= nil then
+      active_table[key] = entry
     end
   end
 
@@ -9455,71 +9502,106 @@ function spawn_model(pokemon)
 
   -- Check this token's shiny state. The shiny_guid_table will return the GUID for its shiny model, if it exists.
   local token_guid = pokemon.chip.getGUID()
-  local pokemon_name = GetNameOfPokemonWithGUID(token_guid)
+  local pokemon_name = pokemon.base and pokemon.base.name or GetNameOfPokemonWithGUID(token_guid)
+
+  -- See if we can spawn a shiny model.
   if pokemon_name and shiny_guid_table[pokemon_name] then
-    -- If shiny_status is true then the model must be a Shiny, if possible.
-    -- This is most likely due to a shiny Pokemon evolving.
-    local shiny_status = tokens_checked_for_shiny[token_guid]
-    -- If shiny_already_spawned is true then another token of this Pokemon is already a Shiny.
-    local shiny_already_spawned = (shiny_pokemon_that_exist_table[pokemon_name] ~= nil and shiny_pokemon_that_exist_table[pokemon_name] ~= token_guid)
-    if force_shiny or (shiny_status == nil and not shiny_already_spawned) then
-      -- This token has not attempted to Spawn a model yet. Attempt to spawn a shiny.
-      if force_shiny or (math.random(1,100) > (100 - shiny_chance)) then
-        -- Spawn a shiny!
-        pokemon.state.model_GUID = shiny_guid_table[pokemon_name]   -- TODO: maybe don't do this and callers can check for .shiny?
-        pokemon.state.shiny = true
-        -- This offset only works the first time the Pokemon is loaded.
-        pokemon.base.offset = {x=pokemon.base.offset.x, y=pokemon.base.offset.y + 0.05, z=pokemon.base.offset.z}
+    local shiny_status = get_token_shiny_status(token_guid)  -- true, false, or nil
+    local holder = shiny_pokemon_that_exist_table and shiny_pokemon_that_exist_table[pokemon_name] or nil
+    local species_claimed_by_other = holder ~= nil and holder ~= token_guid
 
-        -- Make sure this token is on the shiny check list.
-        force_shiny_spawn({guid=token_guid, state=true})
-        -- This prevents another token for this Pokemon also getting a Shiny.
-        shiny_pokemon_that_exist_table[pokemon_name] = token_guid
-
-        -- Get a handle on the Token and set the color tint.
-        local token = getObjectFromGUID(token_guid)
-        if token then
-          token.setColorTint(SHINY_RGB)
-        end
-
-        -- Log it.
-        printToAll("A shiny " .. pokemon_name .. " appeared!", SHINY_RGB)
-
-        -- Tell the Rival Event ball to remove the checkmark.
-        if force_shiny then
-          local rivalBall = getObjectFromGUID(RIVAL_EVENT_POKEBALL_GUID)
-          if rivalBall then
-            rivalBall.call("remove_forced_shiny")
-          end
-        end
-
-        -- Reset force shiny.
-        force_shiny = false
-      else
-        -- Failed to spawn the shiny. Make sure this token is on the shiny check list.
-        force_shiny_spawn({guid=token_guid, state=false})
-
-        -- Log it.
-        printToAll(pokemon_name .. " appeared!")
-
-        -- Get a handle on the Token and set the color tint.
-        local token = getObjectFromGUID(token_guid)
-        if token then
-          token.setColorTint("White")
-        end
+    -- Helper to hard-set this spawn to normal model.
+    local function set_non_shiny_for_this_spawn()
+      -- Restore base model from data.
+      local baseData = GetPokemonDataByGUID({guid = token_guid})
+      if baseData and baseData.model_GUID then
+        pokemon.state.model_GUID = baseData.model_GUID
       end
-    elseif shiny_status then
-      -- This token is already a Shiny. Respawn the shiny!
+      pokemon.state.shiny = false
+
+      -- Set the token to white.
+      local token = getObjectFromGUID(token_guid)
+      if token then
+        token.setColorTint("White")
+      end
+    end
+
+    -- Check for force shiny.
+    if force_shiny then
+      -- Force always wins, regardless of rules.
+      pokemon.state.model_GUID = shiny_guid_table[pokemon_name]
+      pokemon.state.shiny = true
+      pokemon.base.offset = {x=pokemon.base.offset.x, y=pokemon.base.offset.y + 0.05, z=pokemon.base.offset.z}
+
+      -- Set this token's shiny status.
+      set_token_shiny_status({guid=token_guid, state=true})
+
+      -- Tint the token.
+      local token = getObjectFromGUID(token_guid)
+      if token then
+        token.setColorTint(SHINY_RGB)
+      end
+      printToAll("A shiny " .. pokemon_name .. " appeared!", SHINY_RGB)
+
+      -- Remove the shiny force status.
+      local rivalBall = getObjectFromGUID(RIVAL_EVENT_POKEBALL_GUID)
+      if rivalBall then
+        rivalBall.call("remove_forced_shiny")
+      end
+      force_shiny = false
+
+    elseif shiny_status == true then
+      -- Already permanently shiny. Respawn the shiny.
+      pokemon.state.model_GUID = shiny_guid_table[pokemon_name]
       pokemon.state.shiny = true
 
-      -- Determine if the current offset is the same that is in its data.
+      -- Apply the offsets.
       local pokemonData = GetPokemonDataByGUID({guid=token_guid})
       if pokemon.base.offset == pokemonData.offset then
         pokemon.base.offset = {x=pokemon.base.offset.x, y=pokemon.base.offset.y + 0.05, z=pokemon.base.offset.z}
       end
+
+    elseif shiny_status == false then
+      -- Permanently non-shiny, no roll.
+      set_non_shiny_for_this_spawn()
+      printToAll(pokemon_name .. " appeared!")
+
+    else
+      -- shiny_status == nil, first time this token is attempting to spawn.
+      if species_claimed_by_other then
+        -- Pokemon already has a different shiny holder; no roll and permanently lock this token as non-shiny.
+        set_non_shiny_for_this_spawn()
+        set_token_shiny_status({guid=token_guid, state=false})
+        printToAll(pokemon_name .. " appeared!")
+
+      else
+        -- Eligible to roll for shiny.
+        local rolled_shiny = (math.random(1,100) > (100 - shiny_chance))
+        if rolled_shiny then
+          -- Spawn a shiny!
+          pokemon.state.model_GUID = shiny_guid_table[pokemon_name]
+          pokemon.state.shiny = true
+          -- This offset only works the first time the Pokemon is loaded.
+          pokemon.base.offset = {x=pokemon.base.offset.x, y=pokemon.base.offset.y + 0.05, z=pokemon.base.offset.z}
+
+          -- Record the shiny_status and claim this Pokemon as shiny.
+          set_token_shiny_status({guid=token_guid, state=true})
+
+          local token = getObjectFromGUID(token_guid)
+          if token then 
+            token.setColorTint(SHINY_RGB)
+          end
+          printToAll("A shiny " .. pokemon_name .. " appeared!", SHINY_RGB)
+        else
+          -- Permanently non-shiny for this GUID.
+          set_non_shiny_for_this_spawn()
+          set_token_shiny_status({guid=token_guid, state=false})
+          printToAll(pokemon_name .. " appeared!")
+        end
+      end
     end
   elseif pokemon_name then
-    -- Log it.
+    -- Non-shinyable species
     printToAll(pokemon_name .. " appeared!")
   end
 
@@ -9853,26 +9935,92 @@ end
 
 -- Helper function to force a Pokemon token to spawn a shiny. This is mostly used when a Pokemon 
 -- evolves with a Shiny model.
+--
+--   guid  : string GUID of the token
+--   state : boolean, must be true or false
 function force_shiny_spawn(params)
-  if not params.guid or not params.state == nil then
+  if not params or not params.guid or not params.state == nil then
     return 
   end
-  tokens_checked_for_shiny[params.guid] = params.state
+  set_token_shiny_status(params)
 end
 
--- For Yellow Pokemon. Needs every chip to be listed in the pokemon table
-function put_chips_to_container(tbl)
-  local put_list = {}
-  local put_nbr = 0
-  for i=1, #tbl.chips do
-    local pokemon=get_active_pokemon_by_GUID(tbl.chips[i].hit_object.guid)
-    if pokemon and pokemon.chip then
-      put_nbr = put_nbr + 1
-      put_list[put_nbr] = pokemon.chip_GUID
-      tbl.container.putObject(pokemon.chip)
+-- Helper function used to get the shiny status of a token.
+-- This function returns true, false or nil.
+--   true  -> this token is permanently shiny
+--   false -> this token is permanently non-shiny
+--   nil   -> this token has never rolled to be shiny
+function get_token_shiny_status(guid)
+  -- Basic checks.
+  if not guid then return nil end
+  if not tokens_checked_for_shiny then return nil end
+
+  return tokens_checked_for_shiny[guid]
+end
+
+-- Helper function used to set the permanent shiny state for a token GUID.
+-- If state is true, this token will spawn a shiny and it will always be shiny.
+--
+--   guid  : string GUID of the token
+--   state : boolean, must be true or false
+function set_token_shiny_status(params)
+  -- Validate inputs
+  if not params or not params.guid or params.state == nil then return end
+  
+  -- Ensure shiny status table exists
+  if not tokens_checked_for_shiny then
+    print("ERROR: lost shiny tokens checked table, re-initializing..")
+    tokens_checked_for_shiny = {}
+  end
+
+  -- Record state for this specific token.
+  tokens_checked_for_shiny[params.guid] = params.state
+
+  -- If this token is shiny, claim the Pokemon.
+  if params.state == true then
+    local name = nil
+    local active = active_chips and active_chips[guid] or nil
+    if active and active.base and active.base.name then
+      name = active.base.name
+    else
+      -- Fallback if we somehow don't have active_chips yet.
+      name = GetNameOfPokemonWithGUID(guid)
+    end
+
+    if name then
+      if not shiny_pokemon_that_exist_table then
+        print("ERROR: lost shiny Pokémon table, re-initializing..")
+        shiny_pokemon_that_exist_table = {}
+      end
+      shiny_pokemon_that_exist_table[name] = params.guid
     end
   end
-  return put_list
+end
+
+-- Helper function used to reset a token's permanent shiny pokemon status to "never rolled".
+-- If this GUID currently holds the species' shiny claim, release it.
+function clear_token_shiny_status(guid)
+  if not guid then return end
+
+  -- If this token was shiny, release shiny Pokemon claim only if this guid holds it.
+  if tokens_checked_for_shiny and tokens_checked_for_shiny[guid] == true then
+    local name = nil
+    local active = active_chips and active_chips[guid] or nil
+    if active and active.base and active.base.name then
+      name = active.base.name
+    else
+      name = GetNameOfPokemonWithGUID(guid)
+    end
+
+    if name and shiny_pokemon_that_exist_table and shiny_pokemon_that_exist_table[name] == guid then
+      shiny_pokemon_that_exist_table[name] = nil
+    end
+  end
+
+  -- Reset shiny status to "never rolled".
+  if tokens_checked_for_shiny then
+    tokens_checked_for_shiny[guid] = nil
+  end
 end
 
 -- further events
@@ -9886,30 +10034,41 @@ function onObjectLeaveContainer(container, leave_object)
 end
 
 function onObjectEnterContainer(container, enter_object)
-  -- Debug only
-  -- if (guid_nbr) then
-  --   guid_nbr = guid_nbr + 1
-  --   guid_list[guid_nbr] = enter_object.getGUID()
-  --   if guid_list_with_names then
-  --     names_list[guid_nbr] = enter_object.getName()
-  --   end
-  -- end
-
   -- Remove any special color tinting.
   enter_object.setColorTint("White")
 
-  -- Actual code
-  local pokemon = get_active_pokemon_by_GUID(enter_object.getGUID())
+  -- Clean up shiny status.
+  local obj_guid = enter_object.getGUID()
+  local pokemon = get_active_pokemon_by_GUID(obj_guid)
   if pokemon then
     enter_object.unregisterCollisions()
     pokemon.chip = nil
     wait_for_chip(pokemon)
 
     -- Reset a token's chance at being shiny on enter.
-    if tokens_checked_for_shiny[enter_object.getGUID()] then
-      shiny_pokemon_that_exist_table[pokemon.base.name] = nil
+    clear_token_shiny_status(obj_guid)
+
+    -- Reset per-spawn and per-state shiny flags.
+    if pokemon.state then
+      -- Reset the shiny state.
+      pokemon.state.shiny = false
+      -- Reset the base model GUID from data.
+      local baseData = GetPokemonDataByGUID({guid = guid})
+      if baseData and baseData.model_GUID then
+        pokemon.state.model_GUID = baseData.model_GUID
+      end
+
+      -- Reset the base offset to the "data" offset in case we changed it for a shiny.
+      local baseData = GetPokemonDataByGUID({guid = guid})
+      if baseData and baseData.offset and pokemon.base then
+        -- Copy the original offset back.
+        pokemon.base.offset = {
+          x = baseData.offset.x,
+          y = baseData.offset.y,
+          z = baseData.offset.z
+        }
+      end
     end
-    tokens_checked_for_shiny[enter_object.getGUID()] = nil
   end
 end
 
@@ -9996,7 +10155,7 @@ function onObjectStateChange(object, old_state_guid)
     -- Get a handle on the pokeball that we care about.
     local pokeball = getObjectFromGUID(deploy_pokeballs[color_index])
     if not pokeball then
-      print("Failed to get Pokeball handle to update the state model. Move this token to a pokeball and pull it back out to get and updated model.")
+      print("Failed to get Pokéball handle to update the state model. Move this token to a Pokéball and pull it back out to get and updated model.")
       return
     end
 

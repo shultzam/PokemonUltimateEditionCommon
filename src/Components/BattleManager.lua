@@ -5376,17 +5376,14 @@ function evolvePoke(params)
     local evolvedPokemonData
     local diceLevel = pokemonData.diceLevel
 
+    -- Check if the Pokemon has a Model GUID that was shiny. This call is used to get a handle on the model.
+    -- or false to prevent nil. NOTE: Get this state before putting the token into the Pokeball below. :)
+    local shiny_state = Global.call("get_token_shiny_status", pokemonData.pokemonGUID) or false
+
     -- Put away the old token.
     local evolvingPokemon = getObjectFromGUID(pokemonData.pokemonGUID)
     local evolvedPokeball = getObjectFromGUID(evolvedPokeballGUID)
     evolvedPokeball.putObject(evolvingPokemon)
-
-    -- Check if the Pokemon has a Model GUID that was shiny. This call is used to get a handle on the model.
-    local shiny_state = false
-    local active_data = Global.call("simple_get_active_pokemon_by_GUID", pokemonData.pokemonGUID)
-    if Global.call("get_models_enabled") and active_data.model ~= nil and Global.call("pokemon_has_shiny", {name=active_data.base.name, model_guid=active_data.model.getGUID()}) then
-      shiny_state =  true
-    end
 
     local evoList = {}
     for i=1, #pokemonData.evoData do
